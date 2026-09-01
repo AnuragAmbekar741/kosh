@@ -1,0 +1,26 @@
+[project]
+name = "api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "anurag.ambekar1", email = "anurag.ambekar@textbranch.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "alembic>=1.19.1",
+    "fastapi[standard]>=0.141.1",
+    "security",
+    "storage",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+storage = { workspace = true }
+security = { workspace = true }
+
+[tool.fastapi]
+entrypoint = "api.main:app"

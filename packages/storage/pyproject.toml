@@ -1,0 +1,18 @@
+[project]
+name = "storage"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "anurag.ambekar1", email = "anurag.ambekar@textbranch.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "psycopg[binary]>=3.3.4",
+    "pydantic-settings>=2.15.0",
+    "sqlmodel>=0.0.42",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"

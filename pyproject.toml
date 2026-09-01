@@ -1,0 +1,22 @@
+[project]
+name = "finance"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "packages/storage",
+    "packages/security",
+    "apps/api",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.16.0",
+    "mypy>=2.3.1",
+    "pytest>=9.1.1",
+    "ruff>=0.16.5",
+]
