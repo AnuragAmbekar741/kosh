@@ -1,0 +1,32 @@
+---
+description: Use uv CLI for pyproject.toml and dependencies — never hand-edit dependency lists
+alwaysApply: true
+---
+
+# uv workflow
+
+## Projects and workspace members
+
+- Create root project: `uv init --name finance --python ">=3.14"`
+- Create package member: `cd path/to/member && uv init --package --name <name> --python ">=3.14"`
+- Never hand-write a new `pyproject.toml` from scratch
+
+## Dependencies
+
+- Add runtime deps: `uv add --package <member> <package>`
+- Link workspace package: `uv add --package api storage security`
+- Add dev tools at root: `uv add --group dev pytest ruff`
+- Never edit `[project] dependencies` or `[dependency-groups]` by hand
+
+## Lock and sync
+
+```bash
+uv lock
+uv sync --all-packages   # at repo root; plain uv sync skips workspace members
+```
+
+## Allowed manual pyproject.toml edits
+
+- Remove `[project.scripts]` CLI stubs after `uv init --package`
+- Add `[tool.fastapi] entrypoint` when the app exists (Part 2+)
+- Non-dependency structural config only
