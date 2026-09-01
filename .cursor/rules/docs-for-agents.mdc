@@ -1,0 +1,31 @@
+---
+description: Agent guidelines for documentation (reading order, tradeoffs, consistency)
+alwaysApply: true
+---
+
+# Docs for agents
+
+## Read first
+
+1. [docs/README.md](/Users/anuragambekar/dev/finance/docs/README.md)
+2. [docs/architecture/decisions.md](/Users/anuragambekar/dev/finance/docs/architecture/decisions.md) — do not fight a locked tradeoff
+3. [docs/architecture/overview.md](/Users/anuragambekar/dev/finance/docs/architecture/overview.md) — put code in the right package
+4. [docs/product/scope.md](/Users/anuragambekar/dev/finance/docs/product/scope.md) — V1 scope
+5. [docs/product/BUILD_AND_LEARN.md](/Users/anuragambekar/dev/finance/docs/product/BUILD_AND_LEARN.md) — phase/test checklists only
+6. [docs/design/](/Users/anuragambekar/dev/finance/docs/design/) — when touching `apps/web`
+
+## Tradeoffs
+
+If you choose A over B, append a row to `docs/architecture/decisions.md` (Chosen / Rejected / Why / Revisit). Do not bury tradeoffs only in chat.
+
+## Truth
+
+Docs describe **this repo’s paths**. Do not scaffold `apps/api/app/` from the learning guide. When the guide says `apps/api/app/auth/models.py`, implement models in `packages/storage/`.
+
+## After behavior change
+
+Update the matching doc: `architecture/overview.md` if processes/packages change; `product/scope.md` if V1 scope or API status changes; `design/` when dashboard UX changes; `decisions.md` if you lock a new tradeoff. No empty docs: create `docs/design/<feature>.md` or `docs/product/<feature>.md` only when that feature exists in code.
+
+## Ponytail still wins
+
+For code size; docs are the place for “why,” not extra abstractions.

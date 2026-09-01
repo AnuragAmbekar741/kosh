@@ -27,5 +27,5 @@ setup:
 	uv sync --all-packages
 
 git-config:
-	git config user.name "AnuragAmbekar741"
-	git config user.email "anuragambekar1997@gmail.com"
+	git config --global user.name "AnuragAmbekar741"
+	git config --global user.email "anuragambekar1997@gmail.com"
