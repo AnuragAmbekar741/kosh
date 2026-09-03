@@ -41,6 +41,8 @@ uv run --directory apps/api alembic upgrade head
 
 Postgres listens on `localhost:5432` (user/db/password: `finance`). Migrations run from `apps/api` — see [.cursor/rules/alembic-migrations.mdc](.cursor/rules/alembic-migrations.mdc).
 
+Google login (`POST /auth/google`) needs `GOOGLE_CLIENT_ID` in `.env` (Web client ID from Google Cloud Console). Local email/password works without it.
+
 ## Run API
 
 From repo root:

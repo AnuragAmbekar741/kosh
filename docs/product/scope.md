@@ -44,7 +44,7 @@ Status key: **live** = implemented today.
 | GET | `/health` | **live** |
 | POST | `/auth/register` | **live** |
 | POST | `/auth/login` | **live** |
-| POST | `/auth/google` | planned |
+| POST | `/auth/google` | **live** |
 | POST | `/auth/refresh` | **live** |
 | POST | `/auth/logout` | **live** |
 | GET | `/users/me` | **live** |
@@ -66,6 +66,7 @@ Prefer `GET /users/me` over `GET /users/{id}` for profile.
 - Access token: ~15 minutes, `Authorization: Bearer`
 - Refresh token: ~30 days, **httpOnly Secure cookie**, stored hashed server-side
 - Refresh rotates and revokes the previous refresh token
+- Google: client POSTs a Google ID token to `/auth/google`; same access + refresh as local login
 
 ## Document pipeline (target)
 

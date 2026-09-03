@@ -18,10 +18,10 @@ Concise reference for this repo. Locked decisions: [decisions.md](./decisions.md
 ```
 apps/api/src/api/          FastAPI app, routers + auth orchestration
   routers/health.py        GET /health
-  routers/auth.py          register, login, refresh, logout
+  routers/auth.py          register, login, google, refresh, logout
   routers/users.py         GET /users/me
-  auth.py                  register/login/refresh/logout
-  schemas/auth.py          register, login, token, UserPublic
+  auth.py                  register/login/google/refresh/logout
+  schemas/auth.py          register, login, google, token, UserPublic
   main.py                  lifespan: env + Postgres ping
 
 packages/storage/src/storage/
@@ -31,6 +31,7 @@ packages/storage/src/storage/
   database.py              engine, ping
 
 packages/security/src/security/   argon2 hash, access JWT, hashed refresh, CurrentUserDep
+  google.py                Google ID token verify (JWKS)
 
 apps/web/                  React + Vite (later, not a uv member)
 
@@ -44,6 +45,7 @@ Auth, spend, documents, and overview are **router modules inside `apps/api`**, n
 ```mermaid
 flowchart TB
   WEB[apps/web]
+  GOOG[Google Identity]
   API[apps/api :8000]
   WRK[apps/worker]
   AGT[apps/agent]
@@ -53,6 +55,7 @@ flowchart TB
   PG[(Postgres)]
   MINIO[(MinIO — later)]
 
+  WEB --> GOOG
   WEB --> API
   WA --> AGT
   API --> SEC

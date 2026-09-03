@@ -71,20 +71,26 @@ Revisit when: ...
 - Rejected: `User.password_hash` on `users`
 - Why: Guide §23; supports OAuth + multiple login methods
 - Revision 435 does **not** backfill old hashes — local DB is disposable; re-register
-- Revisit when: Phase 2 Google OAuth (`POST /auth/google`)
+- Revisit when: explicit “connect Google” consent is needed before linking
 
 **Identity context in-process**
 
-- Chosen: models/crud in storage; register/login/refresh/logout in `apps/api/auth.py`
+- Chosen: models/crud in storage; register/login/google/refresh/logout in `apps/api/auth.py`
 - Rejected: Auth HTTP service, database-per-service, API gateway, `UserService` class, storage importing security
 - Why: Decision #5/#9/#16; one-way `api → security → storage`
 - Revisit when: Independent scaling forces a split
+
+**Google sign-in: ID token at `POST /auth/google`**
+
+- Chosen: Client sends a Google ID token; API verifies it (JWKS, `aud=GOOGLE_CLIENT_ID`) and issues the same access JWT + refresh cookie as local login. First Google login creates `User` + `AuthIdentity(provider=google)`; same Google `sub` logs into that user; verified Google email matching an existing `User` attaches a second identity.
+- Rejected: Authorization-code redirect, Auth HTTP microservice, `google-auth` library
+- Why: Matches `POST /auth/login`; `AuthIdentity` already has `provider=google`; PyJWT already verifies JWTs
+- Revisit when: a non-SPA client needs a server redirect, or we want explicit consent before linking identities
 
 ## Open
 
 | Topic | Notes |
 |---|---|
-| Google OAuth | After local email/password auth works |
 | Makefile vs raw commands | Root `makefile` exists; not required for agents |
 | `apps/web` timing | After auth API contracts or in parallel once `/health` wired |
 | `packages/ui` / `api-client` | Defer until second consumer or OpenAPI codegen need |
