@@ -13,6 +13,13 @@ from sqlmodel import Session
 from storage.database import get_session
 from storage.models import User
 
+from security.google import (
+    GoogleClaims,
+    GoogleNotConfiguredError,
+    GoogleUnavailableError,
+    InvalidGoogleTokenError,
+    verify_google_id_token,
+)
 from security.settings import get_settings
 
 REFRESH_COOKIE = "refresh_token"
@@ -23,6 +30,10 @@ _bearer = HTTPBearer(auto_error=False)
 __all__ = [
     "REFRESH_COOKIE",
     "CurrentUserDep",
+    "GoogleClaims",
+    "GoogleNotConfiguredError",
+    "GoogleUnavailableError",
+    "InvalidGoogleTokenError",
     "clear_refresh_cookie",
     "create_access_token",
     "create_refresh_token",
@@ -31,6 +42,7 @@ __all__ = [
     "hash_password",
     "hash_refresh_token",
     "set_refresh_cookie",
+    "verify_google_id_token",
     "verify_password",
 ]
 

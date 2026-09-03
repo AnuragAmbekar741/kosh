@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     )
 
     jwt_secret: str
+    google_client_id: str = ""
     access_token_minutes: int = 15
     refresh_token_days: int = 30
     cookie_secure: bool = False
