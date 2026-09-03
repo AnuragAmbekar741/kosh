@@ -1,5 +1,6 @@
 from api.schemas.auth import (
     AccessTokenResponse,
+    GoogleAuthRequest,
     LoginRequest,
     RegisterRequest,
     UserPublic,
@@ -7,6 +8,7 @@ from api.schemas.auth import (
 
 __all__ = [
     "AccessTokenResponse",
+    "GoogleAuthRequest",
     "LoginRequest",
     "RegisterRequest",
     "UserPublic",

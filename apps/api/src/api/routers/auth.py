@@ -12,14 +12,24 @@ from storage.models import User
 
 from api.auth import (
     DuplicateEmailError,
+    GoogleNotConfiguredError,
+    GoogleUnavailableError,
     InvalidCredentialsError,
+    InvalidGoogleTokenError,
     InvalidRefreshError,
+    login_google,
     login_local,
     register_local,
     revoke_refresh,
     rotate_refresh,
 )
-from api.schemas import AccessTokenResponse, LoginRequest, RegisterRequest, UserPublic
+from api.schemas import (
+    AccessTokenResponse,
+    GoogleAuthRequest,
+    LoginRequest,
+    RegisterRequest,
+    UserPublic,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -61,6 +71,30 @@ def login(body: LoginRequest, response: Response, session: SessionDep) -> Access
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
+        ) from None
+    return _token_response(user, access_token, raw, response)
+
+
+@router.post("/google")
+def google(
+    body: GoogleAuthRequest, response: Response, session: SessionDep
+) -> AccessTokenResponse:
+    try:
+        user, access_token, raw = login_google(session, id_token=body.id_token)
+    except InvalidGoogleTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google token",
+        ) from None
+    except GoogleNotConfiguredError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google auth is not configured",
+        ) from None
+    except GoogleUnavailableError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google auth unavailable",
         ) from None
     return _token_response(user, access_token, raw, response)
 

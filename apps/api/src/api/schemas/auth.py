@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 __all__ = [
     "AccessTokenResponse",
+    "GoogleAuthRequest",
     "LoginRequest",
     "RegisterRequest",
     "UserPublic",
@@ -19,6 +20,10 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+
+class GoogleAuthRequest(BaseModel):
+    id_token: str = Field(min_length=1)
 
 
 class UserPublic(BaseModel):

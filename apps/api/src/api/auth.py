@@ -1,28 +1,39 @@
 from security import (
+    GoogleNotConfiguredError,
+    GoogleUnavailableError,
+    InvalidGoogleTokenError,
     create_access_token,
     create_refresh_token,
     hash_password,
     hash_refresh_token,
+    verify_google_id_token,
     verify_password,
 )
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from storage.crud.user import (
+    add_google_identity,
     consume_and_replace_refresh,
     create_refresh_session,
+    create_user_with_google_identity,
     create_user_with_local_identity,
+    get_identity_by_provider,
     get_local_identity_by_email,
     get_refresh_session_by_hash,
     get_user_by_email,
     get_user_by_id,
     revoke_session,
 )
-from storage.models import User
+from storage.models import AuthProvider, User
 
 __all__ = [
     "DuplicateEmailError",
+    "GoogleNotConfiguredError",
+    "GoogleUnavailableError",
     "InvalidCredentialsError",
+    "InvalidGoogleTokenError",
     "InvalidRefreshError",
+    "login_google",
     "login_local",
     "register_local",
     "revoke_refresh",
@@ -70,6 +81,43 @@ def register_local(
     except IntegrityError:
         session.rollback()
         raise DuplicateEmailError from None
+    return _issue(session, user)
+
+
+def login_google(session: Session, *, id_token: str) -> tuple[User, str, str]:
+    claims = verify_google_id_token(id_token)
+    identity = get_identity_by_provider(
+        session, AuthProvider.GOOGLE, claims.subject
+    )
+    if identity is not None:
+        user = get_user_by_id(session, identity.user_id)
+        if user is None:
+            raise InvalidGoogleTokenError
+        return _issue(session, user)
+
+    email = claims.email.lower()
+    user = get_user_by_email(session, email)
+    try:
+        if user is None:
+            user = create_user_with_google_identity(
+                session,
+                name=claims.name,
+                email=email,
+                subject=claims.subject,
+            )
+        else:
+            # ponytail: Google email_verified proves ownership; local register does not
+            add_google_identity(session, user_id=user.id, subject=claims.subject)
+    except IntegrityError:
+        session.rollback()
+        identity = get_identity_by_provider(
+            session, AuthProvider.GOOGLE, claims.subject
+        )
+        if identity is None:
+            raise InvalidGoogleTokenError from None
+        user = get_user_by_id(session, identity.user_id)
+        if user is None:
+            raise InvalidGoogleTokenError from None
     return _issue(session, user)
 
 

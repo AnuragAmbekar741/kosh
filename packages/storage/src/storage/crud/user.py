@@ -6,9 +6,12 @@ from sqlmodel import Session, select
 from storage.models.user import AuthIdentity, AuthProvider, RefreshSession, User
 
 __all__ = [
+    "add_google_identity",
     "consume_and_replace_refresh",
     "create_refresh_session",
+    "create_user_with_google_identity",
     "create_user_with_local_identity",
+    "get_identity_by_provider",
     "get_local_identity_by_email",
     "get_refresh_session_by_hash",
     "get_user_by_email",
@@ -44,13 +47,51 @@ def create_user_with_local_identity(
     return user
 
 
-def get_local_identity_by_email(session: Session, email: str) -> AuthIdentity | None:
+def get_identity_by_provider(
+    session: Session, provider: str, subject: str
+) -> AuthIdentity | None:
     return session.exec(
         select(AuthIdentity).where(
-            AuthIdentity.provider == AuthProvider.LOCAL,
-            AuthIdentity.provider_subject == email,
+            AuthIdentity.provider == provider,
+            AuthIdentity.provider_subject == subject,
         )
     ).first()
+
+
+def get_local_identity_by_email(session: Session, email: str) -> AuthIdentity | None:
+    return get_identity_by_provider(session, AuthProvider.LOCAL, email)
+
+
+def create_user_with_google_identity(
+    session: Session, *, name: str, email: str, subject: str
+) -> User:
+    user = User(name=name, email=email)
+    session.add(user)
+    session.flush()
+    session.add(
+        AuthIdentity(
+            user_id=user.id,
+            provider=AuthProvider.GOOGLE,
+            provider_subject=subject,
+        )
+    )
+    session.commit()
+    session.refresh(user)
+    return user
+
+
+def add_google_identity(
+    session: Session, *, user_id: UUID, subject: str
+) -> AuthIdentity:
+    identity = AuthIdentity(
+        user_id=user_id,
+        provider=AuthProvider.GOOGLE,
+        provider_subject=subject,
+    )
+    session.add(identity)
+    session.commit()
+    session.refresh(identity)
+    return identity
 
 
 def create_refresh_session(
