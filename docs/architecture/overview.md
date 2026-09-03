@@ -16,15 +16,21 @@ Concise reference for this repo. Locked decisions: [decisions.md](./decisions.md
 ## Layout (real paths)
 
 ```
-apps/api/src/api/          FastAPI app, routers only
-  routers/health.py        GET /health (exists)
-  main.py
+apps/api/src/api/          FastAPI app, routers + auth orchestration
+  routers/health.py        GET /health
+  routers/auth.py          register, login, refresh, logout
+  routers/users.py         GET /users/me
+  auth.py                  register/login/refresh/logout
+  schemas/auth.py          register, login, token, UserPublic
+  main.py                  lifespan: env + Postgres ping
 
 packages/storage/src/storage/
-  models.py                SQLModel tables (User exists)
+  models/user.py           User, AuthIdentity, RefreshSession
+  crud/user.py             identity queries
   settings.py              DATABASE_URL
+  database.py              engine, ping
 
-packages/security/src/security/   hash, JWT, CurrentUserDep (stub → auth slice)
+packages/security/src/security/   argon2 hash, access JWT, hashed refresh, CurrentUserDep
 
 apps/web/                  React + Vite (later, not a uv member)
 

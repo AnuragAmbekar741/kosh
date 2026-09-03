@@ -34,7 +34,7 @@ Revisit when: ...
 | 18 | WhatsApp identity | Webhook signature + `channel_accounts` (`wa_id` → `user_id`) |
 | 19 | Agent safety | `user_id` injected by runtime; confirm before mutating/destructive writes |
 | 20 | Build order | storage + security → api → web → worker/documents → agent/whatsapp |
-| 21 | Inner layout | `apps/api/src/api/routers/`; `packages/storage/src/storage/` |
+| 21 | Inner layout | `apps/api/src/api/routers/` + `api/auth.py`; `packages/storage/{models,crud}` |
 | 22 | Deploy unit | Docker image per runnable app; packages baked in |
 | 23 | Python dependencies | **`uv add` only** — see `.cursor/rules/uv-workflow.mdc` |
 | 24 | Migrations | **`alembic revision --autogenerate`** — see `.cursor/rules/alembic-migrations.mdc` |
@@ -45,6 +45,9 @@ Revisit when: ...
 | 29 | Access token | Short-lived (~15 min) JWT in `Authorization` header |
 | 30 | Guide vs repo paths | Do not scaffold `apps/api/app/` from BUILD_AND_LEARN — use storage + routers |
 | 31 | Doc layout | `docs/architecture/`, `docs/product/`, `docs/design/` |
+| 32 | Identity layout | Domain modules `storage/models|crud` (`user.py`); auth orchestration in `apps/api`; Identity is in-process |
+| 33 | HTTP layer | FastAPI routers + `api/auth.py` functions; no controller or repository classes |
+| 34 | API startup | Load `DATABASE_URL` + `JWT_SECRET` and ping Postgres in lifespan; refuse to serve if either fails |
 
 ### Locked detail rows
 
@@ -62,12 +65,20 @@ Revisit when: ...
 - Why: v1 is ledger/analytics, not money movement
 - Revisit when: Plaid or bill-pay needs distinct semantics
 
-**Auth identities (guide) vs current User model**
+**Auth identities vs User**
 
-- Chosen (target): Separate auth identities from `User`; refresh sessions table; hashed refresh tokens
-- Current code: `User.password_hash` on `users` table — **temporary until auth slice**
+- Chosen: Separate `AuthIdentity` from `User`; `RefreshSession` with hashed tokens
+- Rejected: `User.password_hash` on `users`
 - Why: Guide §23; supports OAuth + multiple login methods
-- Revisit when: Starting Phase 3 auth — migrate in one Alembic revision
+- Revision 435 does **not** backfill old hashes — local DB is disposable; re-register
+- Revisit when: Phase 2 Google OAuth (`POST /auth/google`)
+
+**Identity context in-process**
+
+- Chosen: models/crud in storage; register/login/refresh/logout in `apps/api/auth.py`
+- Rejected: Auth HTTP service, database-per-service, API gateway, `UserService` class, storage importing security
+- Why: Decision #5/#9/#16; one-way `api → security → storage`
+- Revisit when: Independent scaling forces a split
 
 ## Open
 

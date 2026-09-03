@@ -26,8 +26,8 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 
 | Done | Next |
 |---|---|
-| uv workspace (`apps/api`, `packages/storage`, `packages/security`) | Local auth (register/login/refresh) |
-| Postgres + Alembic; `User` model in storage | Pydantic request/response schemas |
-| `GET /health` + tests | `apps/web` scaffold (pnpm) |
+| uv workspace (`apps/api`, `packages/storage`, `packages/security`) | Google OAuth (`POST /auth/google`) |
+| Postgres + Alembic; User, AuthIdentity, RefreshSession | `apps/web` scaffold (pnpm) |
+| Local auth (register/login/refresh/logout) + `GET /users/me` | SpendItem CRUD |
 
 When a planning decision changes, update `architecture/decisions.md` first, then `architecture/overview.md` and `product/scope.md`.

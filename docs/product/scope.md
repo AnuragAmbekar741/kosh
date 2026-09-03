@@ -42,12 +42,12 @@ Status key: **live** = implemented today.
 | Method | Path | Status |
 |---|---|---|
 | GET | `/health` | **live** |
-| POST | `/auth/register` | planned |
-| POST | `/auth/login` | planned |
+| POST | `/auth/register` | **live** |
+| POST | `/auth/login` | **live** |
 | POST | `/auth/google` | planned |
-| POST | `/auth/refresh` | planned |
-| POST | `/auth/logout` | planned |
-| GET | `/users/me` | planned |
+| POST | `/auth/refresh` | **live** |
+| POST | `/auth/logout` | **live** |
+| GET | `/users/me` | **live** |
 | POST | `/spend-items` | planned |
 | GET | `/spend-items` | planned |
 | GET | `/spend-items/{id}` | planned |
