@@ -36,7 +36,6 @@ Requires [Docker](https://docs.docker.com/get-docker/).
 ```bash
 docker compose up -d
 cp .env.example .env
-uv run --directory apps/api alembic revision --autogenerate -m "add users"
 uv run --directory apps/api alembic upgrade head
 ```
 
