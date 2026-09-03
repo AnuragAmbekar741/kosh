@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
-from storage.models import User  # noqa: F401 — register models with metadata
+from storage.models import AuthIdentity, RefreshSession, User  # noqa: F401
 from storage.settings import get_settings
 
 config = context.config
