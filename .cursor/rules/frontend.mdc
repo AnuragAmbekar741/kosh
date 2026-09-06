@@ -20,6 +20,7 @@ Tokens: [docs/design/global.md](docs/design/global.md). Deps: `pnpm add` inside 
 
 ```
 src/app/                       main.tsx, App.tsx, index.css, typeset.css
+src/pages/<feature-kebab>/     route pages (`pages/auth/LoginPage.tsx`)
 src/api/client.ts              axios instance + interceptors
 src/api/<resource>/<resource>.ts         HTTP functions
 src/api/<resource>/<resource>.types.ts   request/response types
@@ -29,7 +30,7 @@ src/components/ui/             shadcn
 src/components/<feature-kebab>/PascalFile.tsx
 ```
 
-Example: `src/api/health/health.ts` + `health.types.ts`, hooks in `src/hooks/health/`. Next: `src/api/auth/` + `src/hooks/auth/`.
+Example: `src/api/health/health.ts` + `health.types.ts`, hooks in `src/hooks/health/`. Auth pages are UI-only; next: `src/api/auth/` + `src/hooks/auth/` when wiring.
 
 No barrel `index.ts` in `api/` or `hooks/`. Import the file (`@/api/health/health`, `@/hooks/health/use-health`).
 

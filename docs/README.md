@@ -26,7 +26,8 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 
 | Done | Next |
 |---|---|
-| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | SpendItem CRUD; wire web to auth |
+| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | SpendItem CRUD |
+| Login / signup UI (`/login`, `/signup`) | Wire web to auth |
 | Postgres + Alembic; User, AuthIdentity, RefreshSession | SpendItem CRUD |
 | Local auth + Google (`POST /auth/google`) + `GET /users/me` | |
 
