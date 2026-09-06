@@ -7,7 +7,7 @@ Concise reference for this repo. Locked decisions: [decisions.md](./decisions.md
 | Layer | Choice |
 |---|---|
 | Repo | One git repo |
-| Frontend | **pnpm** only inside `apps/web` (not scaffolded yet) |
+| Frontend | **pnpm** only inside `apps/web` (Vite + shadcn nova) |
 | Python | Root **uv** workspace, one `uv.lock` |
 | Backend style | **Modular monolith** — one main API + shared packages |
 | Database | One **Postgres**, one schema, one Alembic tree under `apps/api` |
@@ -33,7 +33,12 @@ packages/storage/src/storage/
 packages/security/src/security/   argon2 hash, access JWT, hashed refresh, CurrentUserDep
   google.py                Google ID token verify (JWKS)
 
-apps/web/                  React + Vite (later, not a uv member)
+apps/web/                  React + Vite + shadcn (not a uv member)
+  src/app/                 entry, App, global CSS, typeset
+  src/api/client.ts        axios + interceptors
+  src/api/<resource>/      `<resource>.ts` + `<resource>.types.ts` (health live)
+  src/hooks/<resource>/    TanStack Query (`hooks/health/use-health.ts`)
+  src/lib/query-client.ts  QueryClient singleton
 
 apps/worker|agent|whatsapp  later separate deployables
 ```
@@ -75,7 +80,7 @@ The [BUILD_AND_LEARN](../product/BUILD_AND_LEARN.md) guide uses different folder
 | `apps/api/app/auth/models.py` | models in `packages/storage` | worker/agent import storage without HTTP |
 | SQLAlchemy models | SQLModel | course pattern + less dual-model noise |
 | Root pnpm workspace | uv workspace; pnpm only in `apps/web` | Python is the backend |
-| `packages/ui`, `packages/api-client` | deferred | one web app first |
+| `packages/ui`, `packages/api-client` | deferred | axios + RQ inside `apps/web` |
 
 ## Run locally
 
@@ -84,6 +89,7 @@ docker compose up -d
 uv sync --all-packages
 uv run --directory apps/api alembic upgrade head
 uv run --directory apps/api fastapi dev --port 8000
+cd apps/web && pnpm dev
 ```
 
-See root [README.md](../../README.md) for full commands.
+Vite proxies `/health`, `/auth`, `/users` to the API (`:8000`). Design tokens: [../design/global.md](../design/global.md).

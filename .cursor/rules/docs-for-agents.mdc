@@ -13,6 +13,7 @@ alwaysApply: true
 4. [docs/product/scope.md](/Users/anuragambekar/dev/finance/docs/product/scope.md) — V1 scope
 5. [docs/product/BUILD_AND_LEARN.md](/Users/anuragambekar/dev/finance/docs/product/BUILD_AND_LEARN.md) — phase/test checklists only
 6. [docs/design/](/Users/anuragambekar/dev/finance/docs/design/) — when touching `apps/web`
+7. [`.cursor/rules/frontend.mdc`](/Users/anuragambekar/dev/finance/.cursor/rules/frontend.mdc) — `apps/web`: `src/api/<resource>/` and `src/hooks/<resource>/`
 
 ## Tradeoffs
 

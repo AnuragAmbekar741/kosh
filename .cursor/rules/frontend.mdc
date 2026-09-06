@@ -1,0 +1,63 @@
+---
+description: Frontend conventions for apps/web — folders, Axios, TanStack Query, shadcn
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Frontend (`apps/web`)
+
+Tokens: [docs/design/global.md](docs/design/global.md). Deps: `pnpm add` inside `apps/web` only — never hand-edit `package.json` or lockfiles.
+
+## Naming
+
+- Folders: `kebab-case` (`src/components/spend-list/`)
+- Component files: `PascalCase` (`SpendRow.tsx`)
+- Hooks: `useXyz.ts` in the resource folder (`src/hooks/health/use-health.ts`)
+- Types/interfaces: `PascalCase`; props `FooProps`
+- Functions/variables: `camelCase`
+
+## Layout
+
+```
+src/app/                       main.tsx, App.tsx, index.css, typeset.css
+src/pages/<feature-kebab>/     route pages (`pages/auth/LoginPage.tsx`)
+src/api/client.ts              axios instance + interceptors
+src/api/<resource>/<resource>.ts         HTTP functions
+src/api/<resource>/<resource>.types.ts   request/response types
+src/hooks/<resource>/          all hooks for that resource (`use-health.ts`, query-keys)
+src/lib/                       query-client, cn/utils
+src/components/ui/             shadcn
+src/components/<feature-kebab>/PascalFile.tsx
+```
+
+Example: `src/api/health/health.ts` + `health.types.ts`, hooks in `src/hooks/health/`. Auth pages are UI-only; next: `src/api/auth/` + `src/hooks/auth/` when wiring.
+
+No barrel `index.ts` in `api/` or `hooks/`. Import the file (`@/api/health/health`, `@/hooks/health/use-health`).
+
+Import order: third-party → `@/` → styles.
+
+## Type safety
+
+- Types live next to the resource: `<resource>.types.ts` (hand-written until OpenAPI codegen).
+- No `any`. Prefer `unknown` + checks. Optional chaining on nested data.
+- FastAPI errors: `error.response?.data?.detail` (string), not `.message`.
+
+## Server state
+
+- All HTTP through `useQuery` / `useMutation`. Query keys are arrays (`queryKeys.health`).
+- `enabled` for conditional fetch. Pass `signal` into axios.
+- `isLoading` = first load only. `isFetching` = every run (use for later loaders).
+- Mutations later: toast via `sonner`; invalidate related keys on success.
+- Access token is in-memory (`getAccessToken` / `setAccessToken`). Refresh cookie is httpOnly.
+
+## UI
+
+- shadcn primitives + `cn()`. Lucide only. No raw hex — semantic tokens.
+- Typed props. Extract `.map()` rows to subcomponents. Keys = ids, not indexes.
+- Early returns. No `console.log` unless behind a debug flag.
+- Do not define components inside components. Derive state in render, not effects.
+- Do not sprinkle `useMemo` / `useCallback` on simple values.
+
+## Git
+
+Conventional commits (`feat`, `fix`, `chore`, …). GitLab issues as `#<n>`. Not `STAM-xxx`.

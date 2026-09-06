@@ -48,6 +48,8 @@ Revisit when: ...
 | 32 | Identity layout | Domain modules `storage/models|crud` (`user.py`); auth orchestration in `apps/api`; Identity is in-process |
 | 33 | HTTP layer | FastAPI routers + `api/auth.py` functions; no controller or repository classes |
 | 34 | API startup | Load `DATABASE_URL` + `JWT_SECRET` and ping Postgres in lifespan; refuse to serve if either fails |
+| 35 | Web HTTP client | **Axios + TanStack Query** in `apps/web`; types in `src/api/<resource>/<resource>.types.ts` |
+| 36 | Web design craft | **Impeccable** locally (gitignored root files); committed visual system is `docs/design/` + Linear dark + `#DAEFFA` |
 
 ### Locked detail rows
 
@@ -80,6 +82,20 @@ Revisit when: ...
 - Why: Decision #5/#9/#16; one-way `api → security → storage`
 - Revisit when: Independent scaling forces a split
 
+**Web HTTP: axios + TanStack Query in-app**
+
+- Chosen: `pnpm add axios @tanstack/react-query` in `apps/web`; one axios instance with interceptors; hooks wrap endpoints
+- Rejected: Hand-rolled `fetch` wrappers; day-one OpenAPI / `packages/api-client`
+- Why: Auth cookie + Bearer retry is one interceptor; Query handles cache/`enabled`/`signal`. One web app — no second consumer yet
+- Revisit when: a second TS client or generated OpenAPI types are needed
+
+**Impeccable for UI craft, not a new look**
+
+- Chosen: Impeccable root files (`PRODUCT.md`, `DESIGN.md`, `.impeccable/`) stay gitignored. Committed source of truth is `docs/design/`.
+- Rejected: Committing the skill install, hook manifests, or root Stitch files (duplicates `global.md` and bloated the working tree)
+- Why: Impeccable still reads the local copies; git should only carry the design docs we already maintain
+- Revisit when: a deliberate rebrand is requested
+
 **Google sign-in: ID token at `POST /auth/google`**
 
 - Chosen: Verify Google tokens with PyJWT (JWKS + client ID); issue local access/refresh tokens. Identify users by Google `sub`; reject email-only matches with 409.
@@ -101,7 +117,7 @@ Previously linked accounts are unchanged; review them separately if used with re
 | Topic | Notes |
 |---|---|
 | Makefile vs raw commands | Root `makefile` exists; not required for agents |
-| `apps/web` timing | After auth API contracts or in parallel once `/health` wired |
+| `apps/web` timing | Auth pages UI-only. Health hook unused on those routes. Auth hooks next. |
 | `packages/ui` / `api-client` | Defer until second consumer or OpenAPI codegen need |
 
 ## Rejected / deferred (v2+)

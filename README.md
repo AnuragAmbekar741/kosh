@@ -2,7 +2,7 @@
 
 Personal finance app — spend ledger, dashboard, and (later) WhatsApp agent.
 
-Modular monolith: `apps/api` + `packages/storage` + `packages/security`.
+Modular monolith: `apps/api` + `packages/storage` + `packages/security`. Dashboard: `apps/web` (pnpm, not a uv member).
 
 ## Setup
 
@@ -26,6 +26,7 @@ uv tree --package api
 | Path | Role |
 |---|---|
 | `apps/api` | Main FastAPI app |
+| `apps/web` | React + Vite + shadcn (pnpm) |
 | `packages/storage` | SQLModel models and crud |
 | `packages/security` | Auth helpers |
 

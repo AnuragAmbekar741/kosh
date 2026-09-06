@@ -25,3 +25,21 @@ htmlcov/
 *.swo
 
 .DS_Store
+
+node_modules/
+dist/
+*.local
+apps/web/dist/
+.pnpm-store/
+
+# Local agent/skill installs
+.agents/
+.cursor/skills/
+.cursor/agents/
+.cursor/hooks.json
+skills-lock.json
+
+# Impeccable (local only; committed design docs live in docs/design/)
+.impeccable/
+/DESIGN.md
+/PRODUCT.md
