@@ -1,11 +1,11 @@
 ---
 name: Linear-design-analysis
-description: "Dark product canvas from Linear’s DESIGN.md, with dusty teal as the single chromatic accent. Marketing chrome stays charcoal; the app shell uses the same tokens via shadcn CSS variables."
+description: "Dark product canvas from Linear’s DESIGN.md, with sky blue #5CBDEA as the single chromatic accent. Marketing chrome stays charcoal; the app shell uses the same tokens via shadcn CSS variables."
 colors:
-  primary: "#0F766E"
-  on-primary: "#ffffff"
-  primary-hover: "#0D9488"
-  primary-focus: "#115E59"
+  primary: "#5CBDEA"
+  on-primary: "#010102"
+  primary-hover: "#7ECFF0"
+  primary-focus: "#3A9BC4"
   ink: "#f7f8f8"
   ink-muted: "#d0d6e0"
   ink-subtle: "#8a8f98"
@@ -22,7 +22,7 @@ colors:
   inverse-surface-1: "#f5f6f6"
   inverse-surface-2: "#f6f7f7"
   inverse-ink: "#000000"
-  brand-secure: "#5F8F8A"
+  brand-secure: "#7A9AA8"
   semantic-success: "#27a644"
   semantic-overlay: "#000000"
 typography:
@@ -162,7 +162,7 @@ components:
 
 # Global design
 
-Source of truth for `apps/web` tokens and component contracts. shadcn primitives consume the CSS variables in [`apps/web/src/index.css`](../../apps/web/src/index.css). Do not put raw hex on components.
+Source of truth for `apps/web` tokens and component contracts. shadcn primitives consume the CSS variables in [`apps/web/src/app/index.css`](../../apps/web/src/app/index.css). Do not put raw hex on components.
 
 Dark is the default (`ThemeProvider defaultTheme="dark"`). Light uses Linear `inverse-*` tokens.
 
@@ -178,13 +178,13 @@ App chrome uses Geist (nova). Typeset markdown uses Raleway / Nunito Sans via `.
 | `surface-2` `#141516` | `--secondary`, `--accent` |
 | `surface-3` `#18191a` | `--muted` |
 | `hairline` `#23252a` | `--border`, `--input` |
-| `primary` `#0F766E` | `--primary` |
-| `on-primary` `#ffffff` | `--primary-foreground` |
+| `primary` `#5CBDEA` | `--primary` |
+| `on-primary` `#010102` | `--primary-foreground` |
 | `ink-subtle` `#8a8f98` | `--muted-foreground` |
-| `primary-focus` `#115E59` | `--ring` |
+| `primary-focus` `#3A9BC4` | `--ring` |
 | `rounded.md` `8px` | `--radius` `0.5rem` |
 
-`:root` (light) maps to `inverse-canvas` / `inverse-ink` / `inverse-surface-*`. Same teal primary.
+`:root` (light) maps to `inverse-canvas` / `inverse-ink` / `inverse-surface-*`. Same `#5CBDEA` primary.
 
 ## Component entries
 
@@ -192,9 +192,9 @@ Add the listed shadcn primitive when the surface is built. Keep the visual contr
 
 | DESIGN.md token | shadcn (when added) | Contract |
 |---|---|---|
-| `button-primary` | `Button` | `--primary`, 8px radius, 8×14 padding |
-| `button-primary-hover` | `Button` hover | `#0D9488` |
-| `button-primary-pressed` | `Button` active | `#115E59` |
+| `button-primary` | `Button` | `#5CBDEA` fill, `#010102` text, 8px radius, 8×14 padding |
+| `button-primary-hover` | `Button` hover | `#7ECFF0` |
+| `button-primary-pressed` | `Button` active | `#3A9BC4` |
 | `button-secondary` | `Button variant="secondary"` | surface-1 + hairline |
 | `button-tertiary` | `Button variant="ghost"` | canvas, ink text |
 | `button-inverse` | `Button` on inverse | white fill, black text |
