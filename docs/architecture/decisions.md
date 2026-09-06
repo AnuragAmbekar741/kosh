@@ -101,7 +101,7 @@ Previously linked accounts are unchanged; review them separately if used with re
 | Topic | Notes |
 |---|---|
 | Makefile vs raw commands | Root `makefile` exists; not required for agents |
-| `apps/web` timing | After auth API contracts or in parallel once `/health` wired |
+| `apps/web` timing | Scaffolded (Vite + shadcn nova). Wire to auth next. |
 | `packages/ui` / `api-client` | Defer until second consumer or OpenAPI codegen need |
 
 ## Rejected / deferred (v2+)

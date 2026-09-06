@@ -18,7 +18,7 @@ Personal finance app: spend ledger from documents and manual entry, React dashbo
 2. **[architecture/overview.md](./architecture/overview.md)** — put code in the right package
 3. **[product/scope.md](./product/scope.md)** — V1 scope and target API
 4. **[product/BUILD_AND_LEARN.md](./product/BUILD_AND_LEARN.md)** — phase checklists and learning loop only
-5. **[design/dashboard.md](./design/dashboard.md)** — when working on `apps/web`
+5. **[design/global.md](./design/global.md)** — when working on `apps/web`
 
 Course notes (external): [Python for Professionals](https://python-pros.netlify.app/).
 
@@ -26,7 +26,7 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 
 | Done | Next |
 |---|---|
-| uv workspace (`apps/api`, `packages/storage`, `packages/security`) | `apps/web` scaffold (pnpm) |
+| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | SpendItem CRUD; wire web to auth |
 | Postgres + Alembic; User, AuthIdentity, RefreshSession | SpendItem CRUD |
 | Local auth + Google (`POST /auth/google`) + `GET /users/me` | |
 

@@ -7,7 +7,7 @@ Concise reference for this repo. Locked decisions: [decisions.md](./decisions.md
 | Layer | Choice |
 |---|---|
 | Repo | One git repo |
-| Frontend | **pnpm** only inside `apps/web` (not scaffolded yet) |
+| Frontend | **pnpm** only inside `apps/web` (Vite + shadcn nova) |
 | Python | Root **uv** workspace, one `uv.lock` |
 | Backend style | **Modular monolith** — one main API + shared packages |
 | Database | One **Postgres**, one schema, one Alembic tree under `apps/api` |
@@ -33,7 +33,7 @@ packages/storage/src/storage/
 packages/security/src/security/   argon2 hash, access JWT, hashed refresh, CurrentUserDep
   google.py                Google ID token verify (JWKS)
 
-apps/web/                  React + Vite (later, not a uv member)
+apps/web/                  React + Vite + shadcn (not a uv member)
 
 apps/worker|agent|whatsapp  later separate deployables
 ```
@@ -84,6 +84,7 @@ docker compose up -d
 uv sync --all-packages
 uv run --directory apps/api alembic upgrade head
 uv run --directory apps/api fastapi dev --port 8000
+cd apps/web && pnpm dev
 ```
 
-See root [README.md](../../README.md) for full commands.
+See root [README.md](../../README.md) for full commands. Design tokens: [../design/global.md](../design/global.md).
