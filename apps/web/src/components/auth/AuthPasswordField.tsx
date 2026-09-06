@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState, type ComponentProps } from "react"
 import { Eye, EyeOff } from "lucide-react"
 
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import {
   InputGroup,
   InputGroupAddon,
@@ -12,23 +12,27 @@ import {
 type AuthPasswordFieldProps = {
   id: string
   autoComplete: "current-password" | "new-password"
-}
+  error?: string
+} & ComponentProps<typeof InputGroupInput>
 
 export function AuthPasswordField({
   id,
   autoComplete,
+  error,
+  ...inputProps
 }: AuthPasswordFieldProps) {
   const [visible, setVisible] = useState(false)
 
   return (
-    <Field>
+    <Field data-invalid={error ? true : undefined}>
       <FieldLabel htmlFor={id}>Password</FieldLabel>
       <InputGroup>
         <InputGroupInput
+          aria-invalid={error ? true : undefined}
           autoComplete={autoComplete}
           id={id}
-          name="password"
           type={visible ? "text" : "password"}
+          {...inputProps}
         />
         <InputGroupAddon align="inline-end">
           <InputGroupButton
@@ -37,11 +41,13 @@ export function AuthPasswordField({
               setVisible((current) => !current)
             }}
             size="icon-xs"
+            type="button"
           >
             {visible ? <EyeOff /> : <Eye />}
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
+      {error ? <FieldError>{error}</FieldError> : null}
     </Field>
   )
 }

@@ -34,6 +34,14 @@ client.interceptors.request.use((config) => {
   return config
 })
 
+const skipRefresh = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/google",
+  "/auth/logout",
+  "/auth/refresh",
+]
+
 client.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -43,7 +51,7 @@ client.interceptors.response.use(
       error.response?.status !== 401 ||
       config === undefined ||
       config._retried ||
-      url.includes("/auth/refresh")
+      skipRefresh.some((path) => url.includes(path))
     ) {
       return Promise.reject(error)
     }
