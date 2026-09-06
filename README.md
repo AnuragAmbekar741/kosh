@@ -64,14 +64,8 @@ cd apps/api && uv run fastapi dev --port 8000
 uv run --group dev pytest apps/api/tests -q
 ```
 
-Tests override database and auth configuration before importing the application, use a
-fresh temporary SQLite database per test, and close it after each test. No `.env`,
-Postgres server, or Google credentials are needed. API clients run startup/shutdown
-through a context manager. The suite covers rejected email-only Google linking,
-JWT claims/expiry, Google key-service errors, and startup failures.
-
-SQLite tests do not validate Alembic migrations or PostgreSQL row-lock concurrency;
-those require separate checks against a disposable PostgreSQL database.
+Tests use temporary SQLite databases and run API startup/shutdown. No `.env` or external services needed.
+PostgreSQL migrations and row locks need separate integration tests.
 
 ## Add a dependency
 

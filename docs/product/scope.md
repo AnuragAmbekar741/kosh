@@ -63,11 +63,12 @@ Prefer `GET /users/me` over `GET /users/{id}` for profile.
 
 ## Auth flow (target)
 
-- Access token: ~15 minutes, `Authorization: Bearer`
+- Access token: ~15 minutes, `Authorization: Bearer`; requires `exp` and `sub`; invalid/expired tokens return 401
 - Refresh token: ~30 days, **httpOnly Secure cookie**, stored hashed server-side
 - Refresh rotates and revokes the previous refresh token
-- Google: client POSTs a Google ID token to `/auth/google`; same access + refresh as local login. A new Google subject matching an existing email receives 409 without linking identities or issuing tokens; authenticated account linking is not implemented. Existing Google subjects can still log in.
-- Access JWT validation requires `exp` and `sub`; expired or invalid tokens receive 401. Google key-service connection failures receive 503.
+- Google: POST an ID token to `/auth/google`; receive access + refresh tokens.
+- New Google identity with an existing email: 409; account linking is not supported.
+- Google key-service outage: 503.
 
 ## Document pipeline (target)
 

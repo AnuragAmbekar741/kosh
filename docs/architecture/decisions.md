@@ -82,21 +82,19 @@ Revisit when: ...
 
 **Google sign-in: ID token at `POST /auth/google`**
 
-- Chosen: Client sends a Google ID token; API verifies it (JWKS, `aud=GOOGLE_CLIENT_ID`) and issues the same access JWT + refresh cookie as local login. First Google login creates `User` + `AuthIdentity(provider=google)`; same Google `sub` logs into that user; a new Google subject whose email matches an existing `User` is rejected with 409; identities are never linked by email alone.
-- Rejected: Authorization-code redirect, Auth HTTP microservice, `google-auth` library
-- Why: Matches `POST /auth/login`; `AuthIdentity` already has `provider=google`; PyJWT already verifies JWTs
-- Revisit when: a non-SPA client needs a server redirect, or authenticated identity linking is implemented
+- Chosen: Verify Google tokens with PyJWT (JWKS + client ID); issue local access/refresh tokens. Identify users by Google `sub`; reject email-only matches with 409.
+- Rejected: Email-only linking, redirect flow, separate auth service/library
+- Why: Prevent password access from an unverified local registration carrying over to Google sign-in.
+- Revisit when: Authenticated account linking or server redirects are needed.
 
-**Authentication audit: account linking and test isolation**
+Previously linked accounts are unchanged; review them separately if used with real users.
 
-- Chosen: Reject email-only Google account merges with 409. Existing Google subjects continue to sign in. Use a fresh temporary SQLite database per test and context-managed API clients.
-- Rejected: Automatically attaching Google to unverified local registrations; running tests against the configured development database.
-- Why: A pre-registered password must not retain access to the Google owner's account. Tests must be repeatable and exercise lifespan without touching development data.
-- Revisit when: An explicit linking flow can authenticate ownership of both identities. PostgreSQL integration tests are needed for migrations and concurrent refresh row locks; SQLite tests do not verify those behaviors.
+**Test database**
 
-This prevents new automatic merges. Accounts already linked under the old policy
-are not changed; existing linked identities and sessions need separate review if
-this policy was used with real users.
+- Chosen: Temporary SQLite database per test
+- Rejected: Development database
+- Why: Isolated, repeatable tests
+- Revisit when: Testing PostgreSQL migrations or row locks
 
 ## Open
 
