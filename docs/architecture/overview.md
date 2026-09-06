@@ -34,6 +34,11 @@ packages/security/src/security/   argon2 hash, access JWT, hashed refresh, Curre
   google.py                Google ID token verify (JWKS)
 
 apps/web/                  React + Vite + shadcn (not a uv member)
+  src/app/                 entry, App, global CSS, typeset
+  src/api/client.ts        axios + interceptors
+  src/api/<resource>/      `<resource>.ts` + `<resource>.types.ts` (health live)
+  src/hooks/<resource>/    TanStack Query (`hooks/health/use-health.ts`)
+  src/lib/query-client.ts  QueryClient singleton
 
 apps/worker|agent|whatsapp  later separate deployables
 ```
@@ -75,7 +80,7 @@ The [BUILD_AND_LEARN](../product/BUILD_AND_LEARN.md) guide uses different folder
 | `apps/api/app/auth/models.py` | models in `packages/storage` | worker/agent import storage without HTTP |
 | SQLAlchemy models | SQLModel | course pattern + less dual-model noise |
 | Root pnpm workspace | uv workspace; pnpm only in `apps/web` | Python is the backend |
-| `packages/ui`, `packages/api-client` | deferred | one web app first |
+| `packages/ui`, `packages/api-client` | deferred | axios + RQ inside `apps/web` |
 
 ## Run locally
 
@@ -87,4 +92,4 @@ uv run --directory apps/api fastapi dev --port 8000
 cd apps/web && pnpm dev
 ```
 
-See root [README.md](../../README.md) for full commands. Design tokens: [../design/global.md](../design/global.md).
+Vite proxies `/health`, `/auth`, `/users` to the API (`:8000`). Design tokens: [../design/global.md](../design/global.md).
