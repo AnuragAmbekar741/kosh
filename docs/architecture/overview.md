@@ -40,6 +40,8 @@ apps/worker|agent|whatsapp  later separate deployables
 
 Auth, spend, documents, and overview are **router modules inside `apps/api`**, not separate HTTP services.
 
+Google sign-in identifies existing accounts by Google subject. An email collision with a new subject returns 409; it never attaches an identity to an existing account automatically.
+
 ## High-level diagram
 
 ```mermaid

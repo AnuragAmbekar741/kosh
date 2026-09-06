@@ -71,7 +71,7 @@ Revisit when: ...
 - Rejected: `User.password_hash` on `users`
 - Why: Guide §23; supports OAuth + multiple login methods
 - Revision 435 does **not** backfill old hashes — local DB is disposable; re-register
-- Revisit when: explicit “connect Google” consent is needed before linking
+- Revisit when: an authenticated account-linking feature is implemented
 
 **Identity context in-process**
 
@@ -82,10 +82,21 @@ Revisit when: ...
 
 **Google sign-in: ID token at `POST /auth/google`**
 
-- Chosen: Client sends a Google ID token; API verifies it (JWKS, `aud=GOOGLE_CLIENT_ID`) and issues the same access JWT + refresh cookie as local login. First Google login creates `User` + `AuthIdentity(provider=google)`; same Google `sub` logs into that user; verified Google email matching an existing `User` attaches a second identity.
+- Chosen: Client sends a Google ID token; API verifies it (JWKS, `aud=GOOGLE_CLIENT_ID`) and issues the same access JWT + refresh cookie as local login. First Google login creates `User` + `AuthIdentity(provider=google)`; same Google `sub` logs into that user; a new Google subject whose email matches an existing `User` is rejected with 409; identities are never linked by email alone.
 - Rejected: Authorization-code redirect, Auth HTTP microservice, `google-auth` library
 - Why: Matches `POST /auth/login`; `AuthIdentity` already has `provider=google`; PyJWT already verifies JWTs
-- Revisit when: a non-SPA client needs a server redirect, or we want explicit consent before linking identities
+- Revisit when: a non-SPA client needs a server redirect, or authenticated identity linking is implemented
+
+**Authentication audit: account linking and test isolation**
+
+- Chosen: Reject email-only Google account merges with 409. Existing Google subjects continue to sign in. Use a fresh temporary SQLite database per test and context-managed API clients.
+- Rejected: Automatically attaching Google to unverified local registrations; running tests against the configured development database.
+- Why: A pre-registered password must not retain access to the Google owner's account. Tests must be repeatable and exercise lifespan without touching development data.
+- Revisit when: An explicit linking flow can authenticate ownership of both identities. PostgreSQL integration tests are needed for migrations and concurrent refresh row locks; SQLite tests do not verify those behaviors.
+
+This prevents new automatic merges. Accounts already linked under the old policy
+are not changed; existing linked identities and sessions need separate review if
+this policy was used with real users.
 
 ## Open
 

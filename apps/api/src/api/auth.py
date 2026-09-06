@@ -12,7 +12,6 @@ from security import (
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from storage.crud.user import (
-    add_google_identity,
     consume_and_replace_refresh,
     create_refresh_session,
     create_user_with_google_identity,
@@ -28,6 +27,7 @@ from storage.models import AuthProvider, User
 
 __all__ = [
     "DuplicateEmailError",
+    "GoogleAccountConflictError",
     "GoogleNotConfiguredError",
     "GoogleUnavailableError",
     "InvalidCredentialsError",
@@ -42,6 +42,10 @@ __all__ = [
 
 
 class DuplicateEmailError(Exception):
+    pass
+
+
+class GoogleAccountConflictError(Exception):
     pass
 
 
@@ -86,9 +90,7 @@ def register_local(
 
 def login_google(session: Session, *, id_token: str) -> tuple[User, str, str]:
     claims = verify_google_id_token(id_token)
-    identity = get_identity_by_provider(
-        session, AuthProvider.GOOGLE, claims.subject
-    )
+    identity = get_identity_by_provider(session, AuthProvider.GOOGLE, claims.subject)
     if identity is not None:
         user = get_user_by_id(session, identity.user_id)
         if user is None:
@@ -96,24 +98,24 @@ def login_google(session: Session, *, id_token: str) -> tuple[User, str, str]:
         return _issue(session, user)
 
     email = claims.email.lower()
-    user = get_user_by_email(session, email)
+    if get_user_by_email(session, email) is not None:
+        # A verified Google email does not authenticate an existing local password.
+        raise GoogleAccountConflictError
     try:
-        if user is None:
-            user = create_user_with_google_identity(
-                session,
-                name=claims.name,
-                email=email,
-                subject=claims.subject,
-            )
-        else:
-            # ponytail: Google email_verified proves ownership; local register does not
-            add_google_identity(session, user_id=user.id, subject=claims.subject)
+        user = create_user_with_google_identity(
+            session,
+            name=claims.name,
+            email=email,
+            subject=claims.subject,
+        )
     except IntegrityError:
         session.rollback()
         identity = get_identity_by_provider(
             session, AuthProvider.GOOGLE, claims.subject
         )
         if identity is None:
+            if get_user_by_email(session, email) is not None:
+                raise GoogleAccountConflictError from None
             raise InvalidGoogleTokenError from None
         user = get_user_by_id(session, identity.user_id)
         if user is None:

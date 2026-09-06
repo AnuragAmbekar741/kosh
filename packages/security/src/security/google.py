@@ -3,7 +3,11 @@ from urllib.error import URLError
 
 import jwt
 from jwt import PyJWKClient
-from jwt.exceptions import InvalidTokenError, PyJWKClientError
+from jwt.exceptions import (
+    InvalidTokenError,
+    PyJWKClientConnectionError,
+    PyJWKClientError,
+)
 
 from security.settings import get_settings
 
@@ -60,6 +64,8 @@ def verify_google_id_token(token: str) -> GoogleClaims:
             issuer=_ISSUERS,
             options={"require": ["exp", "iss", "aud", "sub"]},
         )
+    except PyJWKClientConnectionError as exc:
+        raise GoogleUnavailableError from exc
     except (InvalidTokenError, PyJWKClientError) as exc:
         raise InvalidGoogleTokenError from exc
     except (URLError, TimeoutError, OSError) as exc:

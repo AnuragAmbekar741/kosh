@@ -12,6 +12,7 @@ from storage.models import User
 
 from api.auth import (
     DuplicateEmailError,
+    GoogleAccountConflictError,
     GoogleNotConfiguredError,
     GoogleUnavailableError,
     InvalidCredentialsError,
@@ -35,7 +36,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
-def _token_response(user: User, access_token: str, raw: str, response: Response) -> AccessTokenResponse:
+def _token_response(
+    user: User, access_token: str, raw: str, response: Response
+) -> AccessTokenResponse:
     set_refresh_cookie(response, raw)
     return AccessTokenResponse(
         access_token=access_token,
@@ -62,7 +65,9 @@ def register(
 
 
 @router.post("/login")
-def login(body: LoginRequest, response: Response, session: SessionDep) -> AccessTokenResponse:
+def login(
+    body: LoginRequest, response: Response, session: SessionDep
+) -> AccessTokenResponse:
     try:
         user, access_token, raw = login_local(
             session, email=str(body.email), password=body.password
@@ -81,6 +86,11 @@ def google(
 ) -> AccessTokenResponse:
     try:
         user, access_token, raw = login_google(session, id_token=body.id_token)
+    except GoogleAccountConflictError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists; automatic linking is not allowed",
+        ) from None
     except InvalidGoogleTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
