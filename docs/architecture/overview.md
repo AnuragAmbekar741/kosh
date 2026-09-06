@@ -22,7 +22,7 @@ apps/api/src/api/          FastAPI app, routers + auth orchestration
   routers/users.py         GET /users/me
   auth.py                  register/login/google/refresh/logout
   schemas/auth.py          register, login, google, token, UserPublic
-  main.py                  lifespan: env + Postgres ping
+  main.py                  lifespan: env + Postgres ping; CORS from CORS_ORIGINS
 
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession
@@ -35,9 +35,9 @@ packages/security/src/security/   argon2 hash, access JWT, hashed refresh, Curre
 
 apps/web/                  React + Vite + shadcn (not a uv member)
   src/app/                 entry, App, global CSS, typeset
-  src/api/client.ts        axios + interceptors
-  src/api/<resource>/      `<resource>.ts` + `<resource>.types.ts` (health live)
-  src/hooks/<resource>/    TanStack Query (`hooks/health/use-health.ts`)
+  src/api/client.ts        axios + interceptors (`VITE_API_URL`, credentials)
+  src/api/<resource>/      `<resource>.ts` + `<resource>.types.ts` (health, auth, users)
+  src/hooks/<resource>/    TanStack Query (`hooks/auth/use-auth.ts`, `hooks/users/use-me.ts`)
   src/lib/query-client.ts  QueryClient singleton
 
 apps/worker|agent|whatsapp  later separate deployables
@@ -92,4 +92,4 @@ uv run --directory apps/api fastapi dev --port 8000
 cd apps/web && pnpm dev
 ```
 
-Vite proxies `/health`, `/auth`, `/users` to the API (`:8000`). Design tokens: [../design/global.md](../design/global.md).
+`apps/web/.env` sets `VITE_API_URL` (empty = Vite proxy) and `VITE_GOOGLE_CLIENT_ID`. API CORS: `CORS_ORIGINS` (default localhost/127.0.0.1:5173) with credentials. Design tokens: [../design/global.md](../design/global.md).

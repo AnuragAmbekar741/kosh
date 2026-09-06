@@ -30,7 +30,7 @@ src/components/ui/             shadcn
 src/components/<feature-kebab>/PascalFile.tsx
 ```
 
-Example: `src/api/health/health.ts` + `health.types.ts`, hooks in `src/hooks/health/`. Auth pages are UI-only; next: `src/api/auth/` + `src/hooks/auth/` when wiring.
+Example: `src/api/health/health.ts` + `health.types.ts`, hooks in `src/hooks/health/`. Auth: `src/api/auth/` + `src/hooks/auth/use-auth.ts`; session `src/hooks/users/use-me.ts`.
 
 No barrel `index.ts` in `api/` or `hooks/`. Import the file (`@/api/health/health`, `@/hooks/health/use-health`).
 

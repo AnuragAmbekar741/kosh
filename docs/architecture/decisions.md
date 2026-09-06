@@ -112,12 +112,33 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Why: Isolated, repeatable tests
 - Revisit when: Testing PostgreSQL migrations or row locks
 
+**CORS: explicit origins + credentials**
+
+- Chosen: `CORSMiddleware` with `CORS_ORIGINS` (default `http://localhost:5173` and `http://127.0.0.1:5173`) and `allow_credentials=True`. Empty `VITE_API_URL` still uses the Vite proxy.
+- Rejected: `allow_origins=["*"]` with credentials; SameSite=None for local
+- Why: Refresh cookie is credentialed; wildcard origins cannot pair with credentials. Localhost ports are same-site.
+- Revisit when: web and API are on different sites (needs `SameSite=None; Secure`)
+
+**Web auth forms: RHF + zod**
+
+- Chosen: `react-hook-form` + `@hookform/resolvers` + zod; `FieldError` for field and API `detail`
+- Rejected: Uncontrolled `preventDefault` forms; sonner for auth errors
+- Why: Matches existing Field `errors` shape; password min 8 only on signup (API `RegisterRequest`)
+- Revisit when: shared form primitives or toasts are needed beyond auth
+
+**Google on the web: GIS ID token**
+
+- Chosen: Load `accounts.google.com/gsi/client`, `renderButton`, POST `{ id_token }` to `/auth/google`. Hide the control when `VITE_GOOGLE_CLIENT_ID` is empty.
+- Rejected: `@react-oauth/google`, redirect OAuth, custom-button click hacks
+- Why: Same ID-token contract as the API; no extra OAuth library
+- Revisit when: One Tap or a custom-branded button is required
+
 ## Open
 
 | Topic | Notes |
 |---|---|
 | Makefile vs raw commands | Root `makefile` exists; not required for agents |
-| `apps/web` timing | Auth pages UI-only. Health hook unused on those routes. Auth hooks next. |
+| Dashboard chrome | `/` is a signed-in stub (email + logout). SpendItem UI next. |
 | `packages/ui` / `api-client` | Defer until second consumer or OpenAPI codegen need |
 
 ## Rejected / deferred (v2+)
@@ -129,3 +150,10 @@ Previously linked accounts are unchanged; review them separately if used with re
 | Splitwise | After v1 ledger stable |
 | Turbo monorepo | uv + pnpm split is enough for v1 |
 | Microservices | See locked row above |
+
+**Auth background motion**
+
+- Chosen: Framer Motion for a slow, pausable contour background, as requested.
+- Rejected: More pulsing blobs or a new visual identity.
+- Why: Refine the current split layout with quiet motion; stop for reduced motion and hidden panels.
+- Revisit when: Motion is shared by other surfaces.
