@@ -1,33 +1,17 @@
-import { Button } from "@/components/ui/button"
-import { useGetHealth } from "@/hooks/health/use-health"
+import { BrowserRouter, Navigate, Route, Routes } from "react-router"
+
+import { LoginPage } from "@/pages/auth/LoginPage"
+import { SignupPage } from "@/pages/auth/SignupPage"
 
 export function App() {
-  const health = useGetHealth()
-  const healthLabel = health.isLoading
-    ? "checking…"
-    : health.isError
-      ? "unavailable"
-      : health.data?.status
-  const refreshing = health.isFetching && !health.isLoading
-
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <p>API health: {healthLabel}</p>
-          {refreshing ? (
-            <p className="text-muted-foreground">refreshing…</p>
-          ) : null}
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<LoginPage />} path="/login" />
+        <Route element={<SignupPage />} path="/signup" />
+        <Route element={<Navigate replace to="/login" />} path="/" />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
