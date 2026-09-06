@@ -71,7 +71,7 @@ Revisit when: ...
 - Rejected: `User.password_hash` on `users`
 - Why: Guide §23; supports OAuth + multiple login methods
 - Revision 435 does **not** backfill old hashes — local DB is disposable; re-register
-- Revisit when: explicit “connect Google” consent is needed before linking
+- Revisit when: an authenticated account-linking feature is implemented
 
 **Identity context in-process**
 
@@ -82,10 +82,19 @@ Revisit when: ...
 
 **Google sign-in: ID token at `POST /auth/google`**
 
-- Chosen: Client sends a Google ID token; API verifies it (JWKS, `aud=GOOGLE_CLIENT_ID`) and issues the same access JWT + refresh cookie as local login. First Google login creates `User` + `AuthIdentity(provider=google)`; same Google `sub` logs into that user; verified Google email matching an existing `User` attaches a second identity.
-- Rejected: Authorization-code redirect, Auth HTTP microservice, `google-auth` library
-- Why: Matches `POST /auth/login`; `AuthIdentity` already has `provider=google`; PyJWT already verifies JWTs
-- Revisit when: a non-SPA client needs a server redirect, or we want explicit consent before linking identities
+- Chosen: Verify Google tokens with PyJWT (JWKS + client ID); issue local access/refresh tokens. Identify users by Google `sub`; reject email-only matches with 409.
+- Rejected: Email-only linking, redirect flow, separate auth service/library
+- Why: Prevent password access from an unverified local registration carrying over to Google sign-in.
+- Revisit when: Authenticated account linking or server redirects are needed.
+
+Previously linked accounts are unchanged; review them separately if used with real users.
+
+**Test database**
+
+- Chosen: Temporary SQLite database per test
+- Rejected: Development database
+- Why: Isolated, repeatable tests
+- Revisit when: Testing PostgreSQL migrations or row locks
 
 ## Open
 

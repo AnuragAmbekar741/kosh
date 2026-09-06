@@ -1,5 +1,4 @@
 from storage.crud.user import (
-    add_google_identity,
     consume_and_replace_refresh,
     create_refresh_session,
     create_user_with_google_identity,
@@ -13,7 +12,6 @@ from storage.crud.user import (
 )
 
 __all__ = [
-    "add_google_identity",
     "consume_and_replace_refresh",
     "create_refresh_session",
     "create_user_with_google_identity",

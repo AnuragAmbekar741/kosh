@@ -64,6 +64,9 @@ cd apps/api && uv run fastapi dev --port 8000
 uv run --group dev pytest apps/api/tests -q
 ```
 
+Tests use temporary SQLite databases and run API startup/shutdown. No `.env` or external services needed.
+PostgreSQL migrations and row locks need separate integration tests.
+
 ## Add a dependency
 
 ```bash

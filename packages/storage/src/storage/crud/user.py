@@ -6,7 +6,6 @@ from sqlmodel import Session, select
 from storage.models.user import AuthIdentity, AuthProvider, RefreshSession, User
 
 __all__ = [
-    "add_google_identity",
     "consume_and_replace_refresh",
     "create_refresh_session",
     "create_user_with_google_identity",
@@ -78,20 +77,6 @@ def create_user_with_google_identity(
     session.commit()
     session.refresh(user)
     return user
-
-
-def add_google_identity(
-    session: Session, *, user_id: UUID, subject: str
-) -> AuthIdentity:
-    identity = AuthIdentity(
-        user_id=user_id,
-        provider=AuthProvider.GOOGLE,
-        provider_subject=subject,
-    )
-    session.add(identity)
-    session.commit()
-    session.refresh(identity)
-    return identity
 
 
 def create_refresh_session(

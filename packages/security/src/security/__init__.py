@@ -68,7 +68,12 @@ def create_access_token(user_id: UUID) -> str:
 def decode_access_token(token: str) -> UUID:
     settings = get_settings()
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[_ALGORITHM])
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=[_ALGORITHM],
+            options={"require": ["exp", "sub"]},
+        )
     except InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,7 +82,7 @@ def decode_access_token(token: str) -> UUID:
     sub = payload.get("sub")
     try:
         return UUID(sub)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
