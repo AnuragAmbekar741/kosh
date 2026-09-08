@@ -14,6 +14,7 @@ This file owns tokens and visual rules, and maps them to
 | `surface-3` | `--muted` |
 | `hairline` | `--border`, `--input` |
 | `primary` | `--primary` |
+| `primary gradient` | `--primary-gradient` |
 | `on-primary` | `--primary-foreground` |
 | `ink-subtle` | `--muted-foreground` |
 | `primary-focus` | `--ring` |
@@ -21,6 +22,11 @@ This file owns tokens and visual rules, and maps them to
 
 Dark is the default. Light uses inverse tokens. Tailwind radius utilities are derived
 from `--radius`; their suffixes do not directly match the design token names.
+Primary controls use the solid `--primary` blue in both themes. The gradient is
+reserved for large brand surfaces such as the auth panel.
+The shared primary is muted cornflower `#7292D0`, used as the terminal panel
+gradient stop, with near-black foreground text for accessible contrast. App
+headings use Raleway; UI and body copy remain Geist.
 
 ## Components
 

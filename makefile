@@ -1,4 +1,4 @@
-.PHONY: help db-up db-down migrate migrate-new test api setup git-config
+.PHONY: help db-up db-down migrate migrate-new test api web setup git-config
 
 help:
 	@grep -E '^[a-zA-Z_-]+:' Makefile | cut -d: -f1 | sort
@@ -21,6 +21,9 @@ test:
 
 api:
 	uv run --directory apps/api fastapi dev --port 8000
+
+web:
+	pnpm --dir apps/web dev
 
 setup:
 	cp -n .env.example .env || true

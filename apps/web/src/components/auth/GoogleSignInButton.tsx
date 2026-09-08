@@ -75,6 +75,7 @@ export function GoogleSignInButton({
       return
     }
     let cancelled = false
+    let renderFrame: number | undefined
     let resizeObserver: ResizeObserver | undefined
     const host = hostRef.current
     loadGis()
@@ -92,7 +93,7 @@ export function GoogleSignInButton({
         })
         let previousWidth = 0
         const render = () => {
-          const width = Math.min(352, Math.floor(host.clientWidth))
+          const width = Math.floor(host.clientWidth)
           if (!width || width === previousWidth) return
           previousWidth = width
           host.replaceChildren()
@@ -104,7 +105,10 @@ export function GoogleSignInButton({
           })
         }
         render()
-        resizeObserver = new ResizeObserver(render)
+        resizeObserver = new ResizeObserver(() => {
+          cancelAnimationFrame(renderFrame ?? 0)
+          renderFrame = requestAnimationFrame(render)
+        })
         resizeObserver.observe(host)
       })
       .catch(() => {
@@ -112,6 +116,7 @@ export function GoogleSignInButton({
       })
     return () => {
       cancelled = true
+      cancelAnimationFrame(renderFrame ?? 0)
       resizeObserver?.disconnect()
     }
   }, [clientId])

@@ -84,12 +84,15 @@ The [BUILD_AND_LEARN](../product/BUILD_AND_LEARN.md) guide uses different folder
 
 ## Run locally
 
+Dev Postgres is **Neon** (`kosh`). Set `DATABASE_URL` in `.env` to the **direct** host (`postgresql+psycopg://…?sslmode=require`, no `-pooler`). Skip Docker unless you want a local fallback.
+
 ```bash
-docker compose up -d
 uv sync --all-packages
 uv run --directory apps/api alembic upgrade head
 uv run --directory apps/api fastapi dev --port 8000
 cd apps/web && pnpm dev
 ```
+
+Optional local Postgres: `docker compose up -d` and the localhost URL in `.env.example`.
 
 `apps/web/.env` sets `VITE_API_URL` (empty = Vite proxy) and `VITE_GOOGLE_CLIENT_ID`. API CORS: `CORS_ORIGINS` (default localhost/127.0.0.1:5173) with credentials. Design tokens: [../design/global.md](../design/global.md).

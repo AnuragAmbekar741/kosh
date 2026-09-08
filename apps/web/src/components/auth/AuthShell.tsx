@@ -1,4 +1,5 @@
 import type { FormEventHandler, ReactNode } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 import type { LucideIcon } from "lucide-react"
 import { Wallet } from "lucide-react"
 import { Link } from "react-router"
@@ -39,10 +40,11 @@ export function AuthShell({
   onGoogleCredential,
 }: AuthShellProps) {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  const reduceMotion = useReducedMotion()
 
   return (
-    <div className="grid min-h-svh bg-background lg:grid-cols-2">
-      <div className="flex min-h-svh min-w-0 flex-col px-6 py-6 md:px-10 md:py-8">
+    <div className="grid min-h-svh bg-background lg:h-svh lg:grid-cols-[44%_56%] lg:overflow-hidden">
+      <div className="flex min-h-svh min-w-0 flex-col px-6 py-6 sm:px-8 md:px-12 md:py-8 lg:min-h-0 lg:overflow-y-auto xl:px-16">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -63,8 +65,17 @@ export function AuthShell({
             </Button>
           </div>
         </header>
-        <div className="flex flex-1 flex-col items-center justify-center py-12">
-          <div className="flex w-full max-w-[22rem] min-w-0 flex-col items-center gap-8">
+        <motion.main
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-1 flex-col items-center justify-center py-8 md:py-10"
+          initial={reduceMotion ? false : { opacity: 0, y: -20 }}
+          transition={{
+            duration: reduceMotion ? 0 : 0.45,
+            ease: [0.22, 1, 0.36, 1],
+            type: "tween",
+          }}
+        >
+          <div className="flex w-full max-w-sm min-w-0 flex-col items-center gap-8">
             <div className="flex flex-col items-center gap-4 text-center">
               <span className="flex size-11 items-center justify-center rounded-xl border border-border">
                 <Icon className="size-5" strokeWidth={1.25} />
@@ -103,7 +114,7 @@ export function AuthShell({
               </div>
             ) : null}
           </div>
-        </div>
+        </motion.main>
         <p className="text-xs text-muted-foreground">© 2026 Finance</p>
       </div>
       <AuthPanel />

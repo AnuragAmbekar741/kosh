@@ -1,103 +1,75 @@
-import { useEffect, useState } from "react"
-import { useInView, useReducedMotion } from "framer-motion"
-import { useAnimate } from "framer-motion/mini"
-import { Pause, Play } from "lucide-react"
+import { motion, useReducedMotion } from "framer-motion"
 
-import { Button } from "@/components/ui/button"
+const contourLines = Array.from({ length: 18 }, (_, index) => ({
+  id: `contour-${index}`,
+  d: `M -160 ${410 + index * 24} C ${80 - index * 2} ${700 + index * 5}, ${250 + index * 4} ${140 + index * 17}, ${500 + index * 3} ${370 + index * 11} S ${720 - index * 4} ${690 - index * 9}, 960 ${440 - index * 5}`,
+}))
 
 export function AuthPanel() {
-  const [scope, animate] = useAnimate()
-  const inView = useInView(scope)
   const reduceMotion = useReducedMotion()
-  const [paused, setPaused] = useState(false)
-  const [visible, setVisible] = useState(true)
-
-  useEffect(() => {
-    const updateVisibility = () => setVisible(!document.hidden)
-    updateVisibility()
-    document.addEventListener("visibilitychange", updateVisibility)
-    return () =>
-      document.removeEventListener("visibilitychange", updateVisibility)
-  }, [])
-
-  useEffect(() => {
-    if (!inView || !visible || paused || reduceMotion) return
-    const animation = animate(
-      "svg",
-      {
-        transform: [
-          "translate(0px, 0px) rotate(0deg)",
-          "translate(-18px, 14px) rotate(-2deg)",
-          "translate(0px, 0px) rotate(0deg)",
-        ],
-      },
-      { duration: 28, repeat: Infinity, ease: "easeInOut" }
-    )
-    return () => animation.stop()
-  }, [animate, inView, paused, reduceMotion, visible])
 
   return (
-    <aside className="relative isolate hidden min-h-svh overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
-      <div
-        ref={scope}
+    <aside className="relative isolate hidden min-h-svh overflow-hidden bg-primary bg-[image:var(--primary-gradient)] text-slate-950 lg:flex lg:min-h-0 lg:flex-col lg:p-10 xl:p-20">
+      <div className="relative z-10 max-w-xl">
+        <p className="mb-6 text-xs font-medium tracking-[0.18em] text-slate-600 uppercase">
+          Personal finance, made clear
+        </p>
+        <h2 className="text-[clamp(3.25rem,5vw,5.75rem)] leading-[0.94] font-light tracking-[-0.045em] whitespace-nowrap">
+          Know your money.
+        </h2>
+        <p className="mt-7 max-w-md text-base leading-relaxed text-slate-600">
+          Understand where your money goes, spot the patterns that matter, and
+          make calmer decisions every day.
+        </p>
+      </div>
+
+      <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        animate={
+          reduceMotion
+            ? undefined
+            : {
+                x: [0, -12, 8, 0],
+                y: [0, 10, -6, 0],
+                rotate: [0, -1.5, 1, 0],
+                scale: [1, 1.025, 0.99, 1],
+              }
+        }
+        className="pointer-events-none absolute -inset-16 -z-10 origin-center"
+        transition={{ duration: 28, ease: "easeInOut", repeat: Infinity }}
       >
-        <div className="absolute inset-0 bg-linear-to-br from-primary via-primary to-ring/30" />
         <svg
-          className="absolute inset-0 size-full text-primary-foreground/12"
-          viewBox="0 0 700 800"
-          preserveAspectRatio="xMidYMid slice"
+          className="size-full"
           fill="none"
+          preserveAspectRatio="xMidYMid slice"
+          viewBox="0 0 800 800"
         >
-          {Array.from({ length: 18 }, (_, index) => (
+          <defs>
+            <linearGradient
+              id="auth-line-gradient"
+              gradientUnits="userSpaceOnUse"
+              x1="80"
+              x2="760"
+              y1="240"
+              y2="640"
+            >
+              <stop stopColor="var(--auth-panel-line-start)" />
+              <stop offset="0.52" stopColor="var(--auth-panel-line-mid)" />
+              <stop offset="1" stopColor="var(--auth-panel-line-end)" />
+            </linearGradient>
+          </defs>
+          {contourLines.map((line) => (
             <path
-              key={index}
-              d={`M -180 ${460 + index * 22} C 90 ${690 + index * 18}, 190 ${130 + index * 22}, 880 ${300 + index * 22}`}
-              stroke="currentColor"
-              strokeWidth="0.7"
+              key={line.id}
+              d={line.d}
+              stroke="url(#auth-line-gradient)"
+              strokeOpacity="0.48"
+              strokeWidth="1.1"
               vectorEffect="non-scaling-stroke"
             />
           ))}
         </svg>
-      </div>
-      <div className="relative max-w-md pt-8 xl:pt-12">
-        <h2 className="text-5xl leading-[1.12] font-light tracking-[-0.035em] text-balance xl:text-6xl">
-          A little clarity.
-          <br />
-          Every day.
-        </h2>
-        <p className="mt-6 max-w-64 text-base leading-relaxed font-light text-primary-foreground/75">
-          A place for the little things.
-          <br />A clearer view of the whole.
-        </p>
-      </div>
-      <div className="relative mt-16 flex items-end justify-between gap-6">
-        <p className="max-w-56 text-sm leading-relaxed font-normal text-primary-foreground/65">
-          Your spending, in perspective.
-        </p>
-        {!reduceMotion && (
-          <Button
-            aria-label={
-              paused
-                ? "Play background animation"
-                : "Pause background animation"
-            }
-            aria-pressed={paused}
-            className="size-11 shrink-0 rounded-full text-primary-foreground/70 hover:bg-primary-foreground/5 hover:text-primary-foreground focus-visible:ring-primary-foreground/50"
-            onClick={() => setPaused((current) => !current)}
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            {paused ? (
-              <Play className="size-3.5" strokeWidth={1.5} />
-            ) : (
-              <Pause className="size-3.5" strokeWidth={1.5} />
-            )}
-          </Button>
-        )}
-      </div>
+      </motion.div>
     </aside>
   )
 }
