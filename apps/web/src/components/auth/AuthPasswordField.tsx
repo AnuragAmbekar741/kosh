@@ -24,9 +24,9 @@ export function AuthPasswordField({
   const [visible, setVisible] = useState(false)
 
   return (
-    <Field data-invalid={error ? true : undefined}>
+    <Field>
       <FieldLabel htmlFor={id}>Password</FieldLabel>
-      <InputGroup>
+      <InputGroup className="has-[[data-slot=input-group-control]:focus-visible]:border-foreground/40 has-[[data-slot=input-group-control]:focus-visible]:ring-foreground/10">
         <InputGroupInput
           aria-invalid={error ? true : undefined}
           autoComplete={autoComplete}

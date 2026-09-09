@@ -41,5 +41,6 @@ skills-lock.json
 
 # Impeccable (local only; committed design docs live in docs/design/)
 .impeccable/
+.firecrawl/
 /DESIGN.md
 /PRODUCT.md
