@@ -6,6 +6,7 @@ UX and UI docs for `apps/web`. Product scope and API contracts live in [../produ
 |---|---|
 | [global.md](./global.md) | Tokens, Linear component contracts, typeset preset |
 | [auth.md](./auth.md) | Login / signup routes and UI-only status |
+| [dashboard.md](./dashboard.md) | Signed-in shell and document intake |
 
 Root `PRODUCT.md` / `DESIGN.md` are gitignored Impeccable copies of this folder. Do not invent a second system.
 

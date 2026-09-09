@@ -8,13 +8,15 @@ This file owns tokens and visual rules, and maps them to
 | Design token | CSS variable |
 |---|---|
 | `canvas` | `--background` |
+| `document-canvas` | `--document-canvas` |
 | `ink` | `--foreground` |
 | `surface-1` | `--card`, `--popover`, `--sidebar` |
 | `surface-2` | `--secondary`, `--accent` |
 | `surface-3` | `--muted` |
 | `hairline` | `--border`, `--input` |
 | `primary` | `--primary` |
-| `primary gradient` | `--primary-gradient` |
+| accessible accent foreground | `--brand-ink` |
+| `auth page background` | `--auth-page-background` |
 | `on-primary` | `--primary-foreground` |
 | `ink-subtle` | `--muted-foreground` |
 | `primary-focus` | `--ring` |
@@ -23,10 +25,14 @@ This file owns tokens and visual rules, and maps them to
 Dark is the default. Light uses inverse tokens. Tailwind radius utilities are derived
 from `--radius`; their suffixes do not directly match the design token names.
 Primary controls use the solid `--primary` blue in both themes. The gradient is
-reserved for large brand surfaces such as the auth panel.
-The shared primary is muted cornflower `#7292D0`, used as the terminal panel
-gradient stop, with near-black foreground text for accessible contrast. App
-headings use Raleway; UI and body copy remain Geist.
+reserved for the auth canvas and uses tonal values from the same ice-blue
+family.
+Document intake uses a dedicated flat, cool-tinted canvas in both themes. This
+keeps the task surface calm without borrowing the auth gradient or waveform art.
+The shared primary is ice blue `#DAEFFA`, with near-black foreground text for
+accessible contrast. On light surfaces, links and accent glyphs use the darker
+same-hue `--brand-ink`; dark surfaces map it back to ice blue. Geist carries
+headings, UI, and body copy.
 
 ## Components
 
@@ -35,7 +41,7 @@ Use shadcn primitives in `apps/web/src/components/ui/`.
 
 ## Typeset
 
-Installed, not applied. Geist is the app font; Raleway / Nunito Sans are scoped to
+Geist is the app font. Raleway / Nunito Sans are scoped to
 `.typeset-changelog` for a future markdown surface:
 
 ```tsx

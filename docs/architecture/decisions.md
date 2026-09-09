@@ -49,7 +49,7 @@ Revisit when: ...
 | 33 | HTTP layer | FastAPI routers + `api/auth.py` functions; no controller or repository classes |
 | 34 | API startup | Load `DATABASE_URL` + `JWT_SECRET` and ping Postgres in lifespan; refuse to serve if either fails |
 | 35 | Web HTTP client | **Axios + TanStack Query** in `apps/web`; types in `src/api/<resource>/<resource>.types.ts` |
-| 36 | Web design craft | **Impeccable** locally (gitignored root files); committed visual system is `docs/design/` + Linear dark + calm cornflower blue |
+| 36 | Web design craft | **Impeccable** locally (gitignored root files); committed visual system is `docs/design/` + Linear dark + ice blue |
 | 37 | Dev Postgres host | **Neon** project `kosh` (direct `DATABASE_URL`); Docker Postgres is optional fallback |
 
 ### Locked detail rows
@@ -161,14 +161,14 @@ Previously linked accounts are unchanged; review them separately if used with re
 
 **Auth background motion**
 
-- Chosen: Slow multi-blue contour lines over the auth gradient, animated as one transform-only layer.
-- Rejected: Dashboard cards, tile fields, and a visible pause control.
-- Why: Keep the panel calm and visually full without competing with the form; reduced motion keeps the artwork static.
+- Chosen: One theme-aware auth canvas with the brand story on the left and form on the right. A low-contrast ice-blue waveform crosses both sides without a dividing border; the form enters as a short, staggered Framer Motion sequence and reduced-motion users receive a static composition.
+- Rejected: The previous light panel on the right; WebGL shaders, particle vortexes, collision effects, and copied component-library backgrounds.
+- Why: The waveform suggests bills and spending moving into an organized record while keeping authentication calm, lightweight, and readable. Reduced motion keeps the artwork static.
 - Revisit when: Motion is shared by other surfaces.
 
 **Web heading type**
 
-- Chosen: Raleway for headings; Geist for UI and body copy.
-- Rejected: Geist-only hierarchy; adding Lexend or another new font dependency.
-- Why: Raleway adds calm, distinctive geometry and is already bundled in the web app.
-- Revisit when: The product receives a broader brand or typography redesign.
+- Chosen: Geist for headings, UI, and body copy. Raleway and Nunito Sans remain scoped to the future changelog typeset surface only.
+- Rejected: Mixed app-chrome families and adding another font dependency.
+- Why: The approved brand reference specifies Geist throughout the product UI, and a single family creates a clearer foundation for future screens.
+- Revisit when: The product receives a broader typography redesign.
