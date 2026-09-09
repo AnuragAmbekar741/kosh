@@ -137,8 +137,8 @@ Previously linked accounts are unchanged; review them separately if used with re
 **Google on the web: GIS ID token**
 
 - Chosen: Load `accounts.google.com/gsi/client`, `renderButton`, POST `{ id_token }` to `/auth/google`. Hide the control when `VITE_GOOGLE_CLIENT_ID` is empty.
-- Rejected: `@react-oauth/google`, redirect OAuth, custom-button click hacks
-- Why: Same ID-token contract as the API; no extra OAuth library
+- Rejected: `@react-oauth/google`, redirect OAuth, and custom-button click hacks.
+- Why: Same ID-token contract as the API; no extra OAuth library. Google does not expose an API that lets a custom web button programmatically initiate the GIS button flow, so the official renderer remains the reliable path. Its supported theme, shape, text, alignment, and width options are configured to match the app as closely as Google branding rules allow.
 - Revisit when: One Tap or a custom-branded button is required
 
 ## Open

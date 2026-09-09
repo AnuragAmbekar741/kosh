@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react"
 
+import { useTheme } from "@/components/theme-provider"
+
 type GoogleCredentialResponse = {
   credential?: string
 }
@@ -12,6 +14,8 @@ type GoogleIdApi = {
   renderButton: (
     parent: HTMLElement,
     options: {
+      logo_alignment?: string
+      shape?: string
       theme?: string
       size?: string
       text?: string
@@ -63,8 +67,15 @@ export function GoogleSignInButton({
   disabled,
 }: GoogleSignInButtonProps) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  const { theme } = useTheme()
   const hostRef = useRef<HTMLDivElement>(null)
   const onCredentialRef = useRef(onCredential)
+  const googleButtonTheme =
+    theme === "light" ||
+    (theme === "system" &&
+      !window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ? "outline"
+      : "filled_black"
 
   useEffect(() => {
     onCredentialRef.current = onCredential
@@ -98,8 +109,10 @@ export function GoogleSignInButton({
           previousWidth = width
           host.replaceChildren()
           window.google?.accounts.id.renderButton(host, {
-            theme: "filled_black",
+            logo_alignment: "left",
+            shape: "rectangular",
             size: "large",
+            theme: googleButtonTheme,
             text: "continue_with",
             width,
           })
@@ -119,7 +132,7 @@ export function GoogleSignInButton({
       cancelAnimationFrame(renderFrame ?? 0)
       resizeObserver?.disconnect()
     }
-  }, [clientId])
+  }, [clientId, googleButtonTheme])
 
   if (!clientId) {
     return null
