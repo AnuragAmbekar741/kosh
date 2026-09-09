@@ -72,7 +72,6 @@ function SelectedFileRow({ file, onRemove }: SelectedFileRowProps) {
       </span>
       <Button
         aria-label={`Remove ${file.name}`}
-        className="size-11"
         onClick={() => onRemove(fileKey(file))}
         size="icon"
         title={`Remove ${file.name}`}
@@ -172,7 +171,7 @@ export function DocumentUpload() {
               Images and PDFs are supported
             </p>
             <Button
-              className="mt-5 min-h-11 min-w-32"
+              className="mt-5 min-w-32"
               onClick={() => uploadInput.current?.click()}
               type="button"
             >
@@ -193,16 +192,11 @@ export function DocumentUpload() {
                 </p>
               </div>
             </div>
-            <Button
-              className="h-11"
-              onClick={() => uploadInput.current?.click()}
-              type="button"
-            >
+            <Button onClick={() => uploadInput.current?.click()} type="button">
               <Upload data-icon="inline-start" />
               Choose files
             </Button>
             <Button
-              className="h-11"
               onClick={() => cameraInput.current?.click()}
               type="button"
               variant="outline"
@@ -264,7 +258,6 @@ export function DocumentUpload() {
                     {files.length === 1 ? "document" : "documents"}
                   </p>
                   <Button
-                    className="min-h-11"
                     onClick={() => uploadInput.current?.click()}
                     size="sm"
                     type="button"
@@ -305,7 +298,7 @@ export function DocumentUpload() {
                       initial={{ opacity: 0 }}
                     >
                       <Button
-                        className="mt-4 h-11 w-full"
+                        className="mt-4 w-full"
                         onClick={() => setIsReady(true)}
                         type="button"
                       >

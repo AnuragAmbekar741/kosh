@@ -54,7 +54,6 @@ export function HomePage() {
             </span>
             <Button
               aria-label="Log out"
-              className="size-11"
               disabled={logout.isPending}
               onClick={() => {
                 logout.mutate(undefined, {

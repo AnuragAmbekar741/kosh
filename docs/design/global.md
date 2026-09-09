@@ -39,6 +39,12 @@ headings, UI, and body copy.
 Use shadcn primitives in `apps/web/src/components/ui/`.
 [auth.md](./auth.md) describes the implemented login and signup screens.
 
+### Buttons
+
+Buttons use more horizontal than vertical space so actions read as sleek controls rather than square tiles. Text buttons use 16px horizontal padding at the default size and compact to 36px tall from `sm` upward. Below `sm`, the same controls retain a 44px touch target. Large buttons are 40px tall on desktop with 20px horizontal padding. Icon-only buttons remain square because the shape communicates a single glyph target, but they follow the same 44px mobile and compact desktop sizing rule.
+
+Full-width form actions may use a 40px desktop height while keeping 44px on mobile. Feature code should select a shared size variant before adding local height or padding overrides.
+
 ## Typeset
 
 Geist is the app font. Raleway / Nunito Sans are scoped to
