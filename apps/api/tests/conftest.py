@@ -39,6 +39,36 @@ def db_engine(tmp_path, monkeypatch) -> Iterator[Engine]:
         security_settings.cache_clear()
 
 
+@pytest.fixture(autouse=True)
+def blob_store(monkeypatch) -> dict[str, bytes]:
+    import api.documents as documents_mod
+    import storage.blobs as blobs_mod
+    import worker.pipeline as pipeline_mod
+
+    store: dict[str, bytes] = {}
+
+    def put_bytes(key: str, data: bytes, content_type: str) -> None:
+        store[key] = data
+
+    def get_bytes(key: str) -> bytes:
+        if key not in store:
+            from storage.blobs import BlobError
+
+            raise BlobError("missing")
+        return store[key]
+
+    def delete_bytes(key: str) -> None:
+        store.pop(key, None)
+
+    monkeypatch.setattr(blobs_mod, "put_bytes", put_bytes)
+    monkeypatch.setattr(blobs_mod, "get_bytes", get_bytes)
+    monkeypatch.setattr(blobs_mod, "delete_bytes", delete_bytes)
+    monkeypatch.setattr(documents_mod, "put_bytes", put_bytes)
+    monkeypatch.setattr(documents_mod, "delete_bytes", delete_bytes)
+    monkeypatch.setattr(pipeline_mod, "get_bytes", get_bytes)
+    return store
+
+
 @pytest.fixture
 def client(db_engine) -> Iterator[TestClient]:
     from api.main import app

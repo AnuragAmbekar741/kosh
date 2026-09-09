@@ -20,18 +20,32 @@ apps/api/src/api/          FastAPI app, routers + auth orchestration
   routers/health.py        GET /health
   routers/auth.py          register, login, google, refresh, logout
   routers/users.py         GET /users/me
-  auth.py                  register/login/google/refresh/logout
-  schemas/auth.py          register, login, google, token, UserPublic
+  routers/spend.py         SpendItem CRUD
+  routers/documents.py     upload, list, detail, confirm
+  documents.py             sniff MIME, hash, store original bytes
+  schemas/spend.py         create, update, public
+  schemas/documents.py     upload and detail responses
   main.py                  lifespan: env + Postgres ping; CORS from CORS_ORIGINS
 
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession
+  models/spend.py          SpendItem
+  models/document.py       Document, ExtractionAttempt
   crud/user.py             identity queries
-  settings.py              DATABASE_URL
+  crud/spend.py            ledger + draft upsert
+  crud/document.py         upload metadata, claim_next, reclaim_stuck
+  blobs.py                 S3 put/get (Neon Object Storage, path-style)
+  settings.py              DATABASE_URL, documents bucket
   database.py              engine, ping
 
 packages/security/src/security/   argon2 hash, access JWT, hashed refresh, CurrentUserDep
   google.py                Google ID token verify (JWKS)
+
+apps/worker/               document extraction loop
+  src/worker/main.py       reclaim + claim + process
+  src/worker/pipeline.py   status machine, drafts
+  src/worker/extract.py    limits, normalize, OpenRouter
+  src/worker/schemas.py    ReceiptExtraction | StatementExtraction
 
 apps/web/                  React + Vite + shadcn (not a uv member)
   src/app/                 entry, App, global CSS, typeset
@@ -40,7 +54,7 @@ apps/web/                  React + Vite + shadcn (not a uv member)
   src/hooks/<resource>/    TanStack Query (`hooks/auth/use-auth.ts`, `hooks/users/use-me.ts`)
   src/lib/query-client.ts  QueryClient singleton
 
-apps/worker|agent|whatsapp  later separate deployables
+apps/worker|agent|whatsapp  worker exists; agent/whatsapp later
 ```
 
 Auth, spend, documents, and overview are **router modules inside `apps/api`**, not separate HTTP services.
@@ -58,7 +72,7 @@ flowchart TB
   STOR[packages/storage]
   SEC[packages/security]
   PG[(Postgres)]
-  MINIO[(MinIO — later)]
+  OBJ[(Neon Object Storage)]
 
   WEB --> GOOG
   WEB --> API
@@ -68,7 +82,7 @@ flowchart TB
   WRK --> STOR
   AGT --> STOR
   STOR --> PG
-  STOR --> MINIO
+  STOR --> OBJ
 ```
 
 ## Guide vs this repo
@@ -90,9 +104,10 @@ Dev Postgres is **Neon** (`kosh`). Set `DATABASE_URL` in `.env` to the **direct*
 uv sync --all-packages
 uv run --directory apps/api alembic upgrade head
 uv run --directory apps/api fastapi dev --port 8000
+uv run --package worker python -m worker.main
 cd apps/web && pnpm dev
 ```
 
 Optional local Postgres: `docker compose up -d` and the localhost URL in `.env.example`.
 
-`apps/web/.env` sets `VITE_API_URL` (empty = Vite proxy) and `VITE_GOOGLE_CLIENT_ID`. API CORS: `CORS_ORIGINS` (default localhost/127.0.0.1:5173) with credentials. Design tokens: [../design/global.md](../design/global.md).
+`apps/web/.env` sets `VITE_API_URL` (empty = Vite proxy) and `VITE_GOOGLE_CLIENT_ID`. API CORS: `CORS_ORIGINS` (default localhost/127.0.0.1:5173) with credentials. Worker needs `OPENROUTER_API_KEY` and Neon S3 `AWS_*` keys; the API starts without them. Design tokens: [../design/global.md](../design/global.md).
