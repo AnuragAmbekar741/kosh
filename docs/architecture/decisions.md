@@ -23,14 +23,14 @@ Revisit when: ...
 | 7 | Frontend | React (Vite) |
 | 8 | v1 product scope | Auth, spend CRUD, docs → draft items, overview; WhatsApp/agent later; no Plaid/bills/Splitwise in v1 |
 | 9 | Database | **One Postgres**, one schema; FKs allowed |
-| 10 | File storage | **MinIO/S3** for blobs; metadata in `documents` table (later) |
+| 10 | File storage | **Neon Object Storage** (S3-compatible, path-style) for blobs; metadata in `documents` |
 | 11 | Main API | **`apps/api` :8000** — auth, spend, overview, documents routers |
-| 12 | Day-one members | `apps/api`, `packages/storage`, `packages/security` |
+| 12 | Day-one members | `apps/api`, `packages/storage`, `packages/security`, `apps/worker` |
 | 13 | Shared data layer | **`packages/storage`** — SQLModel + crud; imported by api, worker, agent |
 | 14 | Shared auth layer | **`packages/security`** — password hash, JWT issue/verify, `CurrentUserDep` |
 | 15 | Auth pattern | `get_current_user` loads `User` from DB in same process (course ch 10) |
 | 16 | API gateway | **No gateway on day one** |
-| 17 | Background processes | `worker`, `agent`, `whatsapp` — separate deployables later |
+| 17 | Background processes | `apps/worker` extracts documents; `agent` / `whatsapp` later |
 | 18 | WhatsApp identity | Webhook signature + `channel_accounts` (`wa_id` → `user_id`) |
 | 19 | Agent safety | `user_id` injected by runtime; confirm before mutating/destructive writes |
 | 20 | Build order | storage + security → api → web → worker/documents → agent/whatsapp |
@@ -141,12 +141,54 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Why: Same ID-token contract as the API; no extra OAuth library. Google does not expose an API that lets a custom web button programmatically initiate the GIS button flow, so the official renderer remains the reliable path. Its supported theme, shape, text, alignment, and width options are configured to match the app as closely as Google branding rules allow.
 - Revisit when: One Tap or a custom-branded button is required
 
+**Multimodal extraction over OCR plus regex**
+
+- Chosen: Vision model via OpenRouter; Pillow + pillow-heif normalize images; pypdf inspects PDFs only
+- Rejected: Tesseract + per-merchant parsers as the extraction path
+- Why: Receipts have no stable layout; the model does OCR and field mapping in one pass
+- Revisit when: Volume or cost forces a dedicated OCR pipeline
+
+**OpenRouter as the LLM gateway**
+
+- Chosen: `openai` SDK with `base_url=https://openrouter.ai/api/v1`, `provider.require_parameters=true`, PDF engine `native`
+- Rejected: Calling Gemini (or another provider) directly in v1
+- Why: One key to swap models; pin native PDF so OpenRouter does not silently bill mistral-ocr
+- Revisit when: A single provider's native schema enforcement is more important than model hopping
+
+**Postgres SKIP LOCKED queue**
+
+- Chosen: `Document.status` is the queue; worker claims with `FOR UPDATE SKIP LOCKED` and a claim token; stale workers cannot finalize a reclaimed job
+- Rejected: FastAPI BackgroundTasks; Redis/Celery on day one
+- Why: Restarts must not drop money drafts; a broker is still "graduate later"
+- Revisit when: Multiple worker hosts need a real broker
+
+**Originals in object storage, normalize in memory**
+
+- Chosen: Store the uploaded bytes unchanged; HEIC/EXIF/downscale is transient for the model call
+- Rejected: Overwriting the blob with a normalized JPEG
+- Why: A better model can re-extract the same original later
+- Revisit when: Storage cost of originals becomes material
+
+**Money as Numeric / Decimal**
+
+- Chosen: `Numeric(12, 2)` in Postgres; `Decimal` in Python; money crosses the LLM as a string
+- Rejected: float amounts
+- Why: JSON numbers and binary floats round money
+- Revisit when: We need more than two decimal places
+
+**content_hash is a warning, not uniqueness**
+
+- Chosen: Indexed `content_hash`; unique `(user_id, idempotency_key)` for retries
+- Rejected: Unique `(user_id, content_hash)`
+- Why: The same receipt photographed twice is a new document; webhook retries are a different problem
+- Revisit when: WhatsApp `message_id` lands as the idempotency key
+
 ## Open
 
 | Topic | Notes |
 |---|---|
 | Makefile vs raw commands | Root `makefile` exists; not required for agents |
-| Dashboard chrome | `/` is a signed-in stub (email + logout). SpendItem UI next. |
+| Dashboard chrome | `/` is a signed-in stub (email + logout). Document upload UI exists locally; wire `POST /documents` next. |
 | `packages/ui` / `api-client` | Defer until second consumer or OpenAPI codegen need |
 
 ## Rejected / deferred (v2+)

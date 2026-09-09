@@ -1,3 +1,19 @@
+from storage.crud.document import (
+    claim_next,
+    create_document,
+    get_document,
+    mark_retry,
+    reclaim_stuck,
+)
+from storage.crud.spend import (
+    confirm_document_items,
+    create_spend_item,
+    delete_spend_item,
+    get_spend_item,
+    list_spend_items,
+    update_spend_item,
+    upsert_drafts,
+)
 from storage.crud.user import (
     consume_and_replace_refresh,
     create_refresh_session,
@@ -12,14 +28,26 @@ from storage.crud.user import (
 )
 
 __all__ = [
+    "claim_next",
+    "confirm_document_items",
     "consume_and_replace_refresh",
+    "create_document",
     "create_refresh_session",
+    "create_spend_item",
     "create_user_with_google_identity",
     "create_user_with_local_identity",
+    "delete_spend_item",
+    "get_document",
     "get_identity_by_provider",
     "get_local_identity_by_email",
     "get_refresh_session_by_hash",
+    "get_spend_item",
     "get_user_by_email",
     "get_user_by_id",
+    "list_spend_items",
+    "mark_retry",
+    "reclaim_stuck",
     "revoke_session",
+    "update_spend_item",
+    "upsert_drafts",
 ]

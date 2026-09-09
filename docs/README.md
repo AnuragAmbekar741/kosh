@@ -26,9 +26,11 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 
 | Done | Next |
 |---|---|
-| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | SpendItem CRUD |
-| Web auth wired (login, signup, Google GIS, session stub) | SpendItem CRUD |
-| Postgres + Alembic; User, AuthIdentity, RefreshSession | SpendItem CRUD |
+| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | Wire web upload to `POST /documents` |
+| Web auth wired (login, signup, Google GIS, session stub) | Review/confirm UI for drafts |
+| Postgres + Alembic; User, AuthIdentity, RefreshSession | Overview |
 | Local auth + Google (`POST /auth/google`) + `GET /users/me` | |
+| SpendItem CRUD | |
+| Documents upload + worker extraction via OpenRouter | |
 
 When a planning decision changes, update `architecture/decisions.md` first, then `architecture/overview.md` and `product/scope.md`.

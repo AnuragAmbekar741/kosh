@@ -11,7 +11,14 @@ members = [
     "packages/storage",
     "packages/security",
     "apps/api",
+    "apps/worker",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "llm: live OpenRouter extraction against a local fixture",
+]
+addopts = "-m 'not llm'"
 
 [dependency-groups]
 dev = [

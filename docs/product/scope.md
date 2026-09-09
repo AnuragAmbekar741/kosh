@@ -48,18 +48,20 @@ Status key: **live** = implemented today.
 | POST | `/auth/refresh` | **live** |
 | POST | `/auth/logout` | **live** |
 | GET | `/users/me` | **live** |
-| POST | `/spend-items` | planned |
-| GET | `/spend-items` | planned |
-| GET | `/spend-items/{id}` | planned |
-| PATCH | `/spend-items/{id}` | planned |
-| DELETE | `/spend-items/{id}` | planned |
-| POST | `/documents` | planned |
-| GET | `/documents` | planned |
-| GET | `/documents/{id}` | planned |
-| POST | `/documents/{id}/confirm` | planned (optional) |
+| POST | `/spend-items` | **live** |
+| GET | `/spend-items` | **live** |
+| GET | `/spend-items/{id}` | **live** |
+| PATCH | `/spend-items/{id}` | **live** |
+| DELETE | `/spend-items/{id}` | **live** |
+| POST | `/documents` | **live** |
+| GET | `/documents` | **live** |
+| GET | `/documents/{id}` | **live** |
+| POST | `/documents/{id}/confirm` | **live** |
 | GET | `/overview` | planned |
 
 Prefer `GET /users/me` over `GET /users/{id}` for profile.
+
+`GET /spend-items` is the confirmed ledger. Pending document candidates are returned by `GET /documents/{id}` until the user confirms either the receipt total or its line items.
 
 ## Auth flow (target)
 
@@ -73,8 +75,9 @@ Prefer `GET /users/me` over `GET /users/{id}` for profile.
 ## Document pipeline (target)
 
 ```text
-POST /documents → store file → Document row → queue job
-  → worker (PDF/OCR/DOCX + LLM) → SpendItem candidates → user confirm
+POST /documents → store original file → Document row (uploaded)
+  → worker claims (SKIP LOCKED) → inspect/normalize → OpenRouter
+  → ExtractionAttempt + draft SpendItems → user confirm
 ```
 
 States: `uploaded` → `processing` → `ready` | `failed`

@@ -1,4 +1,4 @@
-.PHONY: help db-up db-down migrate migrate-new test api web setup git-config
+.PHONY: help db-up db-down migrate migrate-new test api web worker setup git-config
 
 help:
 	@grep -E '^[a-zA-Z_-]+:' Makefile | cut -d: -f1 | sort
@@ -17,7 +17,10 @@ migrate-new:
 	uv run --directory apps/api alembic revision --autogenerate -m "$(MSG)"
 
 test:
-	uv run --group dev pytest apps/api/tests -q
+	uv run --group dev pytest apps/api/tests apps/worker/tests -q
+
+worker:
+	uv run --package worker python -m worker.main
 
 api:
 	uv run --directory apps/api fastapi dev --port 8000

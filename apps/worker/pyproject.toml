@@ -1,0 +1,23 @@
+[project]
+name = "worker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "AnuragAmbekar741", email = "anuragambekar1997@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "openai>=3.10.0",
+    "pillow>=12.3.0",
+    "pillow-heif>=1.7.0",
+    "pypdf>=6.18.0",
+    "storage",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+storage = { workspace = true }
