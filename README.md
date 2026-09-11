@@ -68,6 +68,19 @@ uv run --group dev pytest apps/api/tests -q
 Tests use temporary SQLite databases and run API startup/shutdown. No `.env` or external services needed.
 PostgreSQL migrations and row locks need separate integration tests.
 
+## Run the document pipeline
+
+Apply migrations, then start the web app, API, and extraction worker together:
+
+```bash
+make migrate
+make dev
+```
+
+The worker sends uploaded document contents to the extraction provider configured
+in `.env`. Running only `make web` and `make api` accepts uploads but cannot
+process them.
+
 ## Add a dependency
 
 ```bash

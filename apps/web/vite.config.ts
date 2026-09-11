@@ -15,6 +15,8 @@ export default defineConfig({
     proxy: {
       "/health": "http://127.0.0.1:8000",
       "/auth": "http://127.0.0.1:8000",
+      "/documents": "http://127.0.0.1:8000",
+      "/spend-items": "http://127.0.0.1:8000",
       "/users": "http://127.0.0.1:8000",
     },
   },

@@ -1,4 +1,4 @@
-.PHONY: help db-up db-down migrate migrate-new test api web worker setup git-config
+.PHONY: help db-up db-down migrate migrate-new test api web worker dev setup git-config
 
 help:
 	@grep -E '^[a-zA-Z_-]+:' Makefile | cut -d: -f1 | sort
@@ -27,6 +27,9 @@ api:
 
 web:
 	pnpm --dir apps/web dev
+
+dev:
+	$(MAKE) -j3 api worker web
 
 setup:
 	cp -n .env.example .env || true

@@ -26,8 +26,8 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 
 | Done | Next |
 |---|---|
-| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | Wire web upload to `POST /documents` |
-| Web auth wired (login, signup, Google GIS, session stub) | Review/confirm UI for drafts |
+| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | Overview analytics |
+| Web auth plus document upload, extraction review, and Payments | Manual spend entry UI |
 | Postgres + Alembic; User, AuthIdentity, RefreshSession | Overview |
 | Local auth + Google (`POST /auth/google`) + `GET /users/me` | |
 | SpendItem CRUD | |
