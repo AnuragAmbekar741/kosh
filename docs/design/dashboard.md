@@ -46,18 +46,24 @@ Ready documents open in a shadcn Dialog on the same screen. The dialog shows the
 merchant or institution, document date, source filename, extracted total, and
 individual items or transactions in a shadcn Accordion.
 
-Receipts can be saved as one total or as selected line items. Statements are
-always itemized. Low-confidence rows are flagged, duplicate-content matches are
-disclosed, and an empty item selection cannot be confirmed. Closing the dialog
-keeps a `Review extraction` action on the intake screen.
+The dialog always shows and saves the complete extracted bill or statement.
+Extracted rows are itemized; if a receipt has no usable item breakdown, its
+complete total is saved instead. Low-confidence rows are flagged and
+duplicate-content matches are disclosed. Closing the dialog keeps a
+`Review extraction` action on the intake screen.
+
+Review dialogs use one responsive frame: nearly full-screen on phones and a
+fixed-height `max-w-2xl` surface on larger screens. The header and footer stay
+in place while the extracted content scrolls independently.
 
 ## Payments
 
 Payments reads only confirmed `GET /spend-items` records. It groups entries by
 `document_id`, joins source metadata from `GET /documents`, and orders groups by
 document spend date. Each collapsed row shows the merchant, document date,
-extraction date, and confirmed total. Expanding it reveals its saved line items,
-categories, amounts, and source filename. Manual entries are grouped separately.
+entry count, and confirmed total. Expanding it reveals saved line items,
+categories, amounts, source filename, and extraction date. Long item lists scroll
+within the expanded row. Manual entries are grouped separately.
 
 The page is one continuous ledger surface rather than a card grid. Empty,
 loading, and error states are first-class.
