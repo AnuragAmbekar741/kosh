@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { AlertTriangle, Check, ReceiptText } from "lucide-react"
 
 import type { DocumentDetail } from "@/api/documents/documents.types"
@@ -10,7 +10,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -20,9 +19,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useConfirmDocument } from "@/hooks/documents/use-documents"
-import { cn } from "@/lib/utils"
-
-type ConfirmationMode = "total" | "line_items"
 
 function money(amount: string | number, currency: string) {
   return new Intl.NumberFormat(undefined, {
@@ -62,12 +58,6 @@ export function DocumentReviewDialog({
     [document.drafts]
   )
   const totalDraft = document.drafts.find((item) => item.line_index === null)
-  const [mode, setMode] = useState<ConfirmationMode>(
-    isStatement ? "line_items" : "total"
-  )
-  const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(lineDrafts.map((item) => item.id))
-  )
   const confirm = useConfirmDocument()
 
   if (!document.extraction) return null
@@ -86,27 +76,20 @@ export function DocumentReviewDialog({
     extraction.document_kind === "receipt"
       ? extraction.total
       : lineDrafts.reduce((sum, item) => sum + Number(item.amount), 0)
-  const selectedTotal = lineDrafts
-    .filter((item) => selected.has(item.id))
-    .reduce((sum, item) => sum + Number(item.amount), 0)
-
-  function toggleItem(id: string, checked: boolean) {
-    setSelected((current) => {
-      const next = new Set(current)
-      if (checked) next.add(id)
-      else next.delete(id)
-      return next
-    })
-  }
+  const itemizedTotal = lineDrafts.reduce(
+    (sum, item) => sum + Number(item.amount),
+    0
+  )
+  const confirmationMode = lineDrafts.length > 0 ? "line_items" : "total"
 
   function save() {
     confirm.mutate(
       {
         documentId: document.id,
-        mode,
+        mode: confirmationMode,
         itemIds:
-          mode === "line_items"
-            ? Array.from(selected)
+          confirmationMode === "line_items"
+            ? lineDrafts.map((item) => item.id)
             : totalDraft
               ? [totalDraft.id]
               : undefined,
@@ -117,18 +100,18 @@ export function DocumentReviewDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-h-[calc(100svh-1rem)] max-w-[calc(100%-1rem)] gap-0 overflow-hidden p-0 sm:max-w-2xl">
+      <DialogContent className="gap-0 p-0">
         <DialogHeader className="border-b border-border px-5 py-5 pr-12 sm:px-6">
           <DialogTitle className="text-xl font-normal">
-            Review your document
+            {isStatement ? "Review statement" : "Review bill"}
           </DialogTitle>
           <DialogDescription>
-            Check what we found before adding it to Payments.
+            Check the full extraction before adding it to Payments.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="overflow-y-auto px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+          <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-lg font-medium">{merchant}</p>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -141,64 +124,25 @@ export function DocumentReviewDialog({
             </p>
           </div>
 
-          {!isStatement && totalDraft ? (
-            <div
-              className="my-5 grid grid-cols-2 rounded-lg bg-muted p-1"
-              role="group"
-              aria-label="Save mode"
-            >
-              {(["total", "line_items"] as const).map((value) => (
-                <button
-                  className={cn(
-                    "h-9 rounded-md text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                    mode === value
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  key={value}
-                  onClick={() => setMode(value)}
-                  type="button"
-                >
-                  {value === "total" ? "Save one total" : "Save itemized"}
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          {mode === "total" && totalDraft ? (
-            <div className="my-5 flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4">
-              <ReceiptText className="mt-0.5 size-4 shrink-0 text-brand-ink" />
-              <div>
-                <p className="text-sm font-medium">One payment will be added</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  The receipt remains attached, and its individual items stay
-                  visible here for reference.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="my-5">
-              <div className="mb-2 flex items-center justify-between">
+          {lineDrafts.length > 0 ? (
+            <section className="py-6" aria-labelledby="extracted-items-title">
+              <div className="mb-3 flex items-end justify-between gap-4">
+                <div>
+                  <h3
+                    className="text-sm font-medium"
+                    id="extracted-items-title"
+                  >
+                    {isStatement ? "Transactions" : "Bill items"}
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {lineDrafts.length} extracted
+                  </p>
+                </div>
                 <p className="text-sm font-medium">
-                  {selected.size} of {lineDrafts.length} items selected
+                  {money(itemizedTotal, currency)}
                 </p>
-                <button
-                  className="text-xs text-brand-ink hover:underline"
-                  onClick={() => {
-                    setSelected(
-                      selected.size === lineDrafts.length
-                        ? new Set()
-                        : new Set(lineDrafts.map((item) => item.id))
-                    )
-                  }}
-                  type="button"
-                >
-                  {selected.size === lineDrafts.length
-                    ? "Clear all"
-                    : "Select all"}
-                </button>
               </div>
-              <Accordion className="border-y border-border">
+              <Accordion className="overflow-hidden rounded-xl border border-border">
                 {lineDrafts.map((draft) => {
                   const extracted =
                     extraction.document_kind === "receipt"
@@ -206,16 +150,13 @@ export function DocumentReviewDialog({
                       : extraction.transactions[draft.line_index ?? -1]
                   const needsReview = extracted?.requires_review
                   return (
-                    <AccordionItem key={draft.id} value={draft.id}>
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          aria-label={`Include ${draftName(draft)}`}
-                          checked={selected.has(draft.id)}
-                          onCheckedChange={(checked) =>
-                            toggleItem(draft.id, checked)
-                          }
-                        />
-                        <AccordionTrigger className="min-w-0 py-3 hover:no-underline">
+                    <AccordionItem
+                      className="px-4 transition-colors data-open:bg-muted/40"
+                      key={draft.id}
+                      value={draft.id}
+                    >
+                      <div className="flex items-center py-0.5">
+                        <AccordionTrigger className="min-w-0 py-3.5 hover:no-underline">
                           <span className="min-w-0 pr-3">
                             <span className="block truncate">
                               {draftName(draft)}
@@ -232,9 +173,20 @@ export function DocumentReviewDialog({
                           </span>
                         </AccordionTrigger>
                       </div>
-                      <AccordionContent className="pl-7 text-xs text-muted-foreground">
+                      <AccordionContent className="pr-8 pb-4 pl-7 text-xs leading-relaxed text-muted-foreground">
                         {extracted && "raw_description" in extracted ? (
-                          <p>Receipt text: {extracted.raw_description}</p>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1">
+                            <p>Receipt text: {extracted.raw_description}</p>
+                            {extracted.quantity ? (
+                              <p>Quantity: {extracted.quantity}</p>
+                            ) : null}
+                            {extracted.unit_price ? (
+                              <p>
+                                Unit price:{" "}
+                                {money(extracted.unit_price, currency)}
+                              </p>
+                            ) : null}
+                          </div>
                         ) : (
                           <p>
                             {draft.spent_at} ·{" "}
@@ -246,11 +198,22 @@ export function DocumentReviewDialog({
                   )
                 })}
               </Accordion>
+            </section>
+          ) : totalDraft ? (
+            <div className="my-6 flex items-start gap-3 rounded-lg bg-muted p-4">
+              <ReceiptText className="mt-0.5 size-4 shrink-0 text-brand-ink" />
+              <div>
+                <p className="text-sm font-medium">Bill total</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  No item breakdown was found, so the complete bill will be
+                  saved as one payment.
+                </p>
+              </div>
             </div>
-          )}
+          ) : null}
 
           {document.hash_matches_existing ? (
-            <p className="flex items-center gap-2 text-xs text-amber-500">
+            <p className="flex items-center gap-2 border-t border-border pt-4 text-xs text-amber-500">
               <AlertTriangle className="size-3.5" /> A matching document was
               uploaded before.
             </p>
@@ -263,21 +226,16 @@ export function DocumentReviewDialog({
         </div>
 
         <DialogFooter className="m-0 rounded-none px-5 py-4 sm:px-6">
-          {mode === "line_items" ? (
+          {confirmationMode === "line_items" ? (
             <span className="self-center text-xs text-muted-foreground sm:mr-auto">
-              Selected total {money(selectedTotal, currency)}
+              {lineDrafts.length} {lineDrafts.length === 1 ? "item" : "items"} ·{" "}
+              {money(itemizedTotal, currency)}
             </span>
           ) : null}
           <Button onClick={() => onOpenChange(false)} variant="ghost">
             Review later
           </Button>
-          <Button
-            disabled={
-              confirm.isPending ||
-              (mode === "line_items" && selected.size === 0)
-            }
-            onClick={save}
-          >
+          <Button disabled={confirm.isPending} onClick={save}>
             {confirm.isPending ? "Saving…" : "Save to Payments"}
             {!confirm.isPending ? <Check data-icon="inline-end" /> : null}
           </Button>
