@@ -1,9 +1,18 @@
 import { motion } from "framer-motion"
-import { LogOut, ReceiptText, ScanLine } from "lucide-react"
-import { NavLink, Navigate, Outlet, useNavigate } from "react-router"
+import { LogOut, ReceiptText, ScanLine, Settings } from "lucide-react"
+import { Link, NavLink, Navigate, Outlet, useNavigate } from "react-router"
 
 import { FinanceMark } from "@/components/auth/FinanceMark"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useLogout } from "@/hooks/auth/use-auth"
 import { useGetMe } from "@/hooks/users/use-me"
 import { cn } from "@/lib/utils"
@@ -86,29 +95,42 @@ export function ApplicationShell() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-1 justify-self-end sm:gap-2">
-            <span
-              aria-label={`Signed in as ${displayName}`}
-              className="flex size-8 items-center justify-center rounded-full border border-border bg-card text-[11px] font-medium"
-              title={displayName}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label={`Open account menu for ${displayName}`}
+                  className="justify-self-end rounded-full border-border bg-card text-[11px]"
+                  size="icon-sm"
+                  title={displayName}
+                  variant="outline"
+                />
+              }
             >
               {initials}
-            </span>
-            <Button
-              aria-label="Log out"
-              disabled={logout.isPending}
-              onClick={() => {
-                logout.mutate(undefined, {
-                  onSuccess: () => navigate("/login"),
-                })
-              }}
-              size="icon-sm"
-              title="Log out"
-              variant="ghost"
-            >
-              <LogOut />
-            </Button>
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48" sideOffset={8}>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="truncate px-2 py-1.5 font-normal">
+                  {displayName}
+                </DropdownMenuLabel>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem render={<Link to="/settings" />}>
+                <Settings /> Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={logout.isPending}
+                onClick={() => {
+                  logout.mutate(undefined, {
+                    onSuccess: () => navigate("/login"),
+                  })
+                }}
+              >
+                <LogOut /> {logout.isPending ? "Signing out…" : "Sign out"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
 
         <Outlet />

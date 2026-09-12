@@ -14,6 +14,11 @@ const PaymentsPage = lazy(() =>
     default: module.PaymentsPage,
   }))
 )
+const SettingsPage = lazy(() =>
+  import("@/pages/settings/SettingsPage").then((module) => ({
+    default: module.SettingsPage,
+  }))
+)
 
 export function App() {
   return (
@@ -24,6 +29,7 @@ export function App() {
             <Route element={<HomePage />} path="/" />
             <Route element={<HomePage />} path="/documents/new" />
             <Route element={<PaymentsPage />} path="/payments" />
+            <Route element={<SettingsPage />} path="/settings" />
           </Route>
           <Route element={<AuthPage />}>
             <Route element={<></>} path="/login" />
