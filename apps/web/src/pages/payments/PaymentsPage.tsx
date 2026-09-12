@@ -101,20 +101,20 @@ export function PaymentsPage() {
           </Button>
         </section>
       ) : (
-        <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <Accordion>
+        <section>
+          <Accordion className="gap-3">
             {groups.map(([documentId, items]) => {
               const document = documentById.get(documentId)
               const currency = items[0].currency
               return (
                 <AccordionItem
-                  className="px-5 sm:px-6"
+                  className="overflow-hidden rounded-xl border border-border/80 bg-card/70 px-4 transition-colors sm:px-5 data-open:bg-card"
                   key={documentId}
                   value={documentId}
                 >
-                  <AccordionTrigger className="items-center py-5 hover:no-underline">
-                    <span className="flex min-w-0 items-center gap-3 text-left">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-ink">
+                  <AccordionTrigger className="items-center gap-3 py-4 hover:no-underline sm:py-5">
+                    <span className="flex min-w-0 items-center gap-3.5 text-left">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-ink">
                         <FileText className="size-4" strokeWidth={1.5} />
                       </span>
                       <span className="min-w-0">
@@ -124,7 +124,7 @@ export function PaymentsPage() {
                         <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
                           {date(items[0].spent_at)}
                           {document
-                            ? ` · Extracted ${date(document.created_at)}`
+                            ? ` · ${items.length} ${items.length === 1 ? "entry" : "entries"}`
                             : " · Manual entry"}
                         </span>
                       </span>
@@ -133,11 +133,11 @@ export function PaymentsPage() {
                       {money(total(items), currency)}
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="pb-5 pl-13">
-                    <div className="border-t border-border">
+                  <AccordionContent className="pb-4 sm:pb-5">
+                    <div className="max-h-72 overflow-y-auto overscroll-contain border-t border-border/80 pl-12">
                       {items.map((item) => (
                         <div
-                          className="flex items-center justify-between gap-4 border-b border-border/70 py-3 last:border-0"
+                          className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5 last:border-0"
                           key={item.id}
                         >
                           <div className="min-w-0">
@@ -155,9 +155,10 @@ export function PaymentsPage() {
                       ))}
                     </div>
                     {document ? (
-                      <p className="mt-3 truncate text-xs text-muted-foreground">
-                        Source · {document.filename}
-                      </p>
+                      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 pl-12 text-xs text-muted-foreground">
+                        <p className="truncate">Source · {document.filename}</p>
+                        <p>Extracted {date(document.created_at)}</p>
+                      </div>
                     ) : null}
                   </AccordionContent>
                 </AccordionItem>
