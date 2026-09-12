@@ -52,11 +52,11 @@ export function PaymentsPage() {
   return (
     <motion.main
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto flex w-full max-w-3xl flex-1 flex-col py-12 sm:py-16"
+      className="mx-auto flex w-full max-w-2xl flex-1 flex-col py-10 sm:py-14"
       initial={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="mb-8 flex items-end justify-between gap-4">
+      <div className="mb-7 flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl leading-tight font-light sm:text-4xl">
             Payments
@@ -65,7 +65,12 @@ export function PaymentsPage() {
             A quiet record of every document you’ve confirmed.
           </p>
         </div>
-        <Button render={<Link to="/" />} size="sm" variant="outline">
+        <Button
+          nativeButton={false}
+          render={<Link to="/" />}
+          size="sm"
+          variant="outline"
+        >
           <Plus /> Add document
         </Button>
       </div>
@@ -96,25 +101,29 @@ export function PaymentsPage() {
             Upload a receipt or statement, review the extraction, and save it
             when it looks right.
           </p>
-          <Button className="mt-6" render={<Link to="/" />}>
+          <Button
+            className="mt-6"
+            nativeButton={false}
+            render={<Link to="/" />}
+          >
             Upload your first document
           </Button>
         </section>
       ) : (
         <section>
-          <Accordion className="gap-3">
+          <Accordion className="gap-2.5">
             {groups.map(([documentId, items]) => {
               const document = documentById.get(documentId)
               const currency = items[0].currency
               return (
                 <AccordionItem
-                  className="overflow-hidden rounded-xl border border-border/80 bg-card/70 px-4 transition-colors sm:px-5 data-open:bg-card"
+                  className="overflow-hidden rounded-xl border border-border/80 bg-card/70 px-3 transition-colors sm:px-4 data-open:bg-card"
                   key={documentId}
                   value={documentId}
                 >
-                  <AccordionTrigger className="items-center gap-3 py-4 hover:no-underline sm:py-5">
-                    <span className="flex min-w-0 items-center gap-3.5 text-left">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-ink">
+                  <AccordionTrigger className="items-start gap-3 py-3.5 hover:no-underline [&_[data-slot=accordion-trigger-icon]]:hidden">
+                    <span className="flex min-w-0 items-center gap-3 text-left">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-ink">
                         <FileText className="size-4" strokeWidth={1.5} />
                       </span>
                       <span className="min-w-0">
@@ -129,15 +138,15 @@ export function PaymentsPage() {
                         </span>
                       </span>
                     </span>
-                    <span className="mr-3 ml-auto text-base font-medium tabular-nums">
+                    <span className="ml-auto shrink-0 text-sm font-medium tabular-nums sm:text-base">
                       {money(total(items), currency)}
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="pb-4 sm:pb-5">
-                    <div className="max-h-72 overflow-y-auto overscroll-contain border-t border-border/80 pl-12">
+                  <AccordionContent className="pb-3.5">
+                    <div className="max-h-72 overflow-y-auto overscroll-contain border-t border-border/80 pl-11">
                       {items.map((item) => (
                         <div
-                          className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5 last:border-0"
+                          className="flex items-center justify-between gap-4 border-b border-border/60 py-3 last:border-0"
                           key={item.id}
                         >
                           <div className="min-w-0">
@@ -155,7 +164,7 @@ export function PaymentsPage() {
                       ))}
                     </div>
                     {document ? (
-                      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 pl-12 text-xs text-muted-foreground">
+                      <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 pl-11 text-xs text-muted-foreground">
                         <p className="truncate">Source · {document.filename}</p>
                         <p>Extracted {date(document.created_at)}</p>
                       </div>
