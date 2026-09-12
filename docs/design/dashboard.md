@@ -23,11 +23,13 @@ Reduced-motion preferences are respected.
 | `/` | Document intake | Signed-in upload-first home screen. |
 | `/documents/new` | Document intake | Alias for the upload screen. |
 | `/payments` | Payments | Confirmed spend grouped by document. |
+| `/settings` | Settings | Placeholder for future account preferences. |
 
 Guests redirect to `/login`. A compact, centered top switcher moves between
 Upload and Payments. It takes the horizontal clarity of a simple application
 header without adding a sidebar, dashboard grid, mobile drawer, search field, or
-other admin-shell furniture. Account initials and logout remain quiet utilities.
+other admin-shell furniture. Account initials open a compact menu for Settings
+and Sign out.
 
 ## Document intake
 
@@ -60,8 +62,9 @@ in place while the extracted content scrolls independently.
 
 Payments reads only confirmed `GET /spend-items` records. It groups entries by
 `document_id`, joins source metadata from `GET /documents`, and orders groups by
-document spend date. Each collapsed row shows the merchant, document date,
-entry count, and confirmed total. Expanding it reveals saved line items,
+document spend date. Each compact collapsed row shows the merchant, document
+date, entry count, and a right-aligned confirmed total without a disclosure
+icon. Expanding it reveals saved line items,
 categories, amounts, source filename, and extraction date. Long item lists scroll
 within the expanded row. Manual entries are grouped separately.
 
@@ -74,8 +77,8 @@ loading, and error states are first-class.
   semantic color tokens defined in `global.md`.
 - Do not reuse the authentication gradient or waveform on signed-in surfaces.
 - Avoid dashboards, sidebars, KPI tiles, decorative charts, and nested cards.
-- Keep content widths restrained: upload at `max-w-xl`, Payments at
-  `max-w-3xl`, and the review dialog at `max-w-2xl`.
+- Keep content widths restrained: upload at `max-w-xl`, Payments and the review
+  dialog at `max-w-2xl`.
 - Use motion for page arrival, upload feedback, the active navigation indicator,
   and a restrained extraction activity indicator only.
 
