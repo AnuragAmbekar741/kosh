@@ -1,90 +1,60 @@
-# Document intake and payments
+# Signed-in dashboard
 
-This document is the source of truth for signed-in web screens. The product is
-organized around a centered document workspace, not a dashboard shell.
+This document is the source of truth for signed-in web chrome. Authenticated
+users land in a collapsible sidebar shell with the ledger on the right. Tokens
+stay those in [global.md](./global.md). Do not reuse the authentication
+gradient or waveform on signed-in surfaces.
 
 ## Experience
 
-Authenticated users upload receipt images, HEIC photos, or PDF statements. The
-app sends each file to `POST /documents`, polls document detail while extraction
-runs, opens a review dialog when the result is ready, and confirms the user's
-choice into the spend ledger. Confirmed entries appear in Payments grouped by
-their source document.
+The signed-in product is Operate-mode: scan, move, come back. Brand lives in
+precise details — monochrome primary, Geist, flat 1px hairlines — not in
+marketing chrome.
 
-The interface stays calm and focused during the long extraction call. A compact
-status row shows an activity indicator, the current filename, and queued-file
-count without a scanning metaphor, staged progress, or invented percentage.
-Reduced-motion preferences are respected.
+This step ships layout only. Overview and Spending are empty destinations so
+the shell can land first.
 
 ## Navigation
 
 | Path | Page | Notes |
 | --- | --- | --- |
-| `/` | Document intake | Signed-in upload-first home screen. |
-| `/documents/new` | Document intake | Alias for the upload screen. |
-| `/payments` | Payments | Confirmed spend grouped by document. |
+| `/` | Redirect | Signed-in users go to `/overview`. Guests go to `/login`. |
+| `/overview` | Overview | Empty shell. Future totals and breakdowns. |
+| `/spending` | Spending | Empty shell. Future spend ledger. |
 
-Guests redirect to `/login`. A compact, centered top switcher moves between
-Upload and Payments. It takes the horizontal clarity of a simple application
-header without adding a sidebar, dashboard grid, mobile drawer, search field, or
-other admin-shell furniture. Account initials and logout remain quiet utilities.
+Primary destinations live in
+[`src/components/layout/navigation.ts`](../../apps/web/src/components/layout/navigation.ts).
+The sidebar and the header title both read from that list.
 
-## Document intake
+The sidebar uses the shadcn `Sidebar` primitive (`variant="inset"`,
+`collapsible="icon"`). Collapsing leaves a 3rem icon rail; labels remain
+reachable as tooltips. Collapse state persists in the `sidebar_state` cookie
+and toggles with `Cmd/Ctrl+B`. Below `768px` the same nav opens as a sheet.
 
-- Desktop supports drag and drop plus the native file picker.
-- Mobile provides both the normal picker and a rear-camera capture action.
-- Multiple files can be submitted together and reviewed in sequence.
-- Accepted input includes browser image types, `.heic`, `.heif`, and PDF.
-- Upload failures and extraction failures remain in context with a recovery
-  action.
-- Active jobs poll every two seconds only while status is `uploaded` or
-  `processing`.
-
-## Review and confirmation
-
-Ready documents open in a shadcn Dialog on the same screen. The dialog shows the
-merchant or institution, document date, source filename, extracted total, and
-individual items or transactions in a shadcn Accordion.
-
-The dialog always shows and saves the complete extracted bill or statement.
-Extracted rows are itemized; if a receipt has no usable item breakdown, its
-complete total is saved instead. Low-confidence rows are flagged and
-duplicate-content matches are disclosed. Closing the dialog keeps a
-`Review extraction` action on the intake screen.
-
-Review dialogs use one responsive frame: nearly full-screen on phones and a
-fixed-height `max-w-2xl` surface on larger screens. The header and footer stay
-in place while the extracted content scrolls independently.
-
-## Payments
-
-Payments reads only confirmed `GET /spend-items` records. It groups entries by
-`document_id`, joins source metadata from `GET /documents`, and orders groups by
-document spend date. Each collapsed row shows the merchant, document date,
-entry count, and confirmed total. Expanding it reveals saved line items,
-categories, amounts, source filename, and extraction date. Long item lists scroll
-within the expanded row. Manual entries are grouped separately.
-
-The page is one continuous ledger surface rather than a card grid. Empty,
-loading, and error states are first-class.
+The account menu sits in the sidebar footer: name, email, and Sign out.
+Settings is out of this step.
 
 ## Visual rules
 
-- Keep the flat cool `document-canvas`, Geist typography, ice-blue primary, and
-  semantic color tokens defined in `global.md`.
-- Do not reuse the authentication gradient or waveform on signed-in surfaces.
-- Avoid dashboards, sidebars, KPI tiles, decorative charts, and nested cards.
-- Keep content widths restrained: upload at `max-w-xl`, Payments at
-  `max-w-3xl`, and the review dialog at `max-w-2xl`.
-- Use motion for page arrival, upload feedback, the active navigation indicator,
-  and a restrained extraction activity indicator only.
+- Sidebar canvas matches `--background`. The inset panel (and the mobile
+  sheet) uses `--card` so it lifts off the page. A 1px hairline, never a drop
+  shadow.
+- The active nav item uses `bg-sidebar-accent` plus medium weight. Color is
+  never the only signal. Do not fill the row with primary.
+- Geist and the monochrome tokens from `global.md`. No pills, no glass, no
+  decorative charts in the chrome.
+- Motion is the 200ms sidebar width transition only. Honor
+  `prefers-reduced-motion`.
 
 ## Frontend structure
 
-- API functions: `src/api/documents/` and `src/api/spend-items/`.
-- TanStack Query hooks: `src/hooks/documents/` and
-  `src/hooks/spend-items/`.
-- Shared signed-in header: `src/components/layout/ApplicationShell.tsx`.
-- Document flow components: `src/components/documents/`.
-- Payments route: `src/pages/payments/PaymentsPage.tsx`.
-- shadcn primitives provide Dialog, Accordion, Checkbox, and Button behavior.
+```
+src/pages/overview/            OverviewPage
+src/pages/spending/            SpendingPage
+src/components/layout/         AppShell, AppSidebar, AppHeader, NavMain, NavUser, navigation.ts
+src/components/brand/          FinanceMark (shared with auth)
+src/components/ui/sidebar.tsx  shadcn Sidebar (Base UI)
+```
+
+Auth, API, and query hooks are unchanged. Feature UI belongs in
+`src/components/<feature>/` when it exists — not in `layout/`.

@@ -1,4 +1,4 @@
-import { FinanceMark } from "@/components/auth/FinanceMark"
+import { FinanceMark } from "@/components/brand/FinanceMark"
 
 export function AuthPanel() {
   return (

@@ -49,8 +49,9 @@ Revisit when: ...
 | 33 | HTTP layer | FastAPI routers + `api/auth.py` functions; no controller or repository classes |
 | 34 | API startup | Load `DATABASE_URL` + `JWT_SECRET` and ping Postgres in lifespan; refuse to serve if either fails |
 | 35 | Web HTTP client | **Axios + TanStack Query** in `apps/web`; types in `src/api/<resource>/<resource>.types.ts` |
-| 36 | Web design craft | **Impeccable** locally (gitignored root files); committed visual system is `docs/design/` + Linear dark + ice blue |
+| 36 | Web design craft | **Impeccable** locally (gitignored root files); committed visual system is `docs/design/` + Linear dark + monochrome primary |
 | 37 | Dev Postgres host | **Neon** project `kosh` (direct `DATABASE_URL`); Docker Postgres is optional fallback |
+| 38 | Signed-in chrome | **Collapsible sidebar** (`variant="inset"`, `collapsible="icon"`) with Overview + Spending |
 
 ### Locked detail rows
 
@@ -188,7 +189,7 @@ Previously linked accounts are unchanged; review them separately if used with re
 | Topic | Notes |
 |---|---|
 | Makefile vs raw commands | Root `makefile` exists; not required for agents |
-| Dashboard chrome | `/` is a signed-in stub (email + logout). Document upload UI exists locally; wire `POST /documents` next. |
+| Dashboard chrome | Resolved: locked row 38. Overview/Spending page bodies still empty. |
 | `packages/ui` / `api-client` | Defer until second consumer or OpenAPI codegen need |
 
 ## Rejected / deferred (v2+)
@@ -203,7 +204,7 @@ Previously linked accounts are unchanged; review them separately if used with re
 
 **Auth background motion**
 
-- Chosen: One theme-aware auth canvas with the brand story on the left and form on the right. A low-contrast ice-blue waveform crosses both sides without a dividing border; the form enters as a short, staggered Framer Motion sequence and reduced-motion users receive a static composition.
+- Chosen: One theme-aware auth canvas with the brand story on the left and form on the right. A low-contrast gray waveform crosses both sides without a dividing border; the form enters as a short, staggered Framer Motion sequence and reduced-motion users receive a static composition.
 - Rejected: The previous light panel on the right; WebGL shaders, particle vortexes, collision effects, and copied component-library backgrounds.
 - Why: The waveform suggests bills and spending moving into an organized record while keeping authentication calm, lightweight, and readable. Reduced motion keeps the artwork static.
 - Revisit when: Motion is shared by other surfaces.
@@ -214,3 +215,17 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Mixed app-chrome families and adding another font dependency.
 - Why: The approved brand reference specifies Geist throughout the product UI, and a single family creates a clearer foundation for future screens.
 - Revisit when: The product receives a broader typography redesign.
+
+**Signed-in chrome is a sidebar shell**
+
+- Chosen: Collapsible shadcn sidebar (`inset`, icon rail) with Overview and Spending as the two top-level routes
+- Rejected: Centered document workspace with a header pill nav; no sidebar
+- Why: The ledger needs a persistent nav surface that scales past two destinations without rebuilding chrome
+- Revisit when: The product collapses back to a single-task surface
+
+**Monochrome primary**
+
+- Chosen: Primary inverts per theme — `#0a0a0a` on light, `#f7f8f8` on dark. `--brand-ink` and `--ring` stay in the same family.
+- Rejected: Ice-blue `#DAEFFA` as the brand accent
+- Why: On light surfaces the accent fell below usable contrast and carried no meaning that surface and weight did not already carry
+- Revisit when: A second semantic color is needed for data

@@ -3,7 +3,7 @@ import { LayoutGroup, motion, useReducedMotion } from "framer-motion"
 import { Link } from "react-router"
 
 import { AuthPanel } from "@/components/auth/AuthPanel"
-import { FinanceMark } from "@/components/auth/FinanceMark"
+import { FinanceMark } from "@/components/brand/FinanceMark"
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
@@ -158,7 +158,7 @@ export function AuthShell({
           </div>
         </motion.main>
         <p className="self-end text-xs font-light text-muted-foreground">
-          © 2026 Finance
+          © 2026 Kosh
         </p>
       </div>
       <AuthPanel />
