@@ -11,8 +11,8 @@ The signed-in product is Operate-mode: scan, move, come back. Brand lives in
 precise details — monochrome primary, Geist, flat 1px hairlines — not in
 marketing chrome.
 
-This step ships layout only. Overview and Spending are empty destinations so
-the shell can land first.
+Overview remains an empty destination. Spending contains the document intake,
+extraction review, and confirmed ledger described in [spending.md](./spending.md).
 
 ## Navigation
 
@@ -20,10 +20,10 @@ the shell can land first.
 | --- | --- | --- |
 | `/` | Redirect | Signed-in users go to `/overview`. Guests go to `/login`. |
 | `/overview` | Overview | Empty shell. Future totals and breakdowns. |
-| `/spending` | Spending | Empty shell. Future spend ledger. |
+| `/spending` | Spending | Document intake, extraction review, and confirmed spend ledger. |
 
 Primary destinations live in
-[`src/components/layout/navigation.ts`](../../apps/web/src/components/layout/navigation.ts).
+[`src/components/layout/navigation/navigation.ts`](../../apps/web/src/components/layout/navigation/navigation.ts).
 The sidebar and the header title both read from that list.
 
 The sidebar uses the shadcn `Sidebar` primitive (`variant="inset"`,
@@ -51,7 +51,8 @@ Settings is out of this step.
 ```
 src/pages/overview/            OverviewPage
 src/pages/spending/            SpendingPage
-src/components/layout/         AppShell, AppSidebar, AppHeader, NavMain, NavUser, navigation.ts
+src/components/layout/            AppShell, AppSidebar, AppHeader
+src/components/layout/navigation/ NavMain, NavUser, navigation.ts
 src/components/brand/          FinanceMark (shared with auth)
 src/components/ui/sidebar.tsx  shadcn Sidebar (Base UI)
 ```
