@@ -24,15 +24,13 @@ This file owns tokens and visual rules, and maps them to
 
 Dark is the default. Light uses inverse tokens. Tailwind radius utilities are derived
 from `--radius`; their suffixes do not directly match the design token names.
-Primary controls use the solid `--primary` blue in both themes. The gradient is
-reserved for the auth canvas and uses tonal values from the same ice-blue
-family.
-Document intake uses a dedicated flat, cool-tinted canvas in both themes. This
-keeps the task surface calm without borrowing the auth gradient or waveform art.
-The shared primary is ice blue `#DAEFFA`, with near-black foreground text for
-accessible contrast. On light surfaces, links and accent glyphs use the darker
-same-hue `--brand-ink`; dark surfaces map it back to ice blue. Geist carries
-headings, UI, and body copy.
+Primary inverts against the canvas: near-black `#0a0a0a` on light, near-white
+`#f7f8f8` on dark. `--primary-foreground` is the opposite ink. `--brand-ink`
+and `--ring` stay in the same neutral family so links, focus, and primary
+actions never introduce a second hue. The auth canvas uses gray tonal
+gradients and a gray waveform. Document intake uses a flat neutral canvas.
+Geist carries headings, UI, and body copy. Semantic `--destructive` and
+`--chart-2` (success) stay chromatic.
 
 ## Components
 

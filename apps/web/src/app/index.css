@@ -67,15 +67,15 @@
   --font-raleway: "Raleway Variable", sans-serif;
   --font-nunito-sans: "Nunito Sans Variable", sans-serif;
   --background: #ffffff;
-  --document-canvas: #eef2f1;
+  --document-canvas: #f5f5f5;
   --foreground: #000000;
   --card: #f5f6f6;
   --card-foreground: #000000;
   --popover: #f6f7f7;
   --popover-foreground: #000000;
-  --primary: #daeffa;
-  --primary-foreground: #010102;
-  --brand-ink: #486b7a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --brand-ink: #0a0a0a;
   --secondary: #f5f6f6;
   --secondary-foreground: #000000;
   --muted: #f6f7f7;
@@ -85,36 +85,28 @@
   --destructive: #dc2626;
   --border: #e4e5e6;
   --input: #e4e5e6;
-  --ring: #9fd0e8;
-  --chart-1: #daeffa;
+  --ring: #8a8f98;
+  --chart-1: #0a0a0a;
   --chart-2: #27a644;
   --chart-3: #5a7389;
   --chart-4: #8a8f98;
   --chart-5: #62666d;
   --radius: 0.5rem;
-  --sidebar: #f5f6f6;
+  --sidebar: #ffffff;
   --sidebar-foreground: #000000;
-  --sidebar-primary: #daeffa;
-  --sidebar-primary-foreground: #010102;
+  --sidebar-primary: #0a0a0a;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f6f7f7;
   --sidebar-accent-foreground: #000000;
   --sidebar-border: #e4e5e6;
-  --sidebar-ring: #9fd0e8;
+  --sidebar-ring: #8a8f98;
   --auth-page-background:
-    radial-gradient(
-      circle at 24% 18%,
-      rgb(218 239 250 / 0.82),
-      transparent 32%
-    ),
-    radial-gradient(
-      circle at 70% 78%,
-      rgb(159 208 232 / 0.14),
-      transparent 28%
-    ),
-    linear-gradient(105deg, #f4f9fb 0%, #edf6f9 42%, #ffffff 74%);
-  --auth-line-start: #486b7a;
-  --auth-line-mid: #7faabb;
-  --auth-line-end: #9fd0e8;
+    radial-gradient(circle at 24% 18%, rgb(138 143 152 / 0.18), transparent 32%),
+    radial-gradient(circle at 70% 78%, rgb(196 198 201 / 0.12), transparent 28%),
+    linear-gradient(105deg, #f7f7f7 0%, #fafafa 42%, #ffffff 74%);
+  --auth-line-start: #8a8f98;
+  --auth-line-mid: #c4c6c9;
+  --auth-line-end: #e4e5e6;
 }
 
 .dark {
@@ -125,9 +117,9 @@
   --card-foreground: #f7f8f8;
   --popover: #0f1011;
   --popover-foreground: #f7f8f8;
-  --primary: #daeffa;
+  --primary: #f7f8f8;
   --primary-foreground: #010102;
-  --brand-ink: #daeffa;
+  --brand-ink: #f7f8f8;
   --secondary: #141516;
   --secondary-foreground: #f7f8f8;
   --muted: #18191a;
@@ -137,35 +129,27 @@
   --destructive: #f87171;
   --border: #23252a;
   --input: #23252a;
-  --ring: #9fd0e8;
-  --chart-1: #daeffa;
+  --ring: #8a8f98;
+  --chart-1: #f7f8f8;
   --chart-2: #27a644;
   --chart-3: #5a7389;
   --chart-4: #8a8f98;
   --chart-5: #62666d;
-  --sidebar: #0f1011;
+  --sidebar: #010102;
   --sidebar-foreground: #f7f8f8;
-  --sidebar-primary: #daeffa;
+  --sidebar-primary: #f7f8f8;
   --sidebar-primary-foreground: #010102;
   --sidebar-accent: #141516;
   --sidebar-accent-foreground: #f7f8f8;
   --sidebar-border: #23252a;
-  --sidebar-ring: #9fd0e8;
+  --sidebar-ring: #8a8f98;
   --auth-page-background:
-    radial-gradient(
-      circle at 24% 18%,
-      rgb(218 239 250 / 0.12),
-      transparent 32%
-    ),
-    radial-gradient(
-      circle at 70% 78%,
-      rgb(159 208 232 / 0.06),
-      transparent 28%
-    ),
+    radial-gradient(circle at 24% 18%, rgb(90 92 96 / 0.22), transparent 32%),
+    radial-gradient(circle at 70% 78%, rgb(138 143 152 / 0.08), transparent 28%),
     linear-gradient(105deg, #141516 0%, #08090b 46%, #010102 76%);
-  --auth-line-start: #6f9bb0;
-  --auth-line-mid: #daeffa;
-  --auth-line-end: #e8f6fc;
+  --auth-line-start: #5a5c60;
+  --auth-line-mid: #8a8f98;
+  --auth-line-end: #c4c6c9;
 }
 
 @layer base {
@@ -190,5 +174,12 @@
   ::selection {
     background: color-mix(in srgb, var(--primary) 35%, transparent);
     color: var(--foreground);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"] {
+    transition: none;
   }
 }
