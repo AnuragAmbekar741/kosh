@@ -12,6 +12,7 @@ members = [
     "packages/security",
     "apps/api",
     "apps/worker",
+    "packages/ai",
 ]
 
 [tool.pytest.ini_options]

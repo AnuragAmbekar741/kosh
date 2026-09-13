@@ -16,9 +16,10 @@ Personal finance app: spend ledger from documents and manual entry, React dashbo
 
 1. **[architecture/decisions.md](./architecture/decisions.md)** — locked tradeoffs; do not fight them
 2. **[architecture/overview.md](./architecture/overview.md)** — put code in the right package
-3. **[product/scope.md](./product/scope.md)** — V1 scope and target API
-4. **[product/BUILD_AND_LEARN.md](./product/BUILD_AND_LEARN.md)** — phase checklists and learning loop only
-5. **[design/global.md](./design/global.md)** — when working on `apps/web`
+3. **[architecture/backend.md](./architecture/backend.md)** — layering inside `apps/api` and `apps/worker`; [implementation.md](./architecture/implementation.md) is the phased move to it
+4. **[product/scope.md](./product/scope.md)** — V1 scope and target API
+5. **[product/BUILD_AND_LEARN.md](./product/BUILD_AND_LEARN.md)** — phase checklists and learning loop only
+6. **[design/global.md](./design/global.md)** — when working on `apps/web`
 
 Course notes (external): [Python for Professionals](https://python-pros.netlify.app/).
 

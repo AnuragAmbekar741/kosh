@@ -2,6 +2,8 @@
 
 Concise reference for this repo. Locked decisions: [decisions.md](./decisions.md). V1 scope: [../product/scope.md](../product/scope.md).
 
+Paths below are what exists today. Layering inside `apps/api` and `apps/worker` is [backend.md](./backend.md).
+
 ## Shape
 
 | Layer | Choice |
@@ -16,16 +18,15 @@ Concise reference for this repo. Locked decisions: [decisions.md](./decisions.md
 ## Layout (real paths)
 
 ```
-apps/api/src/api/          FastAPI app, routers + auth orchestration
-  routers/health.py        GET /health
-  routers/auth.py          register, login, google, refresh, logout
-  routers/users.py         GET /users/me
-  routers/spend.py         SpendItem CRUD
-  routers/documents.py     upload, list, detail, confirm
-  documents.py             sniff MIME, hash, store original bytes
-  schemas/spend.py         create, update, public
-  schemas/documents.py     upload and detail responses
+apps/api/src/api/          FastAPI app factory + feature modules
   main.py                  lifespan: env + Postgres ping; CORS from CORS_ORIGINS
+  bootstrap.py             register routers + exception handlers
+  common/                  SessionDep, DomainError, handlers
+  modules/health/          GET /health
+  modules/auth/            register, login, google, refresh, logout
+  modules/users/           GET /users/me; UserPublic
+  modules/spend/           SpendItem CRUD + presenter
+  modules/documents/       upload, list, detail, confirm
 
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession
@@ -41,11 +42,13 @@ packages/storage/src/storage/
 packages/security/src/security/   argon2 hash, access JWT, hashed refresh, CurrentUserDep
   google.py                Google ID token verify (JWKS)
 
+packages/ai/src/ai/        OpenRouter client, normalize, ReceiptExtraction | StatementExtraction
+
 apps/worker/               document extraction loop
-  src/worker/main.py       reclaim + claim + process
-  src/worker/pipeline.py   status machine, drafts
-  src/worker/extract.py    limits, normalize, OpenRouter
-  src/worker/schemas.py    ReceiptExtraction | StatementExtraction
+  src/worker/main.py       reclaim + claim + dispatch
+  src/worker/bootstrap.py  settings + Postgres ping
+  src/worker/consumers/extraction/  consumer → handler → services
+  src/worker/common/outcome.py      Ready | Retry | Failed
 
 apps/web/                  React + Vite + shadcn (not a uv member)
   src/app/                 entry, App, global CSS, typeset
@@ -57,7 +60,7 @@ apps/web/                  React + Vite + shadcn (not a uv member)
 apps/worker|agent|whatsapp  worker exists; agent/whatsapp later
 ```
 
-Auth, spend, documents, and overview are **router modules inside `apps/api`**, not separate HTTP services.
+Auth, spend, documents, and overview are **modules inside `apps/api`**, not separate HTTP services.
 
 ## High-level diagram
 
@@ -71,6 +74,7 @@ flowchart TB
   WA[apps/whatsapp]
   STOR[packages/storage]
   SEC[packages/security]
+  AI[packages/ai]
   PG[(Postgres)]
   OBJ[(Neon Object Storage)]
 
@@ -80,7 +84,9 @@ flowchart TB
   API --> SEC
   API --> STOR
   WRK --> STOR
+  WRK --> AI
   AGT --> STOR
+  AGT --> AI
   STOR --> PG
   STOR --> OBJ
 ```

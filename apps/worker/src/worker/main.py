@@ -4,17 +4,16 @@ import time
 from sqlmodel import Session
 from storage import database
 from storage.crud.document import claim_next, reclaim_stuck
-from storage.database import ping
 
-from worker.pipeline import process_document
+from worker.bootstrap import bootstrap
+from worker.consumers.extraction.consumer import process_document
 from worker.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
 
 def run() -> None:
-    get_settings()
-    ping()
+    bootstrap()
     poll = get_settings().worker_poll_seconds
     while True:
         with Session(database.engine) as session:
