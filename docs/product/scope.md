@@ -23,7 +23,7 @@ Never: `Agent → execute_sql() → Database`.
 | Spend | CRUD on **SpendItem**; filter by date, category, merchant, source |
 | Documents | Upload PDF/image/DOCX → async worker → draft SpendItems → user confirm |
 | Overview | Totals, monthly spend, category breakdown, top merchants, recent spend (computed) |
-| Dashboard | See [../design/dashboard.md](../design/dashboard.md) |
+| Dashboard | Collapsible sidebar shell; Overview + Spending. See [../design/dashboard.md](../design/dashboard.md) |
 | Agent | Read/write spend via tools; confirm before destructive ops; doc status |
 | WhatsApp | Text + media → same agent pipeline; link `wa_id` to user |
 
