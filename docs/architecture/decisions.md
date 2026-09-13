@@ -24,8 +24,8 @@ Revisit when: ...
 | 8 | v1 product scope | Auth, spend CRUD, docs → draft items, overview; WhatsApp/agent later; no Plaid/bills/Splitwise in v1 |
 | 9 | Database | **One Postgres**, one schema; FKs allowed |
 | 10 | File storage | **Neon Object Storage** (S3-compatible, path-style) for blobs; metadata in `documents` |
-| 11 | Main API | **`apps/api` :8000** — auth, spend, overview, documents routers |
-| 12 | Day-one members | `apps/api`, `packages/storage`, `packages/security`, `apps/worker` |
+| 11 | Main API | **`apps/api` :8000** — auth, spend, overview, documents modules |
+| 12 | Day-one members | `apps/api`, `packages/storage`, `packages/security`, `packages/ai`, `apps/worker` |
 | 13 | Shared data layer | **`packages/storage`** — SQLModel + crud; imported by api, worker, agent |
 | 14 | Shared auth layer | **`packages/security`** — password hash, JWT issue/verify, `CurrentUserDep` |
 | 15 | Auth pattern | `get_current_user` loads `User` from DB in same process (course ch 10) |
@@ -34,7 +34,7 @@ Revisit when: ...
 | 18 | WhatsApp identity | Webhook signature + `channel_accounts` (`wa_id` → `user_id`) |
 | 19 | Agent safety | `user_id` injected by runtime; confirm before mutating/destructive writes |
 | 20 | Build order | storage + security → api → web → worker/documents → agent/whatsapp |
-| 21 | Inner layout | `apps/api/src/api/routers/` + `api/auth.py`; `packages/storage/{models,crud}` |
+| 21 | Inner layout | `apps/api/src/api/modules/<f>/`; `packages/storage/{models,crud}` |
 | 22 | Deploy unit | Docker image per runnable app; packages baked in |
 | 23 | Python dependencies | **`uv add` only** — see `.cursor/rules/uv-workflow.mdc` |
 | 24 | Migrations | **`alembic revision --autogenerate`** — see `.cursor/rules/alembic-migrations.mdc` |
@@ -43,10 +43,10 @@ Revisit when: ...
 | 27 | Agent data access | Tools → services/crud, never raw SQL |
 | 28 | Refresh tokens | Stored **hashed** server-side; browser refresh via **httpOnly Secure cookie** |
 | 29 | Access token | Short-lived (~15 min) JWT in `Authorization` header |
-| 30 | Guide vs repo paths | Do not scaffold `apps/api/app/` from BUILD_AND_LEARN — use storage + routers |
+| 30 | Guide vs repo paths | Do not scaffold `apps/api/app/` from BUILD_AND_LEARN — use storage + modules |
 | 31 | Doc layout | `docs/architecture/`, `docs/product/`, `docs/design/` |
 | 32 | Identity layout | Domain modules `storage/models|crud` (`user.py`); auth orchestration in `apps/api`; Identity is in-process |
-| 33 | HTTP layer | FastAPI routers + `api/auth.py` functions; no controller or repository classes |
+| 33 | HTTP layer | FastAPI routers + `modules/<f>/service.py` functions; no controller or repository classes |
 | 34 | API startup | Load `DATABASE_URL` + `JWT_SECRET` and ping Postgres in lifespan; refuse to serve if either fails |
 | 35 | Web HTTP client | **Axios + TanStack Query** in `apps/web`; types in `src/api/<resource>/<resource>.types.ts` |
 | 36 | Web design craft | **Impeccable** locally (gitignored root files); committed visual system is `docs/design/` + Linear dark + monochrome primary |
@@ -77,9 +77,16 @@ Revisit when: ...
 - Revision 435 does **not** backfill old hashes — local DB is disposable; re-register
 - Revisit when: an authenticated account-linking feature is implemented
 
+**ai package now / queue still deferred**
+
+- Chosen: extract OpenRouter into `packages/ai` for the coming agent
+- Rejected: `packages/queue` until a second consumer needs a shared runtime
+- Why: `apps/agent` will call the same client; the SKIP LOCKED claim loop is still one worker
+- Revisit when: `apps/agent` or a second job exists
+
 **Identity context in-process**
 
-- Chosen: models/crud in storage; register/login/google/refresh/logout in `apps/api/auth.py`
+- Chosen: models/crud in storage; register/login/google/refresh/logout in `modules/auth/service.py`
 - Rejected: Auth HTTP service, database-per-service, API gateway, `UserService` class, storage importing security
 - Why: Decision #5/#9/#16; one-way `api → security → storage`
 - Revisit when: Independent scaling forces a split
@@ -189,7 +196,7 @@ Previously linked accounts are unchanged; review them separately if used with re
 | Topic | Notes |
 |---|---|
 | Makefile vs raw commands | Root `makefile` exists; not required for agents |
-| Dashboard chrome | Resolved: locked row 38. Overview/Spending page bodies still empty. |
+| Dashboard chrome | Resolved: locked row 38. Overview page body still empty. |
 | `packages/ui` / `api-client` | Defer until second consumer or OpenAPI codegen need |
 
 ## Rejected / deferred (v2+)

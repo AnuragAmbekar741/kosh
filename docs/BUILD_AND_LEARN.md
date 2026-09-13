@@ -8,8 +8,8 @@ This guide’s folder names are **not** this repo’s layout. When the guide say
 
 | Guide path | Implement as |
 |---|---|
-| `apps/api/app/auth/models.py` | `packages/storage` models + `apps/api/src/api/routers/auth.py` |
-| `apps/api/app/...` routers | `apps/api/src/api/routers/<feature>.py` |
+| `apps/api/app/auth/models.py` | `packages/storage` models + `apps/api/src/api/modules/auth/` |
+| `apps/api/app/...` routers | `apps/api/src/api/modules/<feature>/` |
 | Auth helpers / JWT | `packages/security` |
 | SQLAlchemy models | **SQLModel** in `packages/storage` |
 
