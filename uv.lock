@@ -8,6 +8,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "ai",
     "api",
     "finance",
     "security",
@@ -22,6 +23,27 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/0a/51/2d6a4580f8a1ad26eca1f3849207e08d65a0df318188fe1a5b56cd868a1e/agent_detector-1.1.0.tar.gz", hash = "sha256:3428dc45713f93a115bd0b05c9dbbfdc72af70246064c07bd837a9a95cf016bc", size = 53720, upload-time = "2026-08-19T10:24:41.338Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c4/26/43b02c1cf72b12597dd7a3b49023918bded80edd733e00222f5a3ce42d85/agent_detector-1.1.0-py3-none-any.whl", hash = "sha256:c605af97afb894737dd798721b117d9bbc7aa491e02a676cd5916c79dc39a46d", size = 7966, upload-time = "2026-08-19T10:24:40.276Z" },
+]
+
+[[package]]
+name = "ai"
+version = "0.1.0"
+source = { editable = "packages/ai" }
+dependencies = [
+    { name = "openai" },
+    { name = "pillow" },
+    { name = "pillow-heif" },
+    { name = "pydantic-settings" },
+    { name = "pypdf" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "openai", specifier = ">=3.10.0" },
+    { name = "pillow", specifier = ">=12.3.0" },
+    { name = "pillow-heif", specifier = ">=1.7.0" },
+    { name = "pydantic-settings", specifier = ">=2.15.0" },
+    { name = "pypdf", specifier = ">=6.18.0" },
 ]
 
 [[package]]
@@ -1926,18 +1948,12 @@ name = "worker"
 version = "0.1.0"
 source = { editable = "apps/worker" }
 dependencies = [
-    { name = "openai" },
-    { name = "pillow" },
-    { name = "pillow-heif" },
-    { name = "pypdf" },
+    { name = "ai" },
     { name = "storage" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "openai", specifier = ">=3.10.0" },
-    { name = "pillow", specifier = ">=12.3.0" },
-    { name = "pillow-heif", specifier = ">=1.7.0" },
-    { name = "pypdf", specifier = ">=6.18.0" },
+    { name = "ai", editable = "packages/ai" },
     { name = "storage", editable = "packages/storage" },
 ]

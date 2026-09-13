@@ -10,8 +10,8 @@ from pydantic import TypeAdapter, ValidationError
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
-from worker.schemas import Extraction, ReceiptExtraction
-from worker.settings import get_settings
+from ai.schemas import Extraction
+from ai.settings import get_settings
 
 try:
     from pillow_heif import register_heif_opener
@@ -26,7 +26,6 @@ __all__ = [
     "RetryableExtractError",
     "extract",
     "inspect_and_normalize",
-    "receipt_totals_mismatch",
     "strict_json_schema",
 ]
 
@@ -127,9 +126,11 @@ def _strip_defaults(node: object) -> None:
             _strip_defaults(value)
 
 
-def inspect_and_normalize(data: bytes, mime: str) -> tuple[bytes, str]:
+def inspect_and_normalize(
+    data: bytes, mime: str, *, max_upload_mb: int
+) -> tuple[bytes, str]:
     settings = get_settings()
-    max_bytes = settings.max_upload_mb * 1024 * 1024
+    max_bytes = max_upload_mb * 1024 * 1024
     if len(data) > max_bytes:
         raise ExtractError("file exceeds upload limit")
     if mime == "application/pdf":
@@ -174,21 +175,12 @@ def _normalize_image(data: bytes, max_pixels: int) -> tuple[bytes, str]:
     return out.getvalue(), "image/jpeg"
 
 
-def receipt_totals_mismatch(extraction: ReceiptExtraction) -> bool:
-    from decimal import Decimal
-
-    total = Decimal(extraction.total)
-    lines = sum(
-        (Decimal(item.line_total) for item in extraction.line_items), Decimal(0)
-    )
-    tax = Decimal(extraction.tax) if extraction.tax else Decimal(0)
-    return abs(lines + tax - total) > Decimal("0.01")
-
-
-def extract(data: bytes, mime: str) -> tuple[Extraction, ExtractMeta]:
+def extract(
+    data: bytes, mime: str, *, max_upload_mb: int
+) -> tuple[Extraction, ExtractMeta]:
     settings = get_settings()
     api_key = settings.require_openrouter()
-    payload, mime = inspect_and_normalize(data, mime)
+    payload, mime = inspect_and_normalize(data, mime, max_upload_mb=max_upload_mb)
     content = [{"type": "text", "text": _PROMPT}, _part(payload, mime, "document")]
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
     try:
