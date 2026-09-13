@@ -1,6 +1,7 @@
 import { useLocation } from "react-router"
 
-import { getNavItem } from "@/components/layout/navigation"
+import { getNavItem } from "@/components/layout/navigation/navigation"
+import { AddDocumentDialog } from "@/components/spending/AddDocumentDialog"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -13,6 +14,11 @@ export function AppHeader() {
       <SidebarTrigger className="size-11 md:size-8" />
       <Separator orientation="vertical" />
       <h1 className="text-sm font-medium">{current?.label ?? "Kosh"}</h1>
+      {pathname === "/spending" ? (
+        <div className="ml-auto">
+          <AddDocumentDialog />
+        </div>
+      ) : null}
     </header>
   )
 }
