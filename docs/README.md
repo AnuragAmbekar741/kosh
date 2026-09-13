@@ -1,4 +1,4 @@
-# Finance app documentation
+# Kosh documentation
 
 Personal finance app: spend ledger from documents and manual entry, React dashboard, overview analytics, and (later) WhatsApp + an agent over the same backend.
 

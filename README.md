@@ -1,4 +1,4 @@
-# Finance
+# Kosh
 
 Personal finance app — spend ledger, dashboard, and (later) WhatsApp agent.
 
