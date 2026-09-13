@@ -15,8 +15,8 @@ export function App() {
           <Route element={<SpendingPage />} path="/spending" />
         </Route>
         <Route element={<AuthPage />}>
-          <Route element={<></>} path="/login" />
-          <Route element={<></>} path="/signup" />
+          <Route path="/login" />
+          <Route path="/signup" />
         </Route>
       </Routes>
     </BrowserRouter>

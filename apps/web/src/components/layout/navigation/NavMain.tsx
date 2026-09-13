@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router"
 
-import { navigation } from "@/components/layout/navigation"
+import { navigation } from "@/components/layout/navigation/navigation"
 import {
   SidebarGroup,
   SidebarMenu,

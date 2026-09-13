@@ -1,6 +1,6 @@
 import { useLocation } from "react-router"
 
-import { getNavItem } from "@/components/layout/navigation"
+import { getNavItem } from "@/components/layout/navigation/navigation"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
