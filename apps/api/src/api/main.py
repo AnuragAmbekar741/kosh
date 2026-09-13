@@ -8,7 +8,7 @@ from security.settings import get_settings as get_security_settings
 from storage.database import ping
 from storage.settings import get_settings as get_storage_settings
 
-from api.routers import auth, documents, health, spend, users
+from api.bootstrap import register
 
 _DEFAULT_CORS = "http://localhost:5173,http://127.0.0.1:5173"
 
@@ -34,8 +34,4 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(health.router, tags=["health"])
-app.include_router(auth.router)
-app.include_router(users.router)
-app.include_router(spend.router)
-app.include_router(documents.router)
+register(app)

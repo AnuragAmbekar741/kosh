@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from security import CurrentUserDep
 
-from api.schemas import UserPublic
+from api.modules.users.schemas import UserPublic
 
 router = APIRouter(prefix="/users", tags=["users"])
 

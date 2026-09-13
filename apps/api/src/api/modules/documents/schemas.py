@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from api.schemas.spend import SpendItemPublic
+from api.modules.spend.schemas import SpendItemPublic
 
 __all__ = [
     "ConfirmDocumentRequest",

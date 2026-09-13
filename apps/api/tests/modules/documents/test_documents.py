@@ -1,3 +1,4 @@
+# API + worker integration: upload, then process_document end-to-end.
 from datetime import date
 from decimal import Decimal
 from uuid import UUID, uuid4
@@ -8,9 +9,9 @@ from storage import database
 from storage.blobs import BlobError
 from storage.crud.document import claim_next, get_document_by_id
 from storage.models.document import DocumentStatus
-from worker.extract import ExtractError, ExtractMeta, RetryableExtractError
-from worker.pipeline import process_document
-from worker.schemas import LineItem, ReceiptExtraction
+from ai import ExtractError, ExtractMeta, RetryableExtractError
+from ai.schemas import LineItem, ReceiptExtraction
+from worker.consumers.extraction.consumer import process_document
 
 _PASSWORD = "password1"
 _JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64
@@ -95,7 +96,7 @@ def test_unsupported_and_oversized(client, monkeypatch) -> None:
     bad = _upload(client, headers, b"not-a-file", "notes.txt")
     assert bad.status_code == 415
     monkeypatch.setattr(
-        "api.documents.get_settings", lambda: type("S", (), {"max_upload_mb": 0})()
+        "api.modules.documents.services.upload.get_settings", lambda: type("S", (), {"max_upload_mb": 0})()
     )
     huge = _upload(client, headers, _JPEG, "big.jpg")
     assert huge.status_code == 413
@@ -107,7 +108,7 @@ def test_storage_failure(client, monkeypatch) -> None:
     def boom(key: str, data: bytes, content_type: str) -> None:
         raise BlobError("storage write failed")
 
-    monkeypatch.setattr("api.documents.put_bytes", boom)
+    monkeypatch.setattr("api.modules.documents.services.upload.put_bytes", boom)
     response = _upload(client, headers, _JPEG, "receipt.jpg")
     assert response.status_code == 502
 
@@ -151,7 +152,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
             model="test", provider="test", prompt_tokens=1, completion_tokens=1
         )
 
-    monkeypatch.setattr("worker.pipeline.extract", fake_extract)
+    monkeypatch.setattr("worker.consumers.extraction.services.extractor.extract", fake_extract)
     process_document(document_id, _claim(document_id))
     detail = client.get(f"/documents/{document_id}", headers=headers)
     assert detail.status_code == 200
@@ -204,7 +205,7 @@ def test_extract_failure_marks_failed(client, monkeypatch) -> None:
     headers = _auth(client)
     uploaded = _upload(client, headers, _JPEG, "receipt.jpg")
     monkeypatch.setattr(
-        "worker.pipeline.extract",
+        "worker.consumers.extraction.services.extractor.extract",
         lambda data, mime: (_ for _ in ()).throw(ExtractError("invalid model output")),
     )
     document_id = uploaded.json()["id"]
@@ -218,7 +219,7 @@ def test_transient_extract_failure_is_retried(client, monkeypatch) -> None:
     headers = _auth(client)
     document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
     monkeypatch.setattr(
-        "worker.pipeline.extract",
+        "worker.consumers.extraction.services.extractor.extract",
         lambda data, mime: (_ for _ in ()).throw(
             RetryableExtractError("openrouter rate limited")
         ),
@@ -241,7 +242,7 @@ def test_reextraction_never_changes_confirmed_ledger(client, monkeypatch) -> Non
             model="test", provider="test", prompt_tokens=1, completion_tokens=1
         )
 
-    monkeypatch.setattr("worker.pipeline.extract", fake_extract)
+    monkeypatch.setattr("worker.consumers.extraction.services.extractor.extract", fake_extract)
     process_document(document_id, _claim(document_id))
     confirmed = client.post(
         f"/documents/{document_id}/confirm", json={"mode": "total"}, headers=headers
@@ -266,7 +267,7 @@ def test_sum_mismatch_ready_with_warning(client, monkeypatch) -> None:
             model="test", provider=None, prompt_tokens=1, completion_tokens=1
         )
 
-    monkeypatch.setattr("worker.pipeline.extract", fake_extract)
+    monkeypatch.setattr("worker.consumers.extraction.services.extractor.extract", fake_extract)
     document_id = uploaded.json()["id"]
     process_document(document_id, _claim(document_id))
     detail = client.get(f"/documents/{uploaded.json()['id']}", headers=headers).json()

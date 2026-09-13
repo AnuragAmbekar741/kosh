@@ -1,11 +1,20 @@
 import hashlib
 from uuid import UUID, uuid4
 
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from storage.blobs import BlobError, delete_bytes, put_bytes
 from storage.crud.document import create_document, get_document_by_idempotency
 from storage.models.document import Document, DocumentSource, DocumentStatus
 from storage.settings import get_settings
+
+from api.common.errors import (
+    DuplicateUploadError,
+    FileTooLargeError,
+    IdempotencyConflictError,
+    StorageWriteError,
+    UnsupportedFileError,
+)
 
 __all__ = [
     "FileTooLargeError",
@@ -21,18 +30,6 @@ _PDF = b"%PDF"
 _GIF87 = b"GIF87a"
 _GIF89 = b"GIF89a"
 _HEIC_BRANDS = {b"heic", b"heif", b"mif1", b"msf1", b"heix"}
-
-
-class UnsupportedFileError(Exception):
-    pass
-
-
-class FileTooLargeError(Exception):
-    pass
-
-
-class IdempotencyConflictError(Exception):
-    pass
 
 
 def sniff_mime(data: bytes) -> str:
@@ -78,7 +75,10 @@ def store_upload(
             return existing
     document_id = uuid4()
     storage_key = f"users/{user_id}/{document_id}"
-    put_bytes(storage_key, data, mime_type)
+    try:
+        put_bytes(storage_key, data, mime_type)
+    except BlobError as exc:
+        raise StorageWriteError from exc
     document = Document(
         id=document_id,
         user_id=user_id,
@@ -93,6 +93,23 @@ def store_upload(
     )
     try:
         return create_document(session, document)
+    except IntegrityError:
+        session.rollback()
+        try:
+            delete_bytes(storage_key)
+        except BlobError:
+            pass
+        if idempotency_key:
+            existing = get_document_by_idempotency(
+                session, user_id=user_id, idempotency_key=idempotency_key
+            )
+            if existing is not None:
+                if existing.content_hash != content_hash:
+                    raise IdempotencyConflictError(
+                        "idempotency key was already used for different content"
+                    ) from None
+                return existing
+        raise DuplicateUploadError from None
     except Exception:
         try:
             delete_bytes(storage_key)

@@ -41,9 +41,9 @@ def db_engine(tmp_path, monkeypatch) -> Iterator[Engine]:
 
 @pytest.fixture(autouse=True)
 def blob_store(monkeypatch) -> dict[str, bytes]:
-    import api.documents as documents_mod
+    import api.modules.documents.services.upload as documents_mod
     import storage.blobs as blobs_mod
-    import worker.pipeline as pipeline_mod
+    import worker.consumers.extraction.services.loader as pipeline_mod
 
     store: dict[str, bytes] = {}
 

@@ -25,6 +25,13 @@ from storage.crud.user import (
 )
 from storage.models import AuthProvider, User
 
+from api.common.errors import (
+    DuplicateEmailError,
+    GoogleAccountConflictError,
+    InvalidCredentialsError,
+    InvalidRefreshError,
+)
+
 __all__ = [
     "DuplicateEmailError",
     "GoogleAccountConflictError",
@@ -33,28 +40,15 @@ __all__ = [
     "InvalidCredentialsError",
     "InvalidGoogleTokenError",
     "InvalidRefreshError",
+    "get_identity_by_provider",
+    "get_user_by_email",
     "login_google",
     "login_local",
     "register_local",
     "revoke_refresh",
     "rotate_refresh",
+    "verify_google_id_token",
 ]
-
-
-class DuplicateEmailError(Exception):
-    pass
-
-
-class GoogleAccountConflictError(Exception):
-    pass
-
-
-class InvalidCredentialsError(Exception):
-    pass
-
-
-class InvalidRefreshError(Exception):
-    pass
 
 
 def _issue(session: Session, user: User) -> tuple[User, str, str]:

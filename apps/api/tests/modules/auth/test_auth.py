@@ -140,7 +140,7 @@ def _google_claims(**overrides: str) -> GoogleClaims:
 
 def test_google_creates_user(client, db_engine, monkeypatch) -> None:
     claims = _google_claims()
-    monkeypatch.setattr("api.auth.verify_google_id_token", lambda _token: claims)
+    monkeypatch.setattr("api.modules.auth.service.verify_google_id_token", lambda _token: claims)
     response = client.post("/auth/google", json={"id_token": "fake"})
     assert response.status_code == 200
     body = response.json()
@@ -156,7 +156,7 @@ def test_google_creates_user(client, db_engine, monkeypatch) -> None:
 
 def test_google_existing_identity_logs_in(client, monkeypatch) -> None:
     claims = _google_claims()
-    monkeypatch.setattr("api.auth.verify_google_id_token", lambda _token: claims)
+    monkeypatch.setattr("api.modules.auth.service.verify_google_id_token", lambda _token: claims)
     first = client.post("/auth/google", json={"id_token": "fake"})
     second = client.post("/auth/google", json={"id_token": "fake"})
     assert first.status_code == 200
@@ -167,7 +167,7 @@ def test_google_existing_identity_logs_in(client, monkeypatch) -> None:
 def test_google_rejects_existing_local_email(client, db_engine, monkeypatch) -> None:
     email, body = _register(client)
     claims = _google_claims(email=email.upper())
-    monkeypatch.setattr("api.auth.verify_google_id_token", lambda _token: claims)
+    monkeypatch.setattr("api.modules.auth.service.verify_google_id_token", lambda _token: claims)
     client.cookies.clear()
     response = client.post("/auth/google", json={"id_token": "fake"})
     assert response.status_code == 409
@@ -188,7 +188,7 @@ def test_google_invalid_token(client, monkeypatch) -> None:
     def boom(_token: str) -> None:
         raise InvalidGoogleTokenError
 
-    monkeypatch.setattr("api.auth.verify_google_id_token", boom)
+    monkeypatch.setattr("api.modules.auth.service.verify_google_id_token", boom)
     response = client.post("/auth/google", json={"id_token": "fake"})
     assert response.status_code == 401
 
@@ -198,7 +198,7 @@ def test_google_registration_collision(
     client, db_engine, monkeypatch, provider
 ) -> None:
     claims = _google_claims()
-    monkeypatch.setattr("api.auth.verify_google_id_token", lambda _token: claims)
+    monkeypatch.setattr("api.modules.auth.service.verify_google_id_token", lambda _token: claims)
     if provider == AuthProvider.LOCAL:
         _register(client, claims.email)
     else:
@@ -210,9 +210,9 @@ def test_google_registration_collision(
         )
     # Simulate another registration winning after our initial lookups. The
     # insert hits the real unique constraint; recovery must use the subject.
-    monkeypatch.setattr("api.auth.get_user_by_email", Mock(side_effect=[None, user]))
+    monkeypatch.setattr("api.modules.auth.service.get_user_by_email", Mock(side_effect=[None, user]))
     monkeypatch.setattr(
-        "api.auth.get_identity_by_provider", Mock(side_effect=[None, identity])
+        "api.modules.auth.service.get_identity_by_provider", Mock(side_effect=[None, identity])
     )
     client.cookies.clear()
     response = client.post("/auth/google", json={"id_token": "fake"})
@@ -233,7 +233,7 @@ def test_google_not_configured(client, monkeypatch) -> None:
     def boom(_token: str) -> None:
         raise GoogleNotConfiguredError
 
-    monkeypatch.setattr("api.auth.verify_google_id_token", boom)
+    monkeypatch.setattr("api.modules.auth.service.verify_google_id_token", boom)
     response = client.post("/auth/google", json={"id_token": "fake"})
     assert response.status_code == 503
 
@@ -245,7 +245,7 @@ def test_google_empty_id_token(client) -> None:
 
 def test_me_with_google_access_token(client, monkeypatch) -> None:
     claims = _google_claims()
-    monkeypatch.setattr("api.auth.verify_google_id_token", lambda _token: claims)
+    monkeypatch.setattr("api.modules.auth.service.verify_google_id_token", lambda _token: claims)
     body = client.post("/auth/google", json={"id_token": "fake"}).json()
     response = client.get(
         "/users/me",
