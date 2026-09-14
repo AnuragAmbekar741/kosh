@@ -147,7 +147,7 @@ export function AddDocumentDialog() {
                 }}
                 type="button"
               >
-                <span className="flex size-10 items-center justify-center rounded-lg bg-muted text-foreground [&_svg]:size-4">
+                <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-foreground [&_svg]:size-4">
                   <UploadIcon />
                 </span>
                 <span className="flex flex-col gap-1">
@@ -175,7 +175,7 @@ export function AddDocumentDialog() {
 
               {file ? (
                 <div className="flex min-w-0 items-center gap-3 rounded-lg border bg-card p-3">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted [&_svg]:size-4">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent [&_svg]:size-4">
                     {isPdf(file) ? <FileTextIcon /> : <FileImageIcon />}
                   </span>
                   <span className="min-w-0 flex-1">

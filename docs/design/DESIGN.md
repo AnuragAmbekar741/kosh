@@ -20,7 +20,7 @@ colors:
   hairline-tertiary: "#3e3e44"
   inverse-canvas: "#ffffff"
   inverse-surface-1: "#f5f6f6"
-  inverse-surface-2: "#f6f7f7"
+  inverse-surface-2: "#e8eaed"
   inverse-ink: "#000000"
   brand-secure: "#7A9AA8"
   semantic-success: "#27a644"

@@ -60,21 +60,23 @@ export function SpendingPage() {
             <SpendingAccordion items={spendItems.data} />
           </div>
         ) : (
-          <Empty className="min-h-0 flex-1 border">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <ReceiptTextIcon />
-              </EmptyMedia>
-              <EmptyTitle>No spending yet</EmptyTitle>
-              <EmptyDescription>
-                Add a receipt or statement from the top bar. Extracted entries
-                will appear here after you review them.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button onClick={openAddDocument}>Add document</Button>
-            </EmptyContent>
-          </Empty>
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <ReceiptTextIcon />
+                </EmptyMedia>
+                <EmptyTitle>No spending yet</EmptyTitle>
+                <EmptyDescription>
+                  Add a receipt or statement from the top bar. Extracted entries
+                  will appear here after you review them.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button onClick={openAddDocument}>Add document</Button>
+              </EmptyContent>
+            </Empty>
+          </div>
         )}
       </section>
     </main>

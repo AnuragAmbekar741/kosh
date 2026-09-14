@@ -76,11 +76,11 @@
   --primary: #0a0a0a;
   --primary-foreground: #ffffff;
   --brand-ink: #0a0a0a;
-  --secondary: #f5f6f6;
+  --secondary: #e8eaed;
   --secondary-foreground: #000000;
   --muted: #f6f7f7;
   --muted-foreground: #62666d;
-  --accent: #f5f6f6;
+  --accent: #e8eaed;
   --accent-foreground: #000000;
   --destructive: #dc2626;
   --border: #e4e5e6;
@@ -96,7 +96,7 @@
   --sidebar-foreground: #000000;
   --sidebar-primary: #0a0a0a;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f6f7f7;
+  --sidebar-accent: #e8eaed;
   --sidebar-accent-foreground: #000000;
   --sidebar-border: #e4e5e6;
   --sidebar-ring: #8a8f98;

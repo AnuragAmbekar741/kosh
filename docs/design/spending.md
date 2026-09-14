@@ -29,7 +29,7 @@ Confirmed `GET /spend-items` rows are grouped by source document. Manual rows
 remain individual entries. Each group is a shadcn Accordion item. The trigger
 is one row: merchant title, then outline pill Badges for date, source
 (`Document` or `Manual entry`), and item count (`1 item` / `N items`). The
-group total stays on the right, followed by a muted three-dot tile that
+group total stays on the right, followed by an accent three-dot tile that
 matches the merchant icon. That control does not toggle the accordion. It
 opens a dropdown: Edit expands the bill; Delete opens a confirmation Dialog
 and, on confirm, removes the whole bill. Document groups call
@@ -59,8 +59,9 @@ dense financial content scannable; depth does not rely on shadows.
 Loading uses an accordion-shaped Skeleton: a bordered `rounded-xl` stack of
 bill rows (icon tile, merchant bar, badge chips, trailing amount, kebab
 tile). Failure
-uses Alert. An empty ledger uses the Empty primitive, points at the top-bar
-action, and includes an EmptyContent button that opens the same Add Document
+uses Alert. An empty ledger uses a compact dashed Empty frame centered under
+the Transactions heading, hugging its copy, pointing at the top-bar action,
+and including an EmptyContent button that opens the same Add Document
 dialog. Long extraction reviews also use a ScrollArea so the Dialog header
 and confirmation action stay reachable.
 
