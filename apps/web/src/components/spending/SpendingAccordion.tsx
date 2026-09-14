@@ -122,7 +122,7 @@ function SpendingBillRow({ group, onDelete, onEdit }: SpendingBillRowProps) {
                 aria-label={`Actions for ${first.merchant}`}
                 render={
                   <Button
-                    className="size-9 rounded-lg bg-muted hover:bg-muted"
+                    className="size-9 rounded-lg bg-accent hover:bg-accent"
                     size="icon"
                     variant="ghost"
                   />
@@ -150,7 +150,7 @@ function SpendingBillRow({ group, onDelete, onEdit }: SpendingBillRowProps) {
         headerClassName="px-4 py-4 hover:bg-muted/50 group-data-open/bill:hover:bg-transparent sm:px-5 sm:py-5"
       >
         <span className="flex min-w-0 items-center gap-3 text-left">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted [&_svg]:size-4">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent [&_svg]:size-4">
             <FileTextIcon />
           </span>
           <span className="flex min-w-0 flex-wrap items-center gap-2">
