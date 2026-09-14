@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
 
@@ -7,6 +8,7 @@ from pydantic import BaseModel, Field
 from api.modules.spend.schemas import SpendItemPublic
 
 __all__ = [
+    "AddDocumentLineItemRequest",
     "ConfirmDocumentRequest",
     "DocumentDetail",
     "DocumentSummary",
@@ -41,3 +43,9 @@ class DocumentDetail(DocumentSummary):
 class ConfirmDocumentRequest(BaseModel):
     mode: Literal["total", "line_items"] = "total"
     item_ids: list[UUID] | None = None
+
+
+class AddDocumentLineItemRequest(BaseModel):
+    description: str = Field(min_length=1)
+    amount: Decimal = Field(gt=0)
+    category: str | None = None

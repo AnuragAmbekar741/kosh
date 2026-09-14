@@ -78,3 +78,28 @@ class ConfirmSelectionError(DomainError):
 class NoDraftsToConfirmError(DomainError):
     status_code = 400
     detail = "no matching draft items to confirm"
+
+
+class DocumentProcessingError(DomainError):
+    status_code = 409
+    detail = "document is being processed"
+
+
+class DocumentNotConfirmedError(DomainError):
+    status_code = 409
+    detail = "document has no confirmed items"
+
+
+class DocumentBillNotItemizedError(DomainError):
+    status_code = 409
+    detail = "document bill is not itemized"
+
+
+class DocumentNotReceiptError(DomainError):
+    status_code = 409
+    detail = "line items can only be added to receipts"
+
+
+class StorageCleanupError(DomainError):
+    status_code = 502
+    detail = "storage cleanup failed"
