@@ -19,9 +19,9 @@ Paths below are what exists today. Layering inside `apps/api` and `apps/worker` 
 
 ```
 apps/api/src/api/          FastAPI app factory + feature modules
-  main.py                  lifespan: env + Postgres ping; CORS from CORS_ORIGINS
+  main.py                  lifespan: logging, env + Postgres ping; CORS from CORS_ORIGINS
   bootstrap.py             register routers + exception handlers
-  common/                  SessionDep, DomainError, handlers
+  common/                  SessionDep, DomainError, handlers, request logging middleware
   modules/health/          GET /health
   modules/auth/            register, login, google, refresh, logout
   modules/users/           GET /users/me; UserPublic
@@ -44,10 +44,12 @@ packages/security/src/security/   argon2 hash, access JWT, hashed refresh, Curre
 
 packages/ai/src/ai/        OpenRouter client, normalize, ReceiptExtraction | StatementExtraction
 
+packages/observability/src/observability/   stdlib logging to stdout: text | JSON, redaction, bound ids
+
 apps/worker/               document extraction loop
   src/worker/main.py       reclaim + claim + dispatch
-  src/worker/bootstrap.py  settings + Postgres ping
-  src/worker/consumers/extraction/  consumer → handler → services
+  src/worker/bootstrap.py  logging, settings + Postgres ping
+  src/worker/consumers/extraction/  consumer → handler → services; one outcome line per job
   src/worker/common/outcome.py      Ready | Retry | Failed
 
 apps/web/                  React + Vite + shadcn (not a uv member)
@@ -75,6 +77,7 @@ flowchart TB
   STOR[packages/storage]
   SEC[packages/security]
   AI[packages/ai]
+  OBS[packages/observability]
   PG[(Postgres)]
   OBJ[(Neon Object Storage)]
 
@@ -83,6 +86,8 @@ flowchart TB
   WA --> AGT
   API --> SEC
   API --> STOR
+  API --> OBS
+  WRK --> OBS
   WRK --> STOR
   WRK --> AI
   AGT --> STOR
@@ -116,4 +121,4 @@ cd apps/web && pnpm dev
 
 Optional local Postgres: `docker compose up -d` and the localhost URL in `.env.example`.
 
-`apps/web/.env` sets `VITE_API_URL` (empty = Vite proxy) and `VITE_GOOGLE_CLIENT_ID`. API CORS: `CORS_ORIGINS` (default localhost/127.0.0.1:5173) with credentials. Worker needs `OPENROUTER_API_KEY` and Neon S3 `AWS_*` keys; the API starts without them. Design tokens: [../design/global.md](../design/global.md).
+`apps/web/.env` sets `VITE_API_URL` (empty = Vite proxy) and `VITE_GOOGLE_CLIENT_ID`. API CORS: `CORS_ORIGINS` (default localhost/127.0.0.1:5173) with credentials. Worker needs `OPENROUTER_API_KEY` and Neon S3 `AWS_*` keys; the API starts without them. Both processes read `LOG_LEVEL` (default `INFO`) and `LOG_FORMAT` (`text` locally, `json` wherever logs are shipped). Design tokens: [../design/global.md](../design/global.md).

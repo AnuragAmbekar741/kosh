@@ -25,7 +25,7 @@ Revisit when: ...
 | 9 | Database | **One Postgres**, one schema; FKs allowed |
 | 10 | File storage | **Neon Object Storage** (S3-compatible, path-style) for blobs; metadata in `documents` |
 | 11 | Main API | **`apps/api` :8000** — auth, spend, overview, documents modules |
-| 12 | Day-one members | `apps/api`, `packages/storage`, `packages/security`, `packages/ai`, `apps/worker` |
+| 12 | Day-one members | `apps/api`, `packages/storage`, `packages/security`, `packages/ai`, `packages/observability`, `apps/worker` |
 | 13 | Shared data layer | **`packages/storage`** — SQLModel + crud; imported by api, worker, agent |
 | 14 | Shared auth layer | **`packages/security`** — password hash, JWT issue/verify, `CurrentUserDep` |
 | 15 | Auth pattern | `get_current_user` loads `User` from DB in same process (course ch 10) |
@@ -52,6 +52,7 @@ Revisit when: ...
 | 36 | Web design craft | **Impeccable** locally (gitignored root files); committed visual system is `docs/design/` + Linear dark + monochrome primary |
 | 37 | Dev Postgres host | **Neon** project `kosh` (direct `DATABASE_URL`); Docker Postgres is optional fallback |
 | 38 | Signed-in chrome | **Collapsible sidebar** (`variant="inset"`, `collapsible="icon"`) with Overview + Spending |
+| 39 | Logging | Stdlib `logging` to stdout, configured by `packages/observability`; text locally, JSON when shipped; log ids, never contents |
 
 ### Locked detail rows
 
@@ -83,6 +84,13 @@ Revisit when: ...
 - Rejected: `packages/queue` until a second consumer needs a shared runtime
 - Why: `apps/agent` will call the same client; the SKIP LOCKED claim loop is still one worker
 - Revisit when: `apps/agent` or a second job exists
+
+**Logging: stdlib to stdout, ids not contents**
+
+- Chosen: Stdlib `logging` configured once per process by `packages/observability` — text locally, one JSON object per line with `LOG_FORMAT=json`. `request_id` (API middleware) and `document_id` (worker consumer) are bound through `contextvars`. The formatter redacts by exact key and truncates long values. The request middleware replaces uvicorn's access log so query strings are never logged. One `extraction finished` line per job carries `outcome` ∈ ready / retry / failed.
+- Rejected: structlog / loguru (a second logging API next to the one openai, httpx, SQLAlchemy and uvicorn already use); a package named `logging` (shadows the standard library); Sentry now (no deploy target yet)
+- Why: One pipeline for our code and third-party libraries with no new dependency. A finance ledger must not leak merchants, amounts, emails or tokens into log storage, and `GET /spend-items?merchant=…` carries them in the URL.
+- Revisit when: A deploy target picks a log sink, error tracking is needed, or logging moves off the calling thread (for example a `QueueHandler`) — bound fields are read at format time
 
 **Identity context in-process**
 

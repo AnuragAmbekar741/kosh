@@ -102,7 +102,7 @@ Already correct: `storage`, `security`. Add as the need lands, not before:
 |---|---|---|
 | `queue` | `storage/crud/document.py` claim helpers + `worker/main.py` loop | The claim protocol is transport, not document logic. Consumers should receive a job, not poll for one. |
 | `ai` | `worker/extract.py` | `apps/agent` (see overview.md) needs the same OpenRouter client. Stamina keeps this in `library/ai`. |
-| `logging` | — | Only once a second consumer exists and correlation ids start mattering. |
+| `observability` | — | Api and worker both need one formatter, redaction and bound request/job ids. Not named `logging`: a top-level module of that name shadows the standard library for every importer. |
 
 Rule for promotion: code enters `packages/` when the **second** app needs it, not in anticipation of the first.
 
