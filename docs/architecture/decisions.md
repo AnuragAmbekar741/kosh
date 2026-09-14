@@ -53,6 +53,7 @@ Revisit when: ...
 | 37 | Dev Postgres host | **Neon** project `kosh` (direct `DATABASE_URL`); Docker Postgres is optional fallback |
 | 38 | Signed-in chrome | **Collapsible sidebar** (`variant="inset"`, `collapsible="icon"`) with Overview + Spending |
 | 39 | Logging | Stdlib `logging` to stdout, configured by `packages/observability`; text locally, JSON when shipped; log ids, never contents |
+| 40 | Document bill delete | Explicit ordered deletes (spend items → attempts → document) then blob; no FK CASCADE; rollback DB if blob cleanup fails |
 
 ### Locked detail rows
 
@@ -244,3 +245,10 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Ice-blue `#DAEFFA` as the brand accent
 - Why: On light surfaces the accent fell below usable contrast and carried no meaning that surface and weight did not already carry
 - Revisit when: A second semantic color is needed for data
+
+**Document bill delete is explicit and blob-gated**
+
+- Chosen: Lock the owned document, delete spend items then extraction attempts then the document row, delete the blob, and roll back the DB if blob cleanup fails. No Alembic CASCADE.
+- Rejected: Client-side N× `DELETE /spend-items/{id}`; DB-only delete that orphans the file; blob-first delete that can lose the file while rows remain.
+- Why: FKs have no `ON DELETE`; the ledger and document metadata stay consistent if storage fails; a later retry can finish blob cleanup.
+- Revisit when: object storage and Postgres share a transaction or CASCADE is added to the schema
