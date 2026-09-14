@@ -22,6 +22,7 @@ export function DashboardSkeleton() {
     <SidebarProvider
       aria-busy="true"
       aria-label="Opening your workspace"
+      className="h-svh overflow-hidden"
       defaultOpen={readSidebarOpen()}
       role="status"
     >
@@ -52,14 +53,14 @@ export function DashboardSkeleton() {
           </div>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="bg-card md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border">
+      <SidebarInset className="min-h-0 overflow-hidden bg-card max-h-svh md:max-h-[calc(100svh-1rem)] md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-4">
           <Skeleton className="size-11 md:size-8" />
           <Separator orientation="vertical" />
           <Skeleton className="h-4 w-20" />
         </header>
-        <div className="flex-1 px-6 pb-6 pt-6">
-          <Skeleton className="h-full min-h-64 w-full rounded-xl" />
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-6">
+          <Skeleton className="h-full min-h-0 w-full flex-1 rounded-xl" />
         </div>
       </SidebarInset>
     </SidebarProvider>
