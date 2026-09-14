@@ -3,14 +3,19 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID, uuid4
 
+from ai import ExtractError, ExtractMeta, RetryableExtractError
+from ai.schemas import LineItem, ReceiptExtraction, StatementExtraction, Transaction
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, select
 from storage import database
 from storage.blobs import BlobError
-from storage.crud.document import claim_next, get_document_by_id
-from storage.models.document import DocumentStatus
-from ai import ExtractError, ExtractMeta, RetryableExtractError
-from ai.schemas import LineItem, ReceiptExtraction
+from storage.crud.document import (
+    claim_next,
+    get_document_by_id,
+    list_extraction_attempts,
+)
+from storage.models.document import Document, DocumentStatus
+from storage.models.spend import SpendItem
 from worker.consumers.extraction.consumer import process_document
 
 _PASSWORD = "password1"
@@ -65,6 +70,79 @@ def _receipt(*, total: str = "56.71", line_total: str = "56.71") -> ReceiptExtra
             )
         ],
     )
+
+
+def _receipt_two_lines() -> ReceiptExtraction:
+    return ReceiptExtraction(
+        document_kind="receipt",
+        merchant="Walmart Neighborhood Market",
+        store_location="Corvallis OR",
+        purchased_at=date(2024, 10, 19),
+        currency="USD",
+        subtotal="30.00",
+        tax=None,
+        total="30.00",
+        line_items=[
+            LineItem(
+                raw_description="MILK",
+                normalized_name="Milk",
+                upc=None,
+                quantity="1",
+                unit_price="10.00",
+                line_total="10.00",
+                confidence=0.9,
+                requires_review=False,
+            ),
+            LineItem(
+                raw_description="BREAD",
+                normalized_name="Bread",
+                upc=None,
+                quantity="1",
+                unit_price="20.00",
+                line_total="20.00",
+                confidence=0.9,
+                requires_review=False,
+            ),
+        ],
+    )
+
+
+def _statement() -> StatementExtraction:
+    return StatementExtraction(
+        document_kind="statement",
+        institution="Chase",
+        period_start=date(2024, 10, 1),
+        period_end=date(2024, 10, 31),
+        currency="USD",
+        transactions=[
+            Transaction(
+                merchant="Starbucks",
+                amount="4.50",
+                spent_at=date(2024, 10, 19),
+                category="coffee",
+                confidence=0.9,
+            )
+        ],
+    )
+
+
+def _stub_extract(monkeypatch, extraction) -> None:
+    monkeypatch.setattr(
+        "worker.consumers.extraction.services.extractor.extract",
+        lambda data, mime: (
+            extraction,
+            ExtractMeta(
+                model="test", provider="test", prompt_tokens=1, completion_tokens=1
+            ),
+        ),
+    )
+
+
+def _process(client, monkeypatch, headers, extraction) -> str:
+    document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
+    _stub_extract(monkeypatch, extraction)
+    process_document(document_id, _claim(document_id))
+    return document_id
 
 
 def _claim(document_id: str, *, requeue: bool = False) -> UUID:
@@ -293,3 +371,266 @@ def test_process_logs_one_outcome_line(client, monkeypatch, caplog) -> None:
     assert finished.levelname == "WARNING"
     assert finished.outcome == "retry"
     assert "rate limited" in finished.reason
+
+
+def test_add_line_item_to_confirmed_itemized_bill(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    confirmed = client.post(
+        f"/documents/{document_id}/confirm",
+        json={"mode": "line_items"},
+        headers=headers,
+    )
+    assert confirmed.status_code == 200
+    added = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Bananas", "amount": "2.50", "category": "produce"},
+        headers=headers,
+    )
+    assert added.status_code == 201
+    body = added.json()
+    assert body["description"] == "Bananas"
+    assert body["amount"] == "2.50"
+    assert body["category"] == "produce"
+    assert body["merchant"] == "Walmart Neighborhood Market"
+    assert body["spent_at"] == "2024-10-19"
+    assert body["currency"] == "USD"
+    assert body["line_index"] == 1
+    assert body["source"] == "document"
+    assert body["status"] == "confirmed"
+    assert body["user_edited"] is True
+    ledger = client.get("/spend-items", headers=headers).json()
+    assert any(item["id"] == body["id"] for item in ledger)
+
+
+def test_add_line_item_increments_line_index(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt_two_lines())
+    client.post(
+        f"/documents/{document_id}/confirm",
+        json={"mode": "line_items"},
+        headers=headers,
+    )
+    first = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Eggs", "amount": "3.00"},
+        headers=headers,
+    )
+    second = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Butter", "amount": "4.00"},
+        headers=headers,
+    )
+    assert first.json()["line_index"] == 2
+    assert second.json()["line_index"] == 3
+
+
+def test_add_line_item_rejects_total_mode_bill(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    client.post(
+        f"/documents/{document_id}/confirm",
+        json={"mode": "total"},
+        headers=headers,
+    )
+    response = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Bananas", "amount": "2.50"},
+        headers=headers,
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"] == "document bill is not itemized"
+
+
+def test_add_line_item_rejects_unconfirmed_document(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    response = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Bananas", "amount": "2.50"},
+        headers=headers,
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"] == "document has no confirmed items"
+
+
+def test_add_line_item_rejects_statement(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _statement())
+    client.post(
+        f"/documents/{document_id}/confirm",
+        json={"mode": "line_items"},
+        headers=headers,
+    )
+    response = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Coffee", "amount": "4.50"},
+        headers=headers,
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"] == "line items can only be added to receipts"
+
+
+def test_add_line_item_rejects_processing_document(client) -> None:
+    headers = _auth(client)
+    document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
+    _claim(document_id)
+    response = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Bananas", "amount": "2.50"},
+        headers=headers,
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"] == "document is being processed"
+
+
+def test_add_line_item_cross_user(client, monkeypatch) -> None:
+    headers_a = _auth(client)
+    document_id = _process(client, monkeypatch, headers_a, _receipt())
+    client.post(
+        f"/documents/{document_id}/confirm",
+        json={"mode": "line_items"},
+        headers=headers_a,
+    )
+    headers_b = _auth(client)
+    response = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Bananas", "amount": "2.50"},
+        headers=headers_b,
+    )
+    assert response.status_code == 404
+
+
+def test_add_line_item_validation(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    client.post(
+        f"/documents/{document_id}/confirm",
+        json={"mode": "line_items"},
+        headers=headers,
+    )
+    zero = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Bananas", "amount": "0"},
+        headers=headers,
+    )
+    assert zero.status_code == 422
+    empty = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "", "amount": "2.50"},
+        headers=headers,
+    )
+    assert empty.status_code == 422
+
+
+def test_delete_confirmed_document_bill(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    client.post(
+        f"/documents/{document_id}/confirm",
+        json={"mode": "line_items"},
+        headers=headers,
+    )
+    deleted = client.delete(f"/documents/{document_id}", headers=headers)
+    assert deleted.status_code == 204
+    assert client.get(f"/documents/{document_id}", headers=headers).status_code == 404
+    assert client.get("/spend-items", headers=headers).json() == []
+    listed = client.get("/documents", headers=headers).json()
+    assert listed == []
+
+
+def test_delete_document_removes_blob(client, monkeypatch, blob_store) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    keys = list(blob_store)
+    assert keys
+    client.delete(f"/documents/{document_id}", headers=headers)
+    for key in keys:
+        assert key not in blob_store
+
+
+def test_delete_document_with_pending_drafts(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    deleted = client.delete(f"/documents/{document_id}", headers=headers)
+    assert deleted.status_code == 204
+    with Session(database.engine) as session:
+        assert session.exec(
+            select(SpendItem).where(SpendItem.document_id == UUID(document_id))
+        ).all() == []
+        assert list_extraction_attempts(session, UUID(document_id)) == []
+        assert session.get(Document, UUID(document_id)) is None
+
+
+def test_delete_document_cross_user(client, monkeypatch) -> None:
+    headers_a = _auth(client)
+    document_id = _process(client, monkeypatch, headers_a, _receipt())
+    headers_b = _auth(client)
+    response = client.delete(f"/documents/{document_id}", headers=headers_b)
+    assert response.status_code == 404
+    assert client.get(f"/documents/{document_id}", headers=headers_a).status_code == 200
+
+
+def test_delete_document_rejects_processing(client, blob_store) -> None:
+    headers = _auth(client)
+    document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
+    _claim(document_id)
+    keys = list(blob_store)
+    response = client.delete(f"/documents/{document_id}", headers=headers)
+    assert response.status_code == 409
+    assert response.json()["detail"] == "document is being processed"
+    assert client.get(f"/documents/{document_id}", headers=headers).json()["status"] == (
+        "processing"
+    )
+    for key in keys:
+        assert key in blob_store
+
+
+def test_delete_document_blob_failure_rolls_back(client, monkeypatch, blob_store) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+
+    def boom(key: str) -> None:
+        raise BlobError("storage cleanup failed")
+
+    monkeypatch.setattr("storage.blobs.delete_bytes", boom)
+    response = client.delete(f"/documents/{document_id}", headers=headers)
+    assert response.status_code == 502
+    assert client.get(f"/documents/{document_id}", headers=headers).status_code == 200
+    assert blob_store
+
+
+def test_delete_document_leaves_other_bills(client, monkeypatch) -> None:
+    headers = _auth(client)
+    keep_id = _process(client, monkeypatch, headers, _receipt())
+    client.post(
+        f"/documents/{keep_id}/confirm",
+        json={"mode": "line_items"},
+        headers=headers,
+    )
+    drop_id = _upload(client, headers, _PDF, "other.pdf").json()["id"]
+    _stub_extract(monkeypatch, _receipt(total="10.00", line_total="10.00"))
+    process_document(drop_id, _claim(drop_id))
+    client.post(
+        f"/documents/{drop_id}/confirm",
+        json={"mode": "line_items"},
+        headers=headers,
+    )
+    client.delete(f"/documents/{drop_id}", headers=headers)
+    ledger = client.get("/spend-items", headers=headers).json()
+    assert len(ledger) == 1
+    assert ledger[0]["document_id"] == keep_id
+    assert client.get(f"/documents/{keep_id}", headers=headers).status_code == 200
+
+
+def test_delete_document_with_multiple_attempts(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    process_document(document_id, _claim(document_id, requeue=True))
+    client.delete(f"/documents/{document_id}", headers=headers)
+    with Session(database.engine) as session:
+        assert list_extraction_attempts(session, UUID(document_id)) == []
+        assert session.get(Document, UUID(document_id)) is None
+        assert session.exec(
+            select(SpendItem).where(SpendItem.document_id == UUID(document_id))
+        ).all() == []

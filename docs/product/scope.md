@@ -57,11 +57,13 @@ Status key: **live** = implemented today.
 | GET | `/documents` | **live** |
 | GET | `/documents/{id}` | **live** |
 | POST | `/documents/{id}/confirm` | **live** |
+| POST | `/documents/{id}/line-items` | **live** |
+| DELETE | `/documents/{id}` | **live** |
 | GET | `/overview` | planned |
 
 Prefer `GET /users/me` over `GET /users/{id}` for profile.
 
-`GET /spend-items` is the confirmed ledger. Pending document candidates are returned by `GET /documents/{id}` until the user confirms either the receipt total or its line items.
+`GET /spend-items` is the confirmed ledger. Pending document candidates are returned by `GET /documents/{id}` until the user confirms either the receipt total or its line items. `POST /documents/{id}/line-items` appends a confirmed line to an itemized receipt bill. `DELETE /documents/{id}` removes the document, extraction history, linked spend items, and stored file.
 
 ## Auth flow (target)
 
