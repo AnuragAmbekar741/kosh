@@ -50,9 +50,12 @@ The surface stays flat and monochrome: semantic neutral backgrounds and muted
 fills establish hierarchy. Geist, compact type, and tabular numerals keep the
 dense financial content scannable; depth does not rely on shadows.
 
-Loading uses Skeleton rows. Failure uses Alert. An empty ledger uses the Empty
-primitive and points back to the top-bar action. Long extraction reviews also
-use a ScrollArea so the Dialog header and confirmation action stay reachable.
+Loading uses an accordion-shaped Skeleton: a bordered `rounded-xl` stack of
+bill rows (icon tile, merchant bar, badge chips, trailing amount). Failure
+uses Alert. An empty ledger uses the Empty primitive, points at the top-bar
+action, and includes an EmptyContent button that opens the same Add Document
+dialog. Long extraction reviews also use a ScrollArea so the Dialog header
+and confirmation action stay reachable.
 
 ## Structure
 
@@ -62,5 +65,6 @@ src/components/spending/
   AddDocumentDialog.tsx
   DocumentReview.tsx
   SpendingAccordion.tsx
+  SpendingLedgerSkeleton.tsx
   spending-formatters.ts
 ```

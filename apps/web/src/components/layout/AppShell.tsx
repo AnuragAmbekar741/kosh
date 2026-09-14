@@ -2,6 +2,7 @@ import { Navigate, Outlet } from "react-router"
 
 import { AppHeader } from "@/components/layout/AppHeader"
 import { AppSidebar } from "@/components/layout/AppSidebar"
+import { DashboardSkeleton } from "@/components/layout/DashboardSkeleton"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useGetMe } from "@/hooks/users/use-me"
@@ -14,13 +15,7 @@ function readSidebarOpen() {
 export function AppShell() {
   const me = useGetMe()
 
-  if (me.isPending) {
-    return (
-      <div className="grid min-h-svh place-items-center bg-background text-sm text-muted-foreground">
-        Opening your workspace…
-      </div>
-    )
-  }
+  if (me.isPending) return <DashboardSkeleton />
   if (!me.data) return <Navigate replace to="/login" />
 
   return (

@@ -100,7 +100,7 @@ export function AddDocumentDialog() {
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger data-slot="add-document-trigger" render={<Button />}>
         <PlusIcon data-icon="inline-start" />
         Add Document
       </DialogTrigger>

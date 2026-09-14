@@ -1,16 +1,25 @@
 import { AlertCircleIcon, ReceiptTextIcon } from "lucide-react"
 
 import { SpendingAccordion } from "@/components/spending/SpendingAccordion"
+import { SpendingLedgerSkeleton } from "@/components/spending/SpendingLedgerSkeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useSpendItems } from "@/hooks/spend-items/use-spend-items"
+
+function openAddDocument() {
+  // ponytail: header owns the dialog; empty CTA reuses the trigger
+  document
+    .querySelector<HTMLButtonElement>("[data-slot=add-document-trigger]")
+    ?.click()
+}
 
 export function SpendingPage() {
   const spendItems = useSpendItems()
@@ -37,15 +46,7 @@ export function SpendingPage() {
         </div>
 
         {spendItems.isPending ? (
-          <div
-            aria-label="Loading spending"
-            className="flex min-h-0 flex-1 flex-col gap-2"
-            role="status"
-          >
-            <Skeleton className="h-20 rounded-none" />
-            <Skeleton className="h-20 rounded-none" />
-            <Skeleton className="h-20 rounded-none" />
-          </div>
+          <SpendingLedgerSkeleton />
         ) : spendItems.isError ? (
           <Alert variant="destructive">
             <AlertCircleIcon />
@@ -70,6 +71,9 @@ export function SpendingPage() {
                 will appear here after you review them.
               </EmptyDescription>
             </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={openAddDocument}>Add document</Button>
+            </EmptyContent>
           </Empty>
         )}
       </section>

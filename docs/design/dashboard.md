@@ -11,15 +11,20 @@ The signed-in product is Operate-mode: scan, move, come back. Brand lives in
 precise details — monochrome primary, Geist, flat 1px hairlines — not in
 marketing chrome.
 
-Overview remains an empty destination. Spending contains the document intake,
+Overview is an empty destination until analytics exist: a shadcn Empty state
+with a single CTA to Spending. Spending contains the document intake,
 extraction review, and confirmed ledger described in [spending.md](./spending.md).
+
+While `useGetMe` is pending, the shell renders `DashboardSkeleton` — the same
+inset Sidebar chrome with Skeleton placeholders — so the first paint matches
+the loaded layout. The status is announced as “Opening your workspace.”
 
 ## Navigation
 
 | Path | Page | Notes |
 | --- | --- | --- |
 | `/` | Redirect | Signed-in users go to `/overview`. Guests go to `/login`. |
-| `/overview` | Overview | Empty shell. Future totals and breakdowns. |
+| `/overview` | Overview | Empty destination. CTA to Spending. Future totals and breakdowns. |
 | `/spending` | Spending | Document intake, extraction review, and confirmed spend ledger. |
 
 Primary destinations live in
@@ -51,7 +56,7 @@ Settings is out of this step.
 ```
 src/pages/overview/            OverviewPage
 src/pages/spending/            SpendingPage
-src/components/layout/            AppShell, AppSidebar, AppHeader
+src/components/layout/            AppShell, AppSidebar, AppHeader, DashboardSkeleton
 src/components/layout/navigation/ NavMain, NavUser, navigation.ts
 src/components/brand/          FinanceMark (shared with auth)
 src/components/ui/sidebar.tsx  shadcn Sidebar (Base UI)
