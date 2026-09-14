@@ -35,9 +35,9 @@ optional categories, and amounts. Line items sort by `line_index`, then spend
 date. Groups are ordered newest first by the first entry's spend date.
 
 The ledger fills the dashboard content panel below `2xl`; at `2xl` it uses a
-wide centered maximum for readability. The bill list below the Transactions
-heading uses native overflow, including long product lists, so an open bill
-does not clip mid-row or leave an empty strip after the last product.
+wide centered maximum for readability. The page itself does not scroll; the
+bill list below the Transactions heading is the only overflow region, so an
+open bill does not clip mid-row or leave an empty strip after the last product.
 Accordion triggers intentionally omit disclosure icons, use a pointer cursor,
 and reveal a muted hover state while closed. The accordion is a 1px card box
 with `rounded-xl` corners; inner rows stay square. One hairline divides bills

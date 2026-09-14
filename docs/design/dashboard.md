@@ -36,6 +36,10 @@ The sidebar uses the shadcn `Sidebar` primitive (`variant="inset"`,
 reachable as tooltips. Collapse state persists in the `sidebar_state` cookie
 and toggles with `Cmd/Ctrl+B`. Below `768px` the same nav opens as a sheet.
 
+The inset panel is locked to the viewport (`h-svh`, inset margin subtracted
+on `md+`). The header stays put; page content fills the remaining height
+with `overflow-hidden`, so Overview and Spending do not scroll the page.
+
 The account menu sits in the sidebar footer: name, email, and Sign out.
 Settings is out of this step.
 
