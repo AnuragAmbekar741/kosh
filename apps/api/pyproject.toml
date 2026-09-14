@@ -10,6 +10,7 @@ requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.19.1",
     "fastapi[standard]>=0.141.1",
+    "observability",
     "security",
     "storage",
 ]
@@ -21,6 +22,7 @@ build-backend = "uv_build"
 [tool.uv.sources]
 storage = { workspace = true }
 security = { workspace = true }
+observability = { workspace = true }
 
 [tool.fastapi]
 entrypoint = "api.main:app"

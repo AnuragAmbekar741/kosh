@@ -11,6 +11,7 @@ members = [
     "ai",
     "api",
     "finance",
+    "observability",
     "security",
     "storage",
     "worker",
@@ -97,6 +98,7 @@ source = { editable = "apps/api" }
 dependencies = [
     { name = "alembic" },
     { name = "fastapi", extra = ["standard"] },
+    { name = "observability" },
     { name = "security" },
     { name = "storage" },
 ]
@@ -105,6 +107,7 @@ dependencies = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.19.1" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.141.1" },
+    { name = "observability", editable = "packages/observability" },
     { name = "security", editable = "packages/security" },
     { name = "storage", editable = "packages/storage" },
 ]
@@ -1052,6 +1055,17 @@ wheels = [
 ]
 
 [[package]]
+name = "observability"
+version = "0.1.0"
+source = { editable = "packages/observability" }
+dependencies = [
+    { name = "pydantic-settings" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic-settings", specifier = ">=2.15.0" }]
+
+[[package]]
 name = "openai"
 version = "3.10.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1949,11 +1963,13 @@ version = "0.1.0"
 source = { editable = "apps/worker" }
 dependencies = [
     { name = "ai" },
+    { name = "observability" },
     { name = "storage" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "ai", editable = "packages/ai" },
+    { name = "observability", editable = "packages/observability" },
     { name = "storage", editable = "packages/storage" },
 ]
