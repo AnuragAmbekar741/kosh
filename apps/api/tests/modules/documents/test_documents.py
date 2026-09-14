@@ -273,3 +273,23 @@ def test_sum_mismatch_ready_with_warning(client, monkeypatch) -> None:
     detail = client.get(f"/documents/{uploaded.json()['id']}", headers=headers).json()
     assert detail["status"] == "ready"
     assert "differ from total" in detail["error"]
+
+
+def test_process_logs_one_outcome_line(client, monkeypatch, caplog) -> None:
+    headers = _auth(client)
+    document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
+    monkeypatch.setattr(
+        "worker.consumers.extraction.services.extractor.extract",
+        lambda data, mime: (_ for _ in ()).throw(
+            RetryableExtractError("openrouter rate limited")
+        ),
+    )
+    process_document(document_id, _claim(document_id))
+    (finished,) = [
+        record
+        for record in caplog.records
+        if record.getMessage() == "extraction finished"
+    ]
+    assert finished.levelname == "WARNING"
+    assert finished.outcome == "retry"
+    assert "rate limited" in finished.reason

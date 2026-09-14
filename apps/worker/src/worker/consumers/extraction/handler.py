@@ -1,3 +1,5 @@
+import logging
+
 from ai import ExtractError, RetryableExtractError
 from sqlmodel import Session
 from storage.blobs import BlobError
@@ -13,12 +15,15 @@ from worker.consumers.extraction.services import (
     validator,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def handle(session: Session, document: Document) -> Outcome:
     try:
         data = loader.get_bytes(document.storage_key)
         extraction, meta = extractor.extract(data, document.mime_type)
     except BlobError:
+        logger.exception("document blob read failed")
         return Outcome.failed("storage read failed")
     except ExtractError as exc:
         attempt_writer.write_error(session, document.id, str(exc))
@@ -26,6 +31,7 @@ def handle(session: Session, document: Document) -> Outcome:
             return Outcome.retry(str(exc))
         return Outcome.failed(str(exc))
     except RuntimeError as exc:
+        logger.exception("extraction failed unexpectedly")
         return Outcome.failed(str(exc))
     warning = validator.warning_for(extraction)
     attempt = attempt_writer.write_success(
