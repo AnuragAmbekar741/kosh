@@ -11,8 +11,9 @@ The signed-in product is Operate-mode: scan, move, come back. Brand lives in
 precise details — monochrome primary, Geist, flat 1px hairlines — not in
 marketing chrome.
 
-Overview is an empty destination until analytics exist: a shadcn Empty state
-with a single CTA to Spending. Spending contains the document intake,
+Overview is an empty destination until analytics exist: a compact dashed
+Empty frame, centered in the panel and hugging its copy, with a single CTA
+to Spending. Spending contains the document intake,
 extraction review, and confirmed ledger described in [spending.md](./spending.md).
 
 While `useGetMe` is pending, the shell renders `DashboardSkeleton` — the same

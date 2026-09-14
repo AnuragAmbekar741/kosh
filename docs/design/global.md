@@ -22,8 +22,12 @@ This file owns tokens and visual rules, and maps them to
 | `primary-focus` | `--ring` |
 | `rounded.md` | `--radius` |
 
-Dark is the default. Light uses inverse tokens. Tailwind radius utilities are derived
-from `--radius`; their suffixes do not directly match the design token names.
+Dark is the default. Light uses inverse tokens, except light `surface-2`
+(`--secondary`, `--accent`, `--sidebar-accent`) is `#e8eaed` so icon wells,
+selected nav, and menu hover stay visible on `#ffffff` / `#f5f6f6`. Icon wells
+use `bg-accent` or `bg-sidebar-accent`, not `bg-muted`. Tailwind radius
+utilities are derived from `--radius`; their suffixes do not directly match
+the design token names.
 Primary inverts against the canvas: near-black `#0a0a0a` on light, near-white
 `#f7f8f8` on dark. `--primary-foreground` is the opposite ink. `--brand-ink`
 and `--ring` stay in the same neutral family so links, focus, and primary
