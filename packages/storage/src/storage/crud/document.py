@@ -4,15 +4,18 @@ from uuid import UUID, uuid4
 from sqlmodel import Session, col, select
 
 from storage.models.document import Document, DocumentStatus, ExtractionAttempt
+from storage.models.spend import SpendItem
 
 __all__ = [
     "claim_next",
     "create_document",
     "create_extraction_attempt",
+    "delete_document_tree",
     "get_claimed_document",
     "get_document",
     "get_document_by_id",
     "get_document_by_idempotency",
+    "get_document_for_update",
     "hash_matches_other",
     "latest_attempt",
     "list_documents",
@@ -42,6 +45,39 @@ def get_document(
     if document is None or document.user_id != user_id:
         return None
     return document
+
+
+def get_document_for_update(
+    session: Session, *, user_id: UUID, document_id: UUID
+) -> Document | None:
+    return session.exec(
+        select(Document)
+        .where(Document.id == document_id, Document.user_id == user_id)
+        .with_for_update()
+    ).first()
+
+
+def delete_document_tree(session: Session, document: Document) -> str:
+    storage_key = document.storage_key
+    items = list(
+        session.exec(
+            select(SpendItem).where(SpendItem.document_id == document.id)
+        ).all()
+    )
+    for item in items:
+        session.delete(item)
+    attempts = list(
+        session.exec(
+            select(ExtractionAttempt).where(
+                ExtractionAttempt.document_id == document.id
+            )
+        ).all()
+    )
+    for attempt in attempts:
+        session.delete(attempt)
+    session.delete(document)
+    session.flush()
+    return storage_key
 
 
 def get_document_by_id(session: Session, document_id: UUID) -> Document | None:

@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, File, Header, UploadFile, status
+from fastapi import APIRouter, File, Header, Response, UploadFile, status
 from security import CurrentUserDep
 from storage.settings import get_settings as get_storage_settings
 
@@ -17,6 +17,7 @@ from api.modules.documents.schemas import (
 )
 from api.modules.documents.services.add_line_item import add_line_item
 from api.modules.documents.services.confirm import confirm as confirm_document
+from api.modules.documents.services.delete import delete_document
 from api.modules.documents.services.upload import store_upload
 from api.modules.spend.presenter import to_public
 from api.modules.spend.schemas import SpendItemPublic
@@ -87,3 +88,11 @@ def create_line_item(
             session, user_id=user.id, document_id=document_id, body=body
         )
     )
+
+
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_document(
+    document_id: UUID, user: CurrentUserDep, session: SessionDep
+) -> Response:
+    delete_document(session, user_id=user.id, document_id=document_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
