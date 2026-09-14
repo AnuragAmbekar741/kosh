@@ -66,6 +66,7 @@ def delete_document_tree(session: Session, document: Document) -> str:
     )
     for item in items:
         session.delete(item)
+    session.flush()
     attempts = list(
         session.exec(
             select(ExtractionAttempt).where(
@@ -75,6 +76,7 @@ def delete_document_tree(session: Session, document: Document) -> str:
     )
     for attempt in attempts:
         session.delete(attempt)
+    session.flush()
     session.delete(document)
     session.flush()
     return storage_key
