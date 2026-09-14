@@ -48,3 +48,7 @@ export async function confirmDocument({
   )
   return data
 }
+
+export async function deleteDocument(documentId: string): Promise<void> {
+  await client.delete(`/documents/${documentId}`)
+}

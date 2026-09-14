@@ -18,6 +18,7 @@ function SpendingLedgerSkeletonRow() {
         <Skeleton className="h-5 w-20 rounded-full" />
       </div>
       <Skeleton className="h-4 w-16" />
+      <Skeleton className="size-9 rounded-lg" />
     </div>
   )
 }

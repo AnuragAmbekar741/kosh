@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
   confirmDocument,
+  deleteDocument,
   getDocument,
   getDocuments,
   uploadDocument,
@@ -48,6 +49,22 @@ export function useConfirmDocument() {
         queryClient.invalidateQueries({ queryKey: documentQueryKeys.all }),
         queryClient.invalidateQueries({
           queryKey: documentQueryKeys.detail(input.documentId),
+        }),
+        queryClient.invalidateQueries({ queryKey: spendItemQueryKeys.all }),
+      ])
+    },
+  })
+}
+
+export function useDeleteDocument() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteDocument,
+    onSuccess: (_data, documentId) => {
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: documentQueryKeys.all }),
+        queryClient.invalidateQueries({
+          queryKey: documentQueryKeys.detail(documentId),
         }),
         queryClient.invalidateQueries({ queryKey: spendItemQueryKeys.all }),
       ])

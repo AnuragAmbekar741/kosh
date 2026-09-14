@@ -21,3 +21,7 @@ export async function updateSpendItem({
   const { data } = await client.patch<SpendItem>(`/spend-items/${id}`, updates)
   return data
 }
+
+export async function deleteSpendItem(id: string): Promise<void> {
+  await client.delete(`/spend-items/${id}`)
+}

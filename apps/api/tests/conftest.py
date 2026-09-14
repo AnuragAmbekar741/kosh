@@ -3,7 +3,7 @@ from collections.abc import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import Engine
+from sqlalchemy import Engine, event
 from sqlmodel import SQLModel, create_engine
 
 # Storage creates its engine during import. Set harmless test configuration
@@ -29,6 +29,13 @@ def db_engine(tmp_path, monkeypatch) -> Iterator[Engine]:
     storage_settings.cache_clear()
     security_settings.cache_clear()
     engine = create_engine(url, connect_args={"check_same_thread": False})
+
+    @event.listens_for(engine, "connect")
+    def _enable_sqlite_fks(dbapi_connection, _connection_record) -> None:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
     monkeypatch.setattr(database, "engine", engine)
     SQLModel.metadata.create_all(engine)
     try:

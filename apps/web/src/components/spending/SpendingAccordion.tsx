@@ -1,5 +1,12 @@
-import { FileTextIcon } from "lucide-react"
+import { useState } from "react"
+import {
+  EllipsisVerticalIcon,
+  FileTextIcon,
+  PencilIcon,
+  Trash2Icon,
+} from "lucide-react"
 
+import { apiDetail } from "@/api/client"
 import type { SpendItem } from "@/api/spend-items/spend-items.types"
 import {
   Accordion,
@@ -7,7 +14,26 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Spinner } from "@/components/ui/spinner"
+import { useDeleteDocument } from "@/hooks/documents/use-documents"
+import { useDeleteSpendItem } from "@/hooks/spend-items/use-spend-items"
 
 import { formatDate, formatMoney } from "./spending-formatters"
 
@@ -18,6 +44,12 @@ type SpendingAccordionProps = {
 type SpendingGroup = {
   id: string
   items: SpendItem[]
+}
+
+type SpendingBillRowProps = {
+  group: SpendingGroup
+  onDelete: (group: SpendingGroup) => void
+  onEdit: (group: SpendingGroup) => void
 }
 
 type SpendingLineRowProps = {
@@ -72,51 +104,178 @@ function SpendingLineRow({ item, index }: SpendingLineRowProps) {
   )
 }
 
-export function SpendingAccordion({ items }: SpendingAccordionProps) {
-  const groups = groupSpendItems(items)
+function SpendingBillRow({ group, onDelete, onEdit }: SpendingBillRowProps) {
+  const first = group.items[0]
+  const total = group.items.reduce((sum, item) => sum + Number(item.amount), 0)
+  const itemLabel = group.items.length === 1 ? "item" : "items"
 
   return (
-    <Accordion className="overflow-hidden rounded-xl border">
-      {groups.map((group) => {
-        const first = group.items[0]
-        const total = group.items.reduce(
-          (sum, item) => sum + Number(item.amount),
-          0
-        )
+    <AccordionItem className="group/bill" value={group.id}>
+      <AccordionTrigger
+        actions={
+          <span className="flex shrink-0 items-center gap-3">
+            <span className="font-medium tabular-nums">
+              {formatMoney(total, first.currency)}
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label={`Actions for ${first.merchant}`}
+                render={
+                  <Button
+                    className="size-9 rounded-lg bg-muted hover:bg-muted"
+                    size="icon"
+                    variant="ghost"
+                  />
+                }
+              >
+                <EllipsisVerticalIcon />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(group)}>
+                  <PencilIcon />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDelete(group)}
+                  variant="destructive"
+                >
+                  <Trash2Icon />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </span>
+        }
+        className="cursor-pointer items-center rounded-none py-0 hover:no-underline **:data-[slot=accordion-trigger-icon]:hidden"
+        headerClassName="px-4 py-4 hover:bg-muted/50 group-data-open/bill:hover:bg-transparent sm:px-5 sm:py-5"
+      >
+        <span className="flex min-w-0 items-center gap-3 text-left">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted [&_svg]:size-4">
+            <FileTextIcon />
+          </span>
+          <span className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="truncate font-medium">{first.merchant}</span>
+            <span className="flex shrink-0 items-center gap-1.5">
+              <Badge variant="outline">{formatDate(first.spent_at)}</Badge>
+              <Badge variant="outline">
+                {first.document_id ? "Document" : "Manual entry"}
+              </Badge>
+              <Badge variant="outline">
+                {group.items.length} {itemLabel}
+              </Badge>
+            </span>
+          </span>
+        </span>
+      </AccordionTrigger>
+      <AccordionContent className="h-auto border-t pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
+        {group.items.map((item, index) => (
+          <SpendingLineRow index={index} item={item} key={item.id} />
+        ))}
+      </AccordionContent>
+    </AccordionItem>
+  )
+}
 
-        return (
-          <AccordionItem key={group.id} value={group.id}>
-            <AccordionTrigger className="cursor-pointer items-center rounded-none px-4 py-4 hover:bg-muted/50 hover:no-underline aria-expanded:hover:bg-transparent sm:px-5 sm:py-5 **:data-[slot=accordion-trigger-icon]:hidden">
-              <span className="flex min-w-0 items-center gap-3 text-left">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted [&_svg]:size-4">
-                  <FileTextIcon />
-                </span>
-                <span className="flex min-w-0 flex-wrap items-center gap-2">
-                  <span className="truncate font-medium">{first.merchant}</span>
-                  <span className="flex shrink-0 items-center gap-1.5">
-                    <Badge variant="outline">{formatDate(first.spent_at)}</Badge>
-                    <Badge variant="outline">
-                      {first.document_id ? "Document" : "Manual entry"}
-                    </Badge>
-                    <Badge variant="outline">
-                      {group.items.length}{" "}
-                      {group.items.length === 1 ? "item" : "items"}
-                    </Badge>
-                  </span>
-                </span>
-              </span>
-              <span className="ml-auto shrink-0 font-medium tabular-nums">
-                {formatMoney(total, first.currency)}
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="h-auto border-t pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
-              {group.items.map((item, index) => (
-                <SpendingLineRow index={index} item={item} key={item.id} />
-              ))}
-            </AccordionContent>
-          </AccordionItem>
-        )
-      })}
-    </Accordion>
+export function SpendingAccordion({ items }: SpendingAccordionProps) {
+  const groups = groupSpendItems(items)
+  const [openBill, setOpenBill] = useState("")
+  const [pendingDelete, setPendingDelete] = useState<SpendingGroup | null>(null)
+  const deleteDocument = useDeleteDocument()
+  const deleteSpendItem = useDeleteSpendItem()
+  const isPending = deleteDocument.isPending || deleteSpendItem.isPending
+  const error = deleteDocument.error ?? deleteSpendItem.error
+  const pendingFirst = pendingDelete?.items[0]
+  const pendingCount = pendingDelete?.items.length ?? 0
+  const pendingItemLabel = pendingCount === 1 ? "item" : "items"
+
+  function requestDelete(group: SpendingGroup) {
+    deleteDocument.reset()
+    deleteSpendItem.reset()
+    setPendingDelete(group)
+  }
+
+  function openBillRow(group: SpendingGroup) {
+    setOpenBill(group.id)
+  }
+
+  function closeDeleteDialog() {
+    if (isPending) return
+    setPendingDelete(null)
+    deleteDocument.reset()
+    deleteSpendItem.reset()
+  }
+
+  function confirmDelete() {
+    if (!pendingFirst) return
+    const request = pendingFirst.document_id
+      ? deleteDocument.mutateAsync(pendingFirst.document_id)
+      : deleteSpendItem.mutateAsync(pendingFirst.id)
+    void request.then(() => {
+      setPendingDelete(null)
+    })
+  }
+
+  return (
+    <>
+      <Accordion
+        className="overflow-hidden rounded-xl border"
+        onValueChange={(next) => setOpenBill(next[0] ?? "")}
+        value={openBill ? [openBill] : []}
+      >
+        {groups.map((group) => (
+          <SpendingBillRow
+            group={group}
+            key={group.id}
+            onDelete={requestDelete}
+            onEdit={openBillRow}
+          />
+        ))}
+      </Accordion>
+
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open) closeDeleteDialog()
+        }}
+        open={pendingDelete !== null}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this bill?</DialogTitle>
+            <DialogDescription>
+              {pendingFirst == null
+                ? null
+                : pendingFirst.document_id
+                  ? `This removes ${pendingFirst.merchant} and its ${pendingCount} ${pendingItemLabel} from Spending, including the source file. This cannot be undone.`
+                  : `This removes ${pendingFirst.merchant} from Spending. This cannot be undone.`}
+            </DialogDescription>
+          </DialogHeader>
+          {error ? (
+            <Alert variant="destructive">
+              <AlertTitle>Bill not deleted</AlertTitle>
+              <AlertDescription>
+                {apiDetail(error) || "Please try again."}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          <DialogFooter>
+            <Button
+              disabled={isPending}
+              onClick={closeDeleteDialog}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={isPending}
+              onClick={confirmDelete}
+              variant="destructive"
+            >
+              {isPending ? <Spinner data-icon="inline-start" /> : null}
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
