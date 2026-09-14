@@ -29,10 +29,16 @@ Confirmed `GET /spend-items` rows are grouped by source document. Manual rows
 remain individual entries. Each group is a shadcn Accordion item. The trigger
 is one row: merchant title, then outline pill Badges for date, source
 (`Document` or `Manual entry`), and item count (`1 item` / `N items`). The
-group total stays on the right. Expanding a group reveals numbered products
-nested under the bill: indented to the merchant text column, quieter type,
-optional categories, and amounts. Line items sort by `line_index`, then spend
-date. Groups are ordered newest first by the first entry's spend date.
+group total stays on the right, followed by a muted three-dot tile that
+matches the merchant icon. That control does not toggle the accordion. It
+opens a dropdown: Edit expands the bill; Delete opens a confirmation Dialog
+and, on confirm, removes the whole bill. Document groups call
+`DELETE /documents/{id}` and remove the source file with every line. Manual
+groups call `DELETE /spend-items/{id}`. Line items stay read-only. Expanding
+a group reveals numbered products nested under the bill: indented to the
+merchant text column, quieter type, optional categories, and amounts. Line
+items sort by `line_index`, then spend date. Groups are ordered newest first
+by the first entry's spend date.
 
 The ledger fills the dashboard content panel below `2xl`; at `2xl` it uses a
 wide centered maximum for readability. The bill list below the Transactions
@@ -51,7 +57,8 @@ fills establish hierarchy. Geist, compact type, and tabular numerals keep the
 dense financial content scannable; depth does not rely on shadows.
 
 Loading uses an accordion-shaped Skeleton: a bordered `rounded-xl` stack of
-bill rows (icon tile, merchant bar, badge chips, trailing amount). Failure
+bill rows (icon tile, merchant bar, badge chips, trailing amount, kebab
+tile). Failure
 uses Alert. An empty ledger uses the Empty primitive, points at the top-bar
 action, and includes an EmptyContent button that opens the same Add Document
 dialog. Long extraction reviews also use a ScrollArea so the Dialog header
