@@ -182,4 +182,8 @@
   [data-slot="sidebar-container"] {
     transition: none;
   }
+
+  [data-slot="skeleton"] {
+    animation: none;
+  }
 }
