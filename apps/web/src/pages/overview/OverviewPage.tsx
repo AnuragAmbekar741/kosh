@@ -13,7 +13,7 @@ import {
 
 export function OverviewPage() {
   return (
-    <main className="flex h-[calc(100svh-5rem)] min-h-0 w-full flex-col pt-6 2xl:mx-auto 2xl:max-w-7xl">
+    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-6 2xl:mx-auto 2xl:max-w-7xl">
       <Empty className="min-h-0 flex-1 border">
         <EmptyHeader>
           <EmptyMedia variant="icon">
