@@ -31,9 +31,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useDeleteDocument } from "@/hooks/documents/use-documents"
-import { useDeleteSpendItem } from "@/hooks/spend-items/use-spend-items"
+import {
+  useDeleteSpendItem,
+  useUpdateSpendItem,
+} from "@/hooks/spend-items/use-spend-items"
+import { cn } from "@/lib/utils"
 
 import { formatDate, formatMoney } from "./spending-formatters"
 
@@ -47,15 +53,26 @@ type SpendingGroup = {
 }
 
 type SpendingBillRowProps = {
+  editingItemId: string
   group: SpendingGroup
-  onDelete: (group: SpendingGroup) => void
-  onEdit: (group: SpendingGroup) => void
+  onDeleteBill: (group: SpendingGroup) => void
+  onDeleteItem: (item: SpendItem) => void
+  onEditBill: (group: SpendingGroup) => void
+  onEditItem: (itemId: string) => void
+  onStopEditing: () => void
 }
 
 type SpendingLineRowProps = {
+  isEditing: boolean
   item: SpendItem
   index: number
+  onDelete: (item: SpendItem) => void
+  onEdit: (itemId: string) => void
+  onStopEditing: () => void
 }
+
+type PendingDelete =
+  { group: SpendingGroup; kind: "bill" } | { item: SpendItem; kind: "item" }
 
 function sortLineItems(left: SpendItem, right: SpendItem) {
   const leftIndex = left.line_index ?? Number.MAX_SAFE_INTEGER
@@ -83,28 +100,170 @@ function groupSpendItems(items: SpendItem[]) {
   )
 }
 
-function SpendingLineRow({ item, index }: SpendingLineRowProps) {
+function itemName(item: SpendItem) {
+  return item.description || item.merchant
+}
+
+function SpendingLineRow({
+  isEditing,
+  item,
+  index,
+  onDelete,
+  onEdit,
+  onStopEditing,
+}: SpendingLineRowProps) {
+  const label = itemName(item)
+  const [name, setName] = useState(label)
+  const [validationError, setValidationError] = useState("")
+  const updateItem = useUpdateSpendItem()
+  const error = validationError || apiDetail(updateItem.error)
+  const inputId = `spend-item-name-${item.id}`
+
+  function startEditing() {
+    setName(label)
+    setValidationError("")
+    updateItem.reset()
+    onEdit(item.id)
+  }
+
+  function cancelEditing() {
+    setName(label)
+    setValidationError("")
+    updateItem.reset()
+    onStopEditing()
+  }
+
+  async function saveName() {
+    const trimmedName = name.trim()
+    if (!trimmedName) {
+      setValidationError("Enter an item name.")
+      return
+    }
+    if (trimmedName === label) {
+      onStopEditing()
+      return
+    }
+
+    setValidationError("")
+    const updates = item.document_id
+      ? { description: trimmedName }
+      : item.description
+        ? { description: trimmedName }
+        : { merchant: trimmedName }
+    try {
+      await updateItem.mutateAsync({ id: item.id, updates })
+      setName(trimmedName)
+      onStopEditing()
+    } catch {
+      // Mutation state renders the API error beside the input.
+    }
+  }
+
   return (
-    <div className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 py-3 pr-4 pl-16 not-first:border-t sm:pr-5 sm:pl-17">
+    <div
+      className={cn(
+        "grid items-center gap-3 py-3 pr-4 pl-16 not-first:border-t sm:grid-cols-[2rem_minmax(0,1fr)_auto] sm:pr-5 sm:pl-17",
+        isEditing
+          ? "grid-cols-[2rem_minmax(0,1fr)]"
+          : "grid-cols-[2rem_minmax(0,1fr)_auto]"
+      )}
+    >
       <span className="text-xs text-muted-foreground tabular-nums">
         {String(index + 1).padStart(2, "0")}
       </span>
       <div className="min-w-0">
-        <p className="truncate text-sm font-normal">
-          {item.description || item.merchant}
-        </p>
+        {isEditing ? (
+          <Field className="gap-1" data-invalid={Boolean(error)}>
+            <FieldLabel className="sr-only" htmlFor={inputId}>
+              Item name
+            </FieldLabel>
+            <Input
+              aria-invalid={Boolean(error)}
+              autoFocus
+              disabled={updateItem.isPending}
+              id={inputId}
+              onBlur={() => void saveName()}
+              onChange={(event) => {
+                setName(event.target.value)
+                setValidationError("")
+                updateItem.reset()
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault()
+                  event.currentTarget.blur()
+                }
+                if (event.key === "Escape") {
+                  event.preventDefault()
+                  cancelEditing()
+                }
+              }}
+              value={name}
+            />
+            {error ? (
+              <FieldError className="text-xs">{error}</FieldError>
+            ) : null}
+          </Field>
+        ) : (
+          <button
+            aria-label={`Edit ${label}. Double-click, or press Enter.`}
+            className="block max-w-full cursor-text truncate rounded-sm text-left text-sm font-normal outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={(event) => {
+              if (event.detail === 0) startEditing()
+            }}
+            onDoubleClick={startEditing}
+            onPointerUp={(event) => {
+              if (event.pointerType === "touch") startEditing()
+            }}
+            title="Double-click to edit"
+            type="button"
+          >
+            {label}
+          </button>
+        )}
         {item.category ? (
-          <p className="mt-0.5 text-xs text-muted-foreground">{item.category}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {item.category}
+          </p>
         ) : null}
       </div>
-      <p className="shrink-0 text-sm font-normal tabular-nums">
-        {formatMoney(item.amount, item.currency)}
-      </p>
+      <div
+        className={cn(
+          "flex shrink-0 items-center gap-2",
+          isEditing &&
+            "col-start-2 justify-self-end sm:col-start-3 sm:row-start-1"
+        )}
+      >
+        <p className="text-sm font-normal tabular-nums">
+          {formatMoney(item.amount, item.currency)}
+        </p>
+        {isEditing ? (
+          <Button
+            aria-label={`Delete ${label}`}
+            disabled={updateItem.isPending}
+            onClick={() => onDelete(item)}
+            onPointerDown={(event) => event.preventDefault()}
+            size="icon-sm"
+            title="Delete item"
+            variant="destructive"
+          >
+            <Trash2Icon />
+          </Button>
+        ) : null}
+      </div>
     </div>
   )
 }
 
-function SpendingBillRow({ group, onDelete, onEdit }: SpendingBillRowProps) {
+function SpendingBillRow({
+  editingItemId,
+  group,
+  onDeleteBill,
+  onDeleteItem,
+  onEditBill,
+  onEditItem,
+  onStopEditing,
+}: SpendingBillRowProps) {
   const first = group.items[0]
   const total = group.items.reduce((sum, item) => sum + Number(item.amount), 0)
   const itemLabel = group.items.length === 1 ? "item" : "items"
@@ -131,12 +290,12 @@ function SpendingBillRow({ group, onDelete, onEdit }: SpendingBillRowProps) {
                 <EllipsisVerticalIcon />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(group)}>
+                <DropdownMenuItem onClick={() => onEditBill(group)}>
                   <PencilIcon />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => onDelete(group)}
+                  onClick={() => onDeleteBill(group)}
                   variant="destructive"
                 >
                   <Trash2Icon />
@@ -169,7 +328,15 @@ function SpendingBillRow({ group, onDelete, onEdit }: SpendingBillRowProps) {
       </AccordionTrigger>
       <AccordionContent className="h-auto border-t pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
         {group.items.map((item, index) => (
-          <SpendingLineRow index={index} item={item} key={item.id} />
+          <SpendingLineRow
+            index={index}
+            isEditing={editingItemId === item.id}
+            item={item}
+            key={item.id}
+            onDelete={onDeleteItem}
+            onEdit={onEditItem}
+            onStopEditing={onStopEditing}
+          />
         ))}
       </AccordionContent>
     </AccordionItem>
@@ -179,37 +346,57 @@ function SpendingBillRow({ group, onDelete, onEdit }: SpendingBillRowProps) {
 export function SpendingAccordion({ items }: SpendingAccordionProps) {
   const groups = groupSpendItems(items)
   const [openBill, setOpenBill] = useState("")
-  const [pendingDelete, setPendingDelete] = useState<SpendingGroup | null>(null)
+  const [editingItemId, setEditingItemId] = useState("")
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
   const deleteDocument = useDeleteDocument()
   const deleteSpendItem = useDeleteSpendItem()
   const isPending = deleteDocument.isPending || deleteSpendItem.isPending
   const error = deleteDocument.error ?? deleteSpendItem.error
-  const pendingFirst = pendingDelete?.items[0]
-  const pendingCount = pendingDelete?.items.length ?? 0
+  const pendingGroup =
+    pendingDelete?.kind === "bill" ? pendingDelete.group : null
+  const pendingItem = pendingDelete?.kind === "item" ? pendingDelete.item : null
+  const pendingFirst = pendingGroup?.items[0]
+  const pendingCount = pendingGroup?.items.length ?? 0
   const pendingItemLabel = pendingCount === 1 ? "item" : "items"
 
-  function requestDelete(group: SpendingGroup) {
+  function resetDeleteMutations() {
     deleteDocument.reset()
     deleteSpendItem.reset()
-    setPendingDelete(group)
   }
 
-  function openBillRow(group: SpendingGroup) {
+  function requestDeleteBill(group: SpendingGroup) {
+    resetDeleteMutations()
+    setPendingDelete({ group, kind: "bill" })
+  }
+
+  function requestDeleteItem(item: SpendItem) {
+    resetDeleteMutations()
+    setEditingItemId("")
+    setPendingDelete({ item, kind: "item" })
+  }
+
+  function editBill(group: SpendingGroup) {
     setOpenBill(group.id)
+    setEditingItemId(group.items[0].id)
   }
 
   function closeDeleteDialog() {
     if (isPending) return
     setPendingDelete(null)
-    deleteDocument.reset()
-    deleteSpendItem.reset()
+    resetDeleteMutations()
   }
 
   function confirmDelete() {
-    if (!pendingFirst) return
-    const request = pendingFirst.document_id
-      ? deleteDocument.mutateAsync(pendingFirst.document_id)
-      : deleteSpendItem.mutateAsync(pendingFirst.id)
+    if (!pendingDelete) return
+    const request =
+      pendingDelete.kind === "item"
+        ? deleteSpendItem.mutateAsync(pendingDelete.item.id)
+        : pendingFirst?.document_id
+          ? deleteDocument.mutateAsync(pendingFirst.document_id)
+          : pendingFirst
+            ? deleteSpendItem.mutateAsync(pendingFirst.id)
+            : null
+    if (!request) return
     void request.then(() => {
       setPendingDelete(null)
     })
@@ -219,15 +406,22 @@ export function SpendingAccordion({ items }: SpendingAccordionProps) {
     <>
       <Accordion
         className="overflow-hidden rounded-xl border"
-        onValueChange={(next) => setOpenBill(next[0] ?? "")}
+        onValueChange={(next) => {
+          setOpenBill(next[0] ?? "")
+          setEditingItemId("")
+        }}
         value={openBill ? [openBill] : []}
       >
         {groups.map((group) => (
           <SpendingBillRow
+            editingItemId={editingItemId}
             group={group}
             key={group.id}
-            onDelete={requestDelete}
-            onEdit={openBillRow}
+            onDeleteBill={requestDeleteBill}
+            onDeleteItem={requestDeleteItem}
+            onEditBill={editBill}
+            onEditItem={setEditingItemId}
+            onStopEditing={() => setEditingItemId("")}
           />
         ))}
       </Accordion>
@@ -240,18 +434,24 @@ export function SpendingAccordion({ items }: SpendingAccordionProps) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete this bill?</DialogTitle>
+            <DialogTitle>
+              {pendingItem ? "Delete this item?" : "Delete this bill?"}
+            </DialogTitle>
             <DialogDescription>
-              {pendingFirst == null
-                ? null
-                : pendingFirst.document_id
+              {pendingItem
+                ? `This removes ${itemName(pendingItem)} from ${pendingItem.merchant}. The rest of the bill and its source file stay available. This cannot be undone.`
+                : pendingFirst?.document_id
                   ? `This removes ${pendingFirst.merchant} and its ${pendingCount} ${pendingItemLabel} from Spending, including the source file. This cannot be undone.`
-                  : `This removes ${pendingFirst.merchant} from Spending. This cannot be undone.`}
+                  : pendingFirst
+                    ? `This removes ${pendingFirst.merchant} from Spending. This cannot be undone.`
+                    : null}
             </DialogDescription>
           </DialogHeader>
           {error ? (
             <Alert variant="destructive">
-              <AlertTitle>Bill not deleted</AlertTitle>
+              <AlertTitle>
+                {pendingItem ? "Item not deleted" : "Bill not deleted"}
+              </AlertTitle>
               <AlertDescription>
                 {apiDetail(error) || "Please try again."}
               </AlertDescription>
