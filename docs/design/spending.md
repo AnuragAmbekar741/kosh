@@ -34,11 +34,18 @@ matches the merchant icon. That control does not toggle the accordion. It
 opens a dropdown: Edit expands the bill; Delete opens a confirmation Dialog
 and, on confirm, removes the whole bill. Document groups call
 `DELETE /documents/{id}` and remove the source file with every line. Manual
-groups call `DELETE /spend-items/{id}`. Line items stay read-only. Expanding
-a group reveals numbered products nested under the bill: indented to the
-merchant text column, quieter type, optional categories, and amounts. Line
-items sort by `line_index`, then spend date. Groups are ordered newest first
-by the first entry's spend date.
+groups call `DELETE /spend-items/{id}`. Expanding a group reveals numbered
+products nested under the bill: indented to the merchant text column, quieter
+type, optional categories, and amounts. Double-clicking an item name replaces
+it with an auto-focused inline input; the bill menu's Edit action opens the
+bill and starts its first item for keyboard and touch discoverability. Enter
+or blur saves through `PATCH /spend-items/{id}`, while Escape cancels. During
+item editing, a destructive icon appears beside the amount. It opens a
+confirmation Dialog and `DELETE /spend-items/{id}` removes only that item;
+the rest of the bill and source file remain. Pending mutations disable their
+controls, and validation or API failures stay beside the affected control.
+Line items sort by `line_index`, then spend date. Groups are ordered newest
+first by the first entry's spend date.
 
 The ledger fills the dashboard content panel below `2xl`; at `2xl` it uses a
 wide centered maximum for readability. The page itself does not scroll; the
