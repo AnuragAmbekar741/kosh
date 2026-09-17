@@ -34,4 +34,5 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 | SpendItem CRUD | |
 | Documents upload + worker extraction via OpenRouter | |
 
+
 When a planning decision changes, update `architecture/decisions.md` first, then `architecture/overview.md` and `product/scope.md`.
