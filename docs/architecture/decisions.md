@@ -55,6 +55,7 @@ Revisit when: ...
 | 39 | Logging | Stdlib `logging` to stdout, configured by `packages/observability`; text locally, JSON when shipped; log ids, never contents |
 | 40 | Document bill delete | Explicit ordered deletes (spend items → attempts → document) then blob; no FK CASCADE; rollback DB if blob cleanup fails |
 | 41 | Category badge colors | Chrome stays monochrome; spend category badges use muted categorical tints |
+| 42 | Dialog width | One `DialogContent` width (`sm:max-w-lg`) for every modal |
 
 ### Locked detail rows
 
@@ -256,10 +257,24 @@ Previously linked accounts are unchanged; review them separately if used with re
 
 **Monochrome primary**
 
-- Chosen: Primary inverts per theme — `#0a0a0a` on light, `#f7f8f8` on dark. `--brand-ink` and `--ring` stay in the same family.
-- Rejected: Ice-blue `#DAEFFA` as the brand accent
-- Why: On light surfaces the accent fell below usable contrast and carried no meaning that surface and weight did not already carry
+- Chosen: Primary inverts per theme — charcoal `#3a3a3c` on light, `#f7f8f8` on dark. `--brand-ink` and `--ring` stay in the same family.
+- Rejected: Ice-blue `#DAEFFA` as the brand accent; near-black `#0a0a0a` on light (too harsh on white chrome)
+- Why: On light surfaces a second hue fell below usable contrast and carried no meaning that surface and weight did not already carry. Soft charcoal keeps the monochrome lock without a void-black button.
 - Revisit when: A second semantic color is needed for data
+
+**One dialog width**
+
+- Chosen: Default `DialogContent` is `sm:max-w-lg`. Feature dialogs do not override `sm:max-w-*`.
+- Rejected: Per-feature widths (`sm` / `md` / `2xl`)
+- Why: Intake, confirm, and future modals should read as one system. Tall content scrolls; width stays fixed.
+- Revisit when: A surface truly cannot fit (for example a full-page worksheet)
+
+**Fileless manual bills reuse documents**
+
+- Chosen: `POST /documents/manual` creates a ready document with no blob (`source=manual`); line items use `POST /documents/{id}/line-items`
+- Rejected: Grouping loose `POST /spend-items` rows by merchant; a new bill table
+- Why: Ledger grouping and bill delete already key on `document_id`. Worker only claims `uploaded`, so a `ready` shell is never extracted.
+- Revisit when: Manual bills need a date or currency at create time, or file metadata should be nullable instead of sentinels
 
 **Document bill delete is explicit and blob-gated**
 

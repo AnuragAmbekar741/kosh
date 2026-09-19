@@ -22,9 +22,10 @@ def delete_document(session: Session, *, user_id: UUID, document_id: UUID) -> No
     if document.status == DocumentStatus.PROCESSING:
         raise DocumentProcessingError
     storage_key = delete_document_tree(session, document)
-    try:
-        blobs.delete_bytes(storage_key)
-    except BlobError as exc:
-        session.rollback()
-        raise StorageCleanupError from exc
+    if storage_key:
+        try:
+            blobs.delete_bytes(storage_key)
+        except BlobError as exc:
+            session.rollback()
+            raise StorageCleanupError from exc
     session.commit()

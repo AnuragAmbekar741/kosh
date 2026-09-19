@@ -12,17 +12,27 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { useDocuments } from "@/hooks/documents/use-documents"
 import { useSpendItems } from "@/hooks/spend-items/use-spend-items"
 
-function openAddDocument() {
+function openAddSpending() {
   // ponytail: header owns the dialog; empty CTA reuses the trigger
   document
-    .querySelector<HTMLButtonElement>("[data-slot=add-document-trigger]")
+    .querySelector<HTMLButtonElement>("[data-slot=add-spending-trigger]")
     ?.click()
 }
 
 export function SpendingPage() {
   const spendItems = useSpendItems()
+  const documents = useDocuments()
+  const emptyManual =
+    documents.data?.filter(
+      (document) =>
+        document.source === "manual" &&
+        !spendItems.data?.some((item) => item.document_id === document.id)
+    ) ?? []
+  const hasLedger = Boolean(spendItems.data?.length) || emptyManual.length > 0
+  const entryCount = (spendItems.data?.length ?? 0) + emptyManual.length
 
   return (
     <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-6 2xl:mx-auto 2xl:max-w-7xl">
@@ -37,15 +47,14 @@ export function SpendingPage() {
           >
             Transactions
           </h2>
-          {spendItems.data?.length ? (
+          {hasLedger ? (
             <p className="shrink-0 text-xs text-muted-foreground">
-              {spendItems.data.length}{" "}
-              {spendItems.data.length === 1 ? "entry" : "entries"}
+              {entryCount} {entryCount === 1 ? "entry" : "entries"}
             </p>
           ) : null}
         </div>
 
-        {spendItems.isPending ? (
+        {spendItems.isPending || documents.isPending ? (
           <SpendingLedgerSkeleton />
         ) : spendItems.isError ? (
           <Alert variant="destructive">
@@ -55,9 +64,12 @@ export function SpendingPage() {
               Refresh the page or try again in a moment.
             </AlertDescription>
           </Alert>
-        ) : spendItems.data?.length ? (
+        ) : hasLedger ? (
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <SpendingAccordion items={spendItems.data} />
+            <SpendingAccordion
+              emptyManual={emptyManual}
+              items={spendItems.data ?? []}
+            />
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 items-center justify-center">
@@ -68,12 +80,12 @@ export function SpendingPage() {
                 </EmptyMedia>
                 <EmptyTitle>No spending yet</EmptyTitle>
                 <EmptyDescription>
-                  Add a receipt or statement from the top bar. Extracted entries
-                  will appear here after you review them.
+                  Add a receipt or start a bill from the top bar. Entries appear
+                  here after you save them.
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <Button onClick={openAddDocument}>Add document</Button>
+                <Button onClick={openAddSpending}>Add spending</Button>
               </EmptyContent>
             </Empty>
           </div>

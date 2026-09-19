@@ -1,9 +1,11 @@
 import { client } from "@/api/client"
 import type { SpendItem } from "@/api/spend-items/spend-items.types"
 import type {
+  AddDocumentLineItemInput,
   ConfirmDocumentInput,
   DocumentDetail,
   DocumentSummary,
+  ManualDocumentCreate,
 } from "@/api/documents/documents.types"
 
 export async function uploadDocument(
@@ -51,4 +53,22 @@ export async function confirmDocument({
 
 export async function deleteDocument(documentId: string): Promise<void> {
   await client.delete(`/documents/${documentId}`)
+}
+
+export async function createManualDocument(
+  body: ManualDocumentCreate
+): Promise<DocumentSummary> {
+  const { data } = await client.post<DocumentSummary>("/documents/manual", body)
+  return data
+}
+
+export async function addDocumentLineItem({
+  documentId,
+  ...body
+}: AddDocumentLineItemInput): Promise<SpendItem> {
+  const { data } = await client.post<SpendItem>(
+    `/documents/${documentId}/line-items`,
+    body
+  )
+  return data
 }

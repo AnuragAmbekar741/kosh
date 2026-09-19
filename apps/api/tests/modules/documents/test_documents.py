@@ -646,3 +646,98 @@ def test_delete_document_with_multiple_attempts(client, monkeypatch) -> None:
         assert session.exec(
             select(SpendItem).where(SpendItem.document_id == UUID(document_id))
         ).all() == []
+
+
+def test_create_manual_document(client) -> None:
+    headers = _auth(client)
+    response = client.post(
+        "/documents/manual",
+        json={"title": "Weekend trip"},
+        headers=headers,
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["filename"] == "Weekend trip"
+    assert body["source"] == "manual"
+    assert body["status"] == "ready"
+    assert body["mime_type"] == "application/x-manual-spend"
+    assert body["size_bytes"] == 0
+    listed = client.get("/documents", headers=headers).json()
+    assert any(item["id"] == body["id"] for item in listed)
+    with Session(database.engine) as session:
+        document = session.get(Document, UUID(body["id"]))
+        assert document is not None
+        assert document.storage_key == ""
+        assert document.content_hash.startswith("manual:")
+        assert claim_next(session) is None
+
+
+def test_create_manual_document_rejects_blank_title(client) -> None:
+    headers = _auth(client)
+    empty = client.post("/documents/manual", json={"title": ""}, headers=headers)
+    assert empty.status_code == 422
+    blank = client.post("/documents/manual", json={"title": "   "}, headers=headers)
+    assert blank.status_code == 422
+
+
+def test_add_line_item_to_empty_manual_document(client) -> None:
+    headers = _auth(client)
+    created = client.post(
+        "/documents/manual",
+        json={"title": "Groceries"},
+        headers=headers,
+    )
+    document_id = created.json()["id"]
+    added = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Bananas", "amount": "2.50", "category": "Food"},
+        headers=headers,
+    )
+    assert added.status_code == 201
+    body = added.json()
+    assert body["description"] == "Bananas"
+    assert body["amount"] == "2.50"
+    assert body["category"] == "Food"
+    assert body["merchant"] == "Groceries"
+    assert body["currency"] == "USD"
+    assert body["line_index"] == 0
+    assert body["source"] == "manual"
+    assert body["status"] == "confirmed"
+    assert body["document_id"] == document_id
+    assert body["user_edited"] is True
+    second = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Milk", "amount": "4.00", "category": "Food"},
+        headers=headers,
+    )
+    assert second.status_code == 201
+    assert second.json()["line_index"] == 1
+    assert second.json()["merchant"] == "Groceries"
+    assert second.json()["spent_at"] == body["spent_at"]
+    ledger = client.get("/spend-items", headers=headers).json()
+    assert {item["description"] for item in ledger} == {"Bananas", "Milk"}
+
+
+def test_delete_manual_document_skips_blob(client, monkeypatch, blob_store) -> None:
+    headers = _auth(client)
+    created = client.post(
+        "/documents/manual",
+        json={"title": "Weekend trip"},
+        headers=headers,
+    )
+    document_id = created.json()["id"]
+    client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Coffee", "amount": "4.50"},
+        headers=headers,
+    )
+
+    def boom(key: str) -> None:
+        raise BlobError("storage cleanup failed")
+
+    monkeypatch.setattr("storage.blobs.delete_bytes", boom)
+    deleted = client.delete(f"/documents/{document_id}", headers=headers)
+    assert deleted.status_code == 204
+    assert client.get(f"/documents/{document_id}", headers=headers).status_code == 404
+    assert client.get("/spend-items", headers=headers).json() == []
+    assert blob_store == {}

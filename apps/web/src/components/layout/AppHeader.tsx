@@ -1,7 +1,7 @@
 import { useLocation } from "react-router"
 
 import { getNavItem } from "@/components/layout/navigation/navigation"
-import { AddDocumentDialog } from "@/components/spending/AddDocumentDialog"
+import { AddSpendingDialog } from "@/components/spending/AddSpendingDialog"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -16,7 +16,7 @@ export function AppHeader() {
       <h1 className="text-sm font-medium">{current?.label ?? "Kosh"}</h1>
       {pathname === "/spending" ? (
         <div className="ml-auto">
-          <AddDocumentDialog />
+          <AddSpendingDialog />
         </div>
       ) : null}
     </header>

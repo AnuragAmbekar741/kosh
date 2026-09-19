@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 
 import { apiDetail } from "@/api/client"
+import type { DocumentSummary } from "@/api/documents/documents.types"
 import type { SpendItem } from "@/api/spend-items/spend-items.types"
 import {
   Accordion,
@@ -42,14 +43,20 @@ import {
 import { cn } from "@/lib/utils"
 
 import { CategoryBadge } from "./CategoryBadge"
+import { SpendingAddLineRow } from "./SpendingAddLineRow"
 import { formatDate, formatMoney } from "./spending-formatters"
 
 type SpendingAccordionProps = {
+  emptyManual?: DocumentSummary[]
   items: SpendItem[]
 }
 
 type SpendingGroup = {
   id: string
+  title: string
+  spentAt: string
+  currency: string
+  source: "manual" | "document"
   items: SpendItem[]
 }
 
@@ -82,14 +89,48 @@ function sortLineItems(left: SpendItem, right: SpendItem) {
   return left.spent_at.localeCompare(right.spent_at)
 }
 
-function groupSpendItems(items: SpendItem[]) {
+function groupSource(item: SpendItem): SpendingGroup["source"] {
+  return item.source === "manual" ? "manual" : "document"
+}
+
+function canAddLine(group: SpendingGroup) {
+  if (group.id.startsWith("manual-")) return false
+  if (group.source === "manual") return true
+  return group.items.some((item) => item.line_index != null)
+}
+
+function groupSpendItems(
+  items: SpendItem[],
+  emptyManual: DocumentSummary[]
+) {
   const groups = new Map<string, SpendingGroup>()
 
   for (const item of items) {
     const id = item.document_id ?? `manual-${item.id}`
     const group = groups.get(id)
     if (group) group.items.push(item)
-    else groups.set(id, { id, items: [item] })
+    else {
+      groups.set(id, {
+        id,
+        title: item.merchant,
+        spentAt: item.spent_at,
+        currency: item.currency,
+        source: groupSource(item),
+        items: [item],
+      })
+    }
+  }
+
+  for (const document of emptyManual) {
+    if (groups.has(document.id)) continue
+    groups.set(document.id, {
+      id: document.id,
+      title: document.filename,
+      spentAt: document.created_at,
+      currency: "USD",
+      source: "manual",
+      items: [],
+    })
   }
 
   for (const group of groups.values()) {
@@ -97,7 +138,7 @@ function groupSpendItems(items: SpendItem[]) {
   }
 
   return Array.from(groups.values()).sort((left, right) =>
-    right.items[0].spent_at.localeCompare(left.items[0].spent_at)
+    right.spentAt.localeCompare(left.spentAt)
   )
 }
 
@@ -286,9 +327,9 @@ function SpendingBillRow({
   onEditItem,
   onStopEditing,
 }: SpendingBillRowProps) {
-  const first = group.items[0]
   const total = group.items.reduce((sum, item) => sum + Number(item.amount), 0)
   const itemLabel = group.items.length === 1 ? "item" : "items"
+  const showAddRow = canAddLine(group)
 
   return (
     <AccordionItem className="group/bill" value={group.id}>
@@ -296,11 +337,11 @@ function SpendingBillRow({
         actions={
           <span className="flex shrink-0 items-center gap-3">
             <span className="font-medium tabular-nums">
-              {formatMoney(total, first.currency)}
+              {formatMoney(total, group.currency)}
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger
-                aria-label={`Actions for ${first.merchant}`}
+                aria-label={`Actions for ${group.title}`}
                 render={
                   <Button
                     className="size-9 rounded-lg bg-accent hover:bg-accent"
@@ -335,11 +376,11 @@ function SpendingBillRow({
             <FileTextIcon />
           </span>
           <span className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="truncate font-medium">{first.merchant}</span>
+            <span className="truncate font-medium">{group.title}</span>
             <span className="flex shrink-0 items-center gap-1.5">
-              <Badge variant="outline">{formatDate(first.spent_at)}</Badge>
+              <Badge variant="outline">{formatDate(group.spentAt)}</Badge>
               <Badge variant="outline">
-                {first.document_id ? "Document" : "Manual entry"}
+                {group.source === "manual" ? "Manual entry" : "Document"}
               </Badge>
               <Badge variant="outline">
                 {group.items.length} {itemLabel}
@@ -360,14 +401,26 @@ function SpendingBillRow({
             onStopEditing={onStopEditing}
           />
         ))}
+        {showAddRow ? (
+          <SpendingAddLineRow
+            documentId={group.id}
+            index={group.items.length}
+            startOpen={group.items.length === 0}
+          />
+        ) : null}
       </AccordionContent>
     </AccordionItem>
   )
 }
 
-export function SpendingAccordion({ items }: SpendingAccordionProps) {
-  const groups = groupSpendItems(items)
-  const [openBill, setOpenBill] = useState("")
+export function SpendingAccordion({
+  emptyManual = [],
+  items,
+}: SpendingAccordionProps) {
+  const groups = groupSpendItems(items, emptyManual)
+  const newestEmptyId = groups.find((group) => group.items.length === 0)?.id ?? ""
+  const [openBill, setOpenBill] = useState(newestEmptyId)
+  const [openedEmptyId, setOpenedEmptyId] = useState(newestEmptyId)
   const [editingItemId, setEditingItemId] = useState("")
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
   const deleteDocument = useDeleteDocument()
@@ -380,6 +433,11 @@ export function SpendingAccordion({ items }: SpendingAccordionProps) {
   const pendingFirst = pendingGroup?.items[0]
   const pendingCount = pendingGroup?.items.length ?? 0
   const pendingItemLabel = pendingCount === 1 ? "item" : "items"
+
+  if (newestEmptyId && newestEmptyId !== openedEmptyId) {
+    setOpenBill(newestEmptyId)
+    setOpenedEmptyId(newestEmptyId)
+  }
 
   function resetDeleteMutations() {
     deleteDocument.reset()
@@ -399,7 +457,11 @@ export function SpendingAccordion({ items }: SpendingAccordionProps) {
 
   function editBill(group: SpendingGroup) {
     setOpenBill(group.id)
-    setEditingItemId(group.items[0].id)
+    if (group.items[0]) setEditingItemId(group.items[0].id)
+  }
+
+  function billDocumentId(group: SpendingGroup) {
+    return group.items[0]?.document_id ?? (canAddLine(group) ? group.id : null)
   }
 
   function closeDeleteDialog() {
@@ -410,11 +472,12 @@ export function SpendingAccordion({ items }: SpendingAccordionProps) {
 
   function confirmDelete() {
     if (!pendingDelete) return
+    const documentId = pendingGroup ? billDocumentId(pendingGroup) : null
     const request =
       pendingDelete.kind === "item"
         ? deleteSpendItem.mutateAsync(pendingDelete.item.id)
-        : pendingFirst?.document_id
-          ? deleteDocument.mutateAsync(pendingFirst.document_id)
+        : documentId
+          ? deleteDocument.mutateAsync(documentId)
           : pendingFirst
             ? deleteSpendItem.mutateAsync(pendingFirst.id)
             : null
@@ -462,11 +525,15 @@ export function SpendingAccordion({ items }: SpendingAccordionProps) {
             <DialogDescription>
               {pendingItem
                 ? `This removes ${itemName(pendingItem)} from ${pendingItem.merchant}. The rest of the bill and its source file stay available. This cannot be undone.`
-                : pendingFirst?.document_id
-                  ? `This removes ${pendingFirst.merchant} and its ${pendingCount} ${pendingItemLabel} from Spending, including the source file. This cannot be undone.`
-                  : pendingFirst
-                    ? `This removes ${pendingFirst.merchant} from Spending. This cannot be undone.`
-                    : null}
+                : pendingGroup?.source === "manual"
+                  ? pendingCount
+                    ? `This removes ${pendingGroup.title} and its ${pendingCount} ${pendingItemLabel} from Spending. This cannot be undone.`
+                    : `This removes ${pendingGroup.title} from Spending. This cannot be undone.`
+                  : pendingFirst?.document_id
+                    ? `This removes ${pendingFirst.merchant} and its ${pendingCount} ${pendingItemLabel} from Spending, including the source file. This cannot be undone.`
+                    : pendingFirst
+                      ? `This removes ${pendingFirst.merchant} from Spending. This cannot be undone.`
+                      : null}
             </DialogDescription>
           </DialogHeader>
           {error ? (

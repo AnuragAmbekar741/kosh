@@ -26,7 +26,7 @@ apps/api/src/api/          FastAPI app factory + feature modules
   modules/auth/            register, login, google, refresh, logout
   modules/users/           GET /users/me; UserPublic
   modules/spend/           SpendItem CRUD + presenter
-  modules/documents/       upload, list, detail, confirm
+  modules/documents/       upload, manual create, list, detail, confirm, line items
 
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession
