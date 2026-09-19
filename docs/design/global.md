@@ -28,7 +28,7 @@ selected nav, and menu hover stay visible on `#ffffff` / `#f5f6f6`. Icon wells
 use `bg-accent` or `bg-sidebar-accent`, not `bg-muted`. Tailwind radius
 utilities are derived from `--radius`; their suffixes do not directly match
 the design token names.
-Primary inverts against the canvas: near-black `#0a0a0a` on light, near-white
+Primary inverts against the canvas: charcoal `#3a3a3c` on light, near-white
 `#f7f8f8` on dark. `--primary-foreground` is the opposite ink. `--brand-ink`
 and `--ring` stay in the same neutral family so links, focus, and primary
 actions never introduce a second hue. The auth canvas uses gray tonal
@@ -48,6 +48,10 @@ Use shadcn primitives in `apps/web/src/components/ui/`.
 Buttons use more horizontal than vertical space so actions read as sleek controls rather than square tiles. Text buttons use 16px horizontal padding at the default size and compact to 36px tall from `sm` upward. Below `sm`, the same controls retain a 44px touch target. Large buttons are 40px tall on desktop with 20px horizontal padding. Icon-only buttons remain square because the shape communicates a single glyph target, but they follow the same 44px mobile and compact desktop sizing rule.
 
 Full-width form actions may use a 40px desktop height while keeping 44px on mobile. Feature code should select a shared size variant before adding local height or padding overrides.
+
+### Dialogs
+
+Every shadcn Dialog uses the default `DialogContent` width (`sm:max-w-lg`). Do not pass a different `sm:max-w-*`. Confirm dialogs use the same shell as intake dialogs. Tall content scrolls inside the dialog; the width stays fixed.
 
 ## Typeset
 
