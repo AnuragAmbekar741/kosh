@@ -54,8 +54,16 @@ type CategoryBadgeProps = {
   onSelect?: (category: string) => void
 }
 
-function categoryClass(category: string) {
+export function categoryTintClass(category: string) {
   return CATEGORY_STYLES[category as KnownCategory] ?? CATEGORY_STYLES.Other
+}
+
+export function categorySwatchClass(category: string) {
+  return SWATCH_STYLES[category as KnownCategory] ?? SWATCH_STYLES.Other
+}
+
+function categoryClass(category: string) {
+  return categoryTintClass(category)
 }
 
 function CategoryBadgeLabel({ category }: { category: string | null }) {

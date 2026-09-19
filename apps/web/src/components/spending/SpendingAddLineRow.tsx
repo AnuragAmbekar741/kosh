@@ -12,13 +12,11 @@ import { CategoryBadge } from "./CategoryBadge"
 
 type SpendingAddLineRowProps = {
   documentId: string
-  index: number
   startOpen?: boolean
 }
 
 export function SpendingAddLineRow({
   documentId,
-  index,
   startOpen = false,
 }: SpendingAddLineRowProps) {
   const [isOpen, setIsOpen] = useState(startOpen)
@@ -73,26 +71,20 @@ export function SpendingAddLineRow({
   if (!isOpen) {
     return (
       <button
-        className="grid w-full cursor-pointer items-center gap-3 py-3 pr-4 pl-16 text-left not-first:border-t hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none sm:grid-cols-[2rem_minmax(0,1fr)_auto] sm:pr-5 sm:pl-17"
+        className="grid w-full cursor-pointer items-center gap-3 py-2 pr-4 pl-16 text-left not-first:border-t hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none sm:pr-5 sm:pl-17"
         onClick={() => {
           resetForm()
           setIsOpen(true)
         }}
         type="button"
       >
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {String(index + 1).padStart(2, "0")}
-        </span>
         <span className="text-sm text-muted-foreground">Add item</span>
       </button>
     )
   }
 
   return (
-    <div className="grid items-center gap-3 py-3 pr-4 pl-16 not-first:border-t grid-cols-[2rem_minmax(0,1fr)] sm:grid-cols-[2rem_minmax(0,1fr)_auto] sm:pr-5 sm:pl-17">
-      <span className="text-xs text-muted-foreground tabular-nums">
-        {String(index + 1).padStart(2, "0")}
-      </span>
+    <div className="grid items-center gap-3 py-2 pr-4 pl-16 not-first:border-t grid-cols-[minmax(0,1fr)] sm:grid-cols-[minmax(0,1fr)_auto] sm:pr-5 sm:pl-17">
       <Field className="min-w-0 gap-1" data-invalid={Boolean(error)}>
         <FieldLabel className="sr-only" htmlFor={nameId}>
           Item name
@@ -133,7 +125,7 @@ export function SpendingAddLineRow({
         </div>
         {error ? <FieldError className="text-xs">{error}</FieldError> : null}
       </Field>
-      <div className="col-start-2 flex shrink-0 items-center gap-2 justify-self-end sm:col-start-3 sm:row-start-1">
+      <div className="flex shrink-0 items-center gap-2 justify-self-end sm:col-start-2 sm:row-start-1">
         <Field className="gap-0">
           <FieldLabel className="sr-only" htmlFor={amountId}>
             Price

@@ -40,7 +40,6 @@ import {
   useDeleteSpendItem,
   useUpdateSpendItem,
 } from "@/hooks/spend-items/use-spend-items"
-import { cn } from "@/lib/utils"
 
 import { CategoryBadge } from "./CategoryBadge"
 import { SpendingAddLineRow } from "./SpendingAddLineRow"
@@ -73,7 +72,6 @@ type SpendingBillRowProps = {
 type SpendingLineRowProps = {
   isEditing: boolean
   item: SpendItem
-  index: number
   onDelete: (item: SpendItem) => void
   onEdit: (itemId: string) => void
   onStopEditing: () => void
@@ -149,7 +147,6 @@ function itemName(item: SpendItem) {
 function SpendingLineRow({
   isEditing,
   item,
-  index,
   onDelete,
   onEdit,
   onStopEditing,
@@ -221,17 +218,7 @@ function SpendingLineRow({
   )
 
   return (
-    <div
-      className={cn(
-        "grid items-center gap-3 py-3 pr-4 pl-16 not-first:border-t sm:grid-cols-[2rem_minmax(0,1fr)_auto] sm:pr-5 sm:pl-17",
-        isEditing
-          ? "grid-cols-[2rem_minmax(0,1fr)]"
-          : "grid-cols-[2rem_minmax(0,1fr)_auto]"
-      )}
-    >
-      <span className="text-xs text-muted-foreground tabular-nums">
-        {String(index + 1).padStart(2, "0")}
-      </span>
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2 pr-4 pl-16 not-first:border-t sm:pr-5 sm:pl-17">
       <div className="min-w-0">
         {isEditing ? (
           <Field className="gap-1" data-invalid={Boolean(error)}>
@@ -290,13 +277,7 @@ function SpendingLineRow({
           </div>
         )}
       </div>
-      <div
-        className={cn(
-          "flex shrink-0 items-center gap-2",
-          isEditing &&
-            "col-start-2 justify-self-end sm:col-start-3 sm:row-start-1"
-        )}
-      >
+      <div className="flex shrink-0 items-center gap-2">
         <p className="text-sm font-normal tabular-nums">
           {formatMoney(item.amount, item.currency)}
         </p>
@@ -318,6 +299,16 @@ function SpendingLineRow({
   )
 }
 
+function uniqueCategories(items: SpendItem[]) {
+  const names: string[] = []
+  for (const item of items) {
+    if (item.category && !names.includes(item.category)) {
+      names.push(item.category)
+    }
+  }
+  return names
+}
+
 function SpendingBillRow({
   editingItemId,
   group,
@@ -330,9 +321,10 @@ function SpendingBillRow({
   const total = group.items.reduce((sum, item) => sum + Number(item.amount), 0)
   const itemLabel = group.items.length === 1 ? "item" : "items"
   const showAddRow = canAddLine(group)
+  const categories = uniqueCategories(group.items)
 
   return (
-    <AccordionItem className="group/bill" value={group.id}>
+    <AccordionItem className="group/bill border-b" value={group.id}>
       <AccordionTrigger
         actions={
           <span className="flex shrink-0 items-center gap-3">
@@ -373,7 +365,7 @@ function SpendingBillRow({
       >
         <span className="flex min-w-0 items-center gap-3 text-left">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent [&_svg]:size-4">
-            <FileTextIcon />
+            {group.source === "manual" ? <PencilIcon /> : <FileTextIcon />}
           </span>
           <span className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="truncate font-medium">{group.title}</span>
@@ -385,29 +377,32 @@ function SpendingBillRow({
               <Badge variant="outline">
                 {group.items.length} {itemLabel}
               </Badge>
+              {categories.map((category) => (
+                <CategoryBadge category={category} key={category} />
+              ))}
             </span>
           </span>
         </span>
       </AccordionTrigger>
-      <AccordionContent className="h-auto border-t pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
-        {group.items.map((item, index) => (
-          <SpendingLineRow
-            index={index}
-            isEditing={editingItemId === item.id}
-            item={item}
-            key={item.id}
-            onDelete={onDeleteItem}
-            onEdit={onEditItem}
-            onStopEditing={onStopEditing}
-          />
-        ))}
-        {showAddRow ? (
-          <SpendingAddLineRow
-            documentId={group.id}
-            index={group.items.length}
-            startOpen={group.items.length === 0}
-          />
-        ) : null}
+      <AccordionContent className="border-t pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
+        <div className="max-h-72 overflow-y-auto">
+          {group.items.map((item) => (
+            <SpendingLineRow
+              isEditing={editingItemId === item.id}
+              item={item}
+              key={item.id}
+              onDelete={onDeleteItem}
+              onEdit={onEditItem}
+              onStopEditing={onStopEditing}
+            />
+          ))}
+          {showAddRow ? (
+            <SpendingAddLineRow
+              documentId={group.id}
+              startOpen={group.items.length === 0}
+            />
+          ) : null}
+        </div>
       </AccordionContent>
     </AccordionItem>
   )

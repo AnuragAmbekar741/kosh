@@ -57,6 +57,7 @@ Revisit when: ...
 | 41 | Category badge colors | Chrome stays monochrome; spend category badges use muted categorical tints |
 | 42 | Dialog width | One `DialogContent` width (`sm:max-w-lg`) for every modal |
 | 43 | Spend ledger analytics | **`GET /spend-items/summary`** computed per request; `GET /overview` stays the later dashboard snapshot |
+| 44 | Spend page filters | **URL search params** on `/spending`; no React context |
 
 ### Locked detail rows
 
@@ -283,6 +284,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: A dedicated summary table; shipping `/overview` now as the spending-page strip
 - Why: Same filters as the ledger; personal-ledger size does not need SQL `GROUP BY`; overview is a different product surface
 - Revisit when: item volume makes two list scans expensive, or the dashboard route is built
+
+**Spend page filters live in the URL**
+
+- Chosen: Period, range, category, source, search, and Bills/Items view are `useSearchParams` on `/spending`. `useSpendFilters()` is a hook, not a provider.
+- Rejected: A `SpendingFiltersProvider` context; session-only state that dies on refresh
+- Why: Deep links, back/forward, and shareable filtered views. The page is a few siblings, not a deep tree; a provider would re-render the ledger on every search keystroke. React Router already broadcasts the URL.
+- Revisit when: a portal outside `/spending` needs the same state without a URL
 
 **Document bill delete is explicit and blob-gated**
 
