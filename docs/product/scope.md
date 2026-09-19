@@ -79,7 +79,7 @@ Prefer `GET /users/me` over `GET /users/{id}` for profile.
 ```text
 POST /documents → store original file → Document row (uploaded)
   → worker claims (SKIP LOCKED) → inspect/normalize → OpenRouter
-  → ExtractionAttempt + draft SpendItems → user confirm
+  → ExtractionAttempt + categorized draft SpendItems → user confirm
 ```
 
 States: `uploaded` → `processing` → `ready` | `failed`

@@ -193,6 +193,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Why: JSON numbers and binary floats round money
 - Revisit when: We need more than two decimal places
 
+**Where spend categories come from**
+
+- Chosen: Category enum (9 values) on the vision extraction schema; one call extracts and categorizes
+- Rejected: Second worker consumer with a text-only categorize call; category table; free-form vision categories
+- Why: +~2% output tokens vs a second queue, claim protocol, poll loop and review-dialog polling. Model sees the whole receipt. Statements and receipts share one taxonomy.
+- Revisit when: Taxonomy changes need re-categorizing existing rows without a vision call, or users manage their own categories
+
 **content_hash is a warning, not uniqueness**
 
 - Chosen: Indexed `content_hash`; unique `(user_id, idempotency_key)` for retries
