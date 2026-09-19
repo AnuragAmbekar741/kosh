@@ -54,6 +54,7 @@ Revisit when: ...
 | 38 | Signed-in chrome | **Collapsible sidebar** (`variant="inset"`, `collapsible="icon"`) with Overview + Spending |
 | 39 | Logging | Stdlib `logging` to stdout, configured by `packages/observability`; text locally, JSON when shipped; log ids, never contents |
 | 40 | Document bill delete | Explicit ordered deletes (spend items → attempts → document) then blob; no FK CASCADE; rollback DB if blob cleanup fails |
+| 41 | Category badge colors | Chrome stays monochrome; spend category badges use muted categorical tints |
 
 ### Locked detail rows
 
@@ -199,6 +200,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Second worker consumer with a text-only categorize call; category table; free-form vision categories
 - Why: +~2% output tokens vs a second queue, claim protocol, poll loop and review-dialog polling. Model sees the whole receipt. Statements and receipts share one taxonomy.
 - Revisit when: Taxonomy changes need re-categorizing existing rows without a vision call, or users manage their own categories
+
+**Category badge colors stay off the chrome**
+
+- Chosen: Soft `bg`/`fg` tokens per extraction category on spend-row badges only
+- Rejected: Recolor the product chrome to a trust-blue OLED system; solid filled rainbow pills; color-only dots
+- Why: Locked monochrome primary still owns actions and focus. Distinct hues help scan a dense ledger; the label remains the meaning. Health is emerald so it never collides with `--destructive`. Unknown strings reuse Other.
+- Revisit when: Users manage a custom taxonomy or Overview charts need the same scale
 
 **content_hash is a warning, not uniqueness**
 

@@ -14,10 +14,11 @@ monochrome visual system.
    `GET /documents/{id}` and shows processing, failure, and ready states.
 4. A ready receipt with a total draft can be saved as one total or itemized
    rows. Statements are itemized. All extracted rows start selected; flagged
-   lines remain called out in the item Accordion. Review shows a category per
-   row and for the one-total entry. The ledger shows the existing chip when
-   category is set. Duplicate hashes and mismatched totals produce review
-   warnings.
+   lines remain called out in the item Accordion. Review shows a tinted
+   category badge on the same row as each draft title, and names the category
+   in the one-total copy. The ledger shows the same badge beside the item
+   name when category is set. Duplicate hashes and mismatched totals produce
+   review warnings.
 5. `POST /documents/{id}/confirm` adds selected drafts to Spending and refreshes
    the ledger.
 
@@ -38,14 +39,21 @@ and, on confirm, removes the whole bill. Document groups call
 `DELETE /documents/{id}` and remove the source file with every line. Manual
 groups call `DELETE /spend-items/{id}`. Expanding a group reveals numbered
 products nested under the bill: indented to the merchant text column, quieter
-type, optional categories, and amounts. Double-clicking an item name replaces
-it with an auto-focused inline input; the bill menu's Edit action opens the
-bill and starts its first item for keyboard and touch discoverability. Enter
-or blur saves through `PATCH /spend-items/{id}`, while Escape cancels. During
-item editing, a destructive icon appears beside the amount. It opens a
-confirmation Dialog and `DELETE /spend-items/{id}` removes only that item;
-the rest of the bill and source file remain. Pending mutations disable their
-controls, and validation or API failures stay beside the affected control.
+type, a tinted category badge on the same row as the item name, and amounts.
+The name truncates; the badge stays `w-fit` and does not wrap underneath.
+Clicking the badge opens a DropdownMenu of the nine extraction categories
+(Food, Transport, Housing, Entertainment, Shopping, Health, Utilities,
+Travel, Other). The current value is checked. A row with no category shows
+a muted Category trigger. Choosing a value saves through
+`PATCH /spend-items/{id}`. Double-clicking an item name replaces it with an
+auto-focused inline input at half the name column, with the category badge
+beside it; the bill menu's Edit action opens the bill and
+starts its first item for keyboard and touch discoverability. Enter or blur
+saves the name through the same PATCH. Escape cancels. During item editing,
+a destructive icon appears beside the amount. It opens a confirmation Dialog
+and `DELETE /spend-items/{id}` removes only that item; the rest of the bill
+and source file remain. Pending mutations disable their controls, and
+validation or API failures stay beside the affected control.
 Line items sort by `line_index`, then spend date. Groups are ordered newest
 first by the first entry's spend date.
 
@@ -62,8 +70,10 @@ product does not stack a second rule on the bill divider. The open panel hugs
 its rows (`h-auto`).
 
 The surface stays flat and monochrome: semantic neutral backgrounds and muted
-fills establish hierarchy. Geist, compact type, and tabular numerals keep the
-dense financial content scannable; depth does not rely on shadows.
+fills establish hierarchy. Category badges are the only chromatic marks in
+the ledger — soft fills with matching ink, label always present. Geist,
+compact type, and tabular numerals keep the dense financial content
+scannable; depth does not rely on shadows.
 
 Loading uses an accordion-shaped Skeleton: a bordered `rounded-xl` stack of
 bill rows (icon tile, merchant bar, badge chips, trailing amount, kebab
@@ -80,6 +90,7 @@ and confirmation action stay reachable.
 src/pages/spending/SpendingPage.tsx
 src/components/spending/
   AddDocumentDialog.tsx
+  CategoryBadge.tsx
   DocumentReview.tsx
   SpendingAccordion.tsx
   SpendingLedgerSkeleton.tsx

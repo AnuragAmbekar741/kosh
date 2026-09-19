@@ -41,6 +41,7 @@ import {
 } from "@/hooks/spend-items/use-spend-items"
 import { cn } from "@/lib/utils"
 
+import { CategoryBadge } from "./CategoryBadge"
 import { formatDate, formatMoney } from "./spending-formatters"
 
 type SpendingAccordionProps = {
@@ -159,6 +160,25 @@ function SpendingLineRow({
     }
   }
 
+  async function saveCategory(category: string) {
+    if (category === item.category) return
+    setValidationError("")
+    updateItem.reset()
+    try {
+      await updateItem.mutateAsync({ id: item.id, updates: { category } })
+    } catch {
+      // Mutation state renders the API error beside the badge.
+    }
+  }
+
+  const categoryBadge = (
+    <CategoryBadge
+      category={item.category}
+      disabled={updateItem.isPending}
+      onSelect={(category) => void saveCategory(category)}
+    />
+  )
+
   return (
     <div
       className={cn(
@@ -177,55 +197,57 @@ function SpendingLineRow({
             <FieldLabel className="sr-only" htmlFor={inputId}>
               Item name
             </FieldLabel>
-            <Input
-              aria-invalid={Boolean(error)}
-              autoFocus
-              disabled={updateItem.isPending}
-              id={inputId}
-              onBlur={() => void saveName()}
-              onChange={(event) => {
-                setName(event.target.value)
-                setValidationError("")
-                updateItem.reset()
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault()
-                  event.currentTarget.blur()
-                }
-                if (event.key === "Escape") {
-                  event.preventDefault()
-                  cancelEditing()
-                }
-              }}
-              value={name}
-            />
+            <div className="inline-flex w-full max-w-full flex-nowrap items-center gap-2">
+              <Input
+                aria-invalid={Boolean(error)}
+                autoFocus
+                className="w-1/2 min-w-0 shrink-0"
+                disabled={updateItem.isPending}
+                id={inputId}
+                onBlur={() => void saveName()}
+                onChange={(event) => {
+                  setName(event.target.value)
+                  setValidationError("")
+                  updateItem.reset()
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault()
+                    event.currentTarget.blur()
+                  }
+                  if (event.key === "Escape") {
+                    event.preventDefault()
+                    cancelEditing()
+                  }
+                }}
+                value={name}
+              />
+              {categoryBadge}
+            </div>
             {error ? (
               <FieldError className="text-xs">{error}</FieldError>
             ) : null}
           </Field>
         ) : (
-          <button
-            aria-label={`Edit ${label}. Double-click, or press Enter.`}
-            className="block max-w-full cursor-text truncate rounded-sm text-left text-sm font-normal outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring"
-            onClick={(event) => {
-              if (event.detail === 0) startEditing()
-            }}
-            onDoubleClick={startEditing}
-            onPointerUp={(event) => {
-              if (event.pointerType === "touch") startEditing()
-            }}
-            title="Double-click to edit"
-            type="button"
-          >
-            {label}
-          </button>
+          <div className="inline-flex max-w-full flex-nowrap items-center gap-2">
+            <button
+              aria-label={`Edit ${label}. Double-click, or press Enter.`}
+              className="max-w-full shrink cursor-text truncate rounded-sm text-left text-sm font-normal outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={(event) => {
+                if (event.detail === 0) startEditing()
+              }}
+              onDoubleClick={startEditing}
+              onPointerUp={(event) => {
+                if (event.pointerType === "touch") startEditing()
+              }}
+              title="Double-click to edit"
+              type="button"
+            >
+              {label}
+            </button>
+            {categoryBadge}
+          </div>
         )}
-        {item.category ? (
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {item.category}
-          </p>
-        ) : null}
       </div>
       <div
         className={cn(

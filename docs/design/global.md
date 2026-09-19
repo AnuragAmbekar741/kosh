@@ -34,7 +34,9 @@ and `--ring` stay in the same neutral family so links, focus, and primary
 actions never introduce a second hue. The auth canvas uses gray tonal
 gradients and a gray waveform. Document intake uses a flat neutral canvas.
 Geist carries headings, UI, and body copy. Semantic `--destructive` and
-`--chart-2` (success) stay chromatic.
+`--chart-2` (success) stay chromatic. Spend category badges are the other
+chromatic exception: muted `bg` / `fg` pairs (`--category-food` …
+`--category-other`) so a ledger can scan by hue without recoloring chrome.
 
 ## Components
 

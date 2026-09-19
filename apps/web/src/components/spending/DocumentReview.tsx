@@ -22,6 +22,7 @@ import {
   useDocument,
 } from "@/hooks/documents/use-documents"
 
+import { CategoryBadge } from "./CategoryBadge"
 import { formatDate, formatMoney } from "./spending-formatters"
 
 type ConfirmationMode = "total" | "line_items"
@@ -215,8 +216,13 @@ function ReadyDocument({
                         />
                         <AccordionTrigger className="min-w-0 py-3 hover:no-underline">
                           <span className="min-w-0 pr-3">
-                            <span className="block truncate">
-                              {draftName(draft)}
+                            <span className="flex min-w-0 items-center gap-2">
+                              <span className="min-w-0 truncate">
+                                {draftName(draft)}
+                              </span>
+                              {draft.category ? (
+                                <CategoryBadge category={draft.category} />
+                              ) : null}
                             </span>
                             {extracted?.requires_review ? (
                               <span className="mt-0.5 flex items-center gap-1 text-xs font-normal text-muted-foreground [&_svg]:size-3.5">
@@ -231,12 +237,8 @@ function ReadyDocument({
                       </div>
                       <AccordionContent className="pl-7 text-xs text-muted-foreground">
                         {extracted && "raw_description" in extracted
-                          ? draft.category
-                            ? `Receipt text: ${extracted.raw_description} · ${draft.category}`
-                            : `Receipt text: ${extracted.raw_description}`
-                          : [formatDate(draft.spent_at), draft.category]
-                              .filter(Boolean)
-                              .join(" · ")}
+                          ? `Receipt text: ${extracted.raw_description}`
+                          : formatDate(draft.spent_at)}
                       </AccordionContent>
                     </AccordionItem>
                   )
