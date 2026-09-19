@@ -1,7 +1,9 @@
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID
 
+from sqlalchemy import func, or_
 from sqlmodel import Session, col, select
 
 from storage.models.spend import SpendItem, SpendSource, SpendStatus
@@ -15,6 +17,7 @@ __all__ = [
     "list_spend_items",
     "update_spend_item",
     "upsert_drafts",
+    "user_has_confirmed_spend",
 ]
 
 
@@ -73,9 +76,10 @@ def list_spend_items(
     user_id: UUID,
     spent_from: date | None = None,
     spent_to: date | None = None,
-    category: str | None = None,
+    category: Sequence[str] | None = None,
     merchant: str | None = None,
     source: str | None = None,
+    q: str | None = None,
     status: str | None = SpendStatus.CONFIRMED,
 ) -> list[SpendItem]:
     statement = select(SpendItem).where(SpendItem.user_id == user_id)
@@ -83,18 +87,39 @@ def list_spend_items(
         statement = statement.where(SpendItem.spent_at >= spent_from)
     if spent_to is not None:
         statement = statement.where(SpendItem.spent_at <= spent_to)
-    if category is not None:
-        statement = statement.where(SpendItem.category == category)
+    if category:
+        statement = statement.where(col(SpendItem.category).in_(category))
     if merchant is not None:
         statement = statement.where(SpendItem.merchant == merchant)
     if source is not None:
         statement = statement.where(SpendItem.source == source)
+    if q:
+        # SQLite has no ILIKE; lower+LIKE matches Postgres ilike for ASCII.
+        needle = f"%{q.lower()}%"
+        statement = statement.where(
+            or_(
+                func.lower(SpendItem.merchant).like(needle),
+                func.lower(SpendItem.description).like(needle),
+            )
+        )
     if status is not None:
         statement = statement.where(SpendItem.status == status)
     statement = statement.order_by(
         col(SpendItem.spent_at).desc(), col(SpendItem.created_at).desc()
     )
     return list(session.exec(statement).all())
+
+
+def user_has_confirmed_spend(session: Session, *, user_id: UUID) -> bool:
+    statement = (
+        select(SpendItem.id)
+        .where(
+            SpendItem.user_id == user_id,
+            SpendItem.status == SpendStatus.CONFIRMED,
+        )
+        .limit(1)
+    )
+    return session.exec(statement).first() is not None
 
 
 def list_document_spend_items(
