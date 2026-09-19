@@ -50,6 +50,7 @@ Status key: **live** = implemented today.
 | GET | `/users/me` | **live** |
 | POST | `/spend-items` | **live** |
 | GET | `/spend-items` | **live** |
+| GET | `/spend-items/summary` | **live** |
 | GET | `/spend-items/{id}` | **live** |
 | PATCH | `/spend-items/{id}` | **live** |
 | DELETE | `/spend-items/{id}` | **live** |
@@ -64,7 +65,7 @@ Status key: **live** = implemented today.
 
 Prefer `GET /users/me` over `GET /users/{id}` for profile.
 
-`GET /spend-items` is the confirmed ledger. Pending document candidates are returned by `GET /documents/{id}` until the user confirms either the receipt total or its line items. `POST /documents/manual` creates a fileless bill from a title. `POST /documents/{id}/line-items` appends a confirmed line to an itemized receipt bill or a manual bill. `DELETE /documents/{id}` removes the document, extraction history, linked spend items, and stored file (manual bills have no file).
+`GET /spend-items` is the confirmed ledger. It accepts `spent_from`, `spent_to`, repeatable `category`, exact `merchant`, `source`, and `q` (case-insensitive contains on merchant or description). `GET /spend-items/summary` is the same confirmed slice plus `period` (`day` / `week` / `month` / `custom`): totals, bill/item counts, category mix, and optional month-over-month comparison. Pending document candidates are returned by `GET /documents/{id}` until the user confirms either the receipt total or its line items. `POST /documents/manual` creates a fileless bill from a title. `POST /documents/{id}/line-items` appends a confirmed line to an itemized receipt bill or a manual bill. `DELETE /documents/{id}` removes the document, extraction history, linked spend items, and stored file (manual bills have no file).
 
 ## Auth flow (target)
 

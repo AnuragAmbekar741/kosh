@@ -25,7 +25,7 @@ apps/api/src/api/          FastAPI app factory + feature modules
   modules/health/          GET /health
   modules/auth/            register, login, google, refresh, logout
   modules/users/           GET /users/me; UserPublic
-  modules/spend/           SpendItem CRUD + presenter
+  modules/spend/           SpendItem CRUD + summary + presenter
   modules/documents/       upload, manual create, list, detail, confirm, line items
 
 packages/storage/src/storage/

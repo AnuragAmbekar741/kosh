@@ -56,6 +56,7 @@ Revisit when: ...
 | 40 | Document bill delete | Explicit ordered deletes (spend items → attempts → document) then blob; no FK CASCADE; rollback DB if blob cleanup fails |
 | 41 | Category badge colors | Chrome stays monochrome; spend category badges use muted categorical tints |
 | 42 | Dialog width | One `DialogContent` width (`sm:max-w-lg`) for every modal |
+| 43 | Spend ledger analytics | **`GET /spend-items/summary`** computed per request; `GET /overview` stays the later dashboard snapshot |
 
 ### Locked detail rows
 
@@ -275,6 +276,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Grouping loose `POST /spend-items` rows by merchant; a new bill table
 - Why: Ledger grouping and bill delete already key on `document_id`. Worker only claims `uploaded`, so a `ready` shell is never extracted.
 - Revisit when: Manual bills need a date or currency at create time, or file metadata should be nullable instead of sentinels
+
+**Spend ledger analytics vs overview**
+
+- Chosen: `GET /spend-items/summary` on the spend module, computed per request by reducing the same filtered confirmed rows as the list. `GET /overview` remains the later dashboard snapshot.
+- Rejected: A dedicated summary table; shipping `/overview` now as the spending-page strip
+- Why: Same filters as the ledger; personal-ledger size does not need SQL `GROUP BY`; overview is a different product surface
+- Revisit when: item volume makes two list scans expensive, or the dashboard route is built
 
 **Document bill delete is explicit and blob-gated**
 
