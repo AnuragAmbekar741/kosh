@@ -33,7 +33,18 @@ _PROMPT = (
     "Extract spending data from this financial document. "
     "Use document_kind receipt for store receipts and statement for bank or card statements. "
     "Money fields must be decimal strings such as 56.71. "
-    "Dates must be ISO 8601 (YYYY-MM-DD). Treat 10/19/24 as 2024-10-19 when the locale is US."
+    "Dates must be ISO 8601 (YYYY-MM-DD). Treat 10/19/24 as 2024-10-19 when the locale is US. "
+    "Assign every line item and transaction exactly one category. "
+    "Food: groceries, restaurants, cafes, delivery. "
+    "Transport: fuel, parking, transit, rideshare, tolls. "
+    "Housing: rent, mortgage, repairs, furniture. "
+    "Utilities: electricity, water, gas, internet, phone. "
+    "Health: pharmacy, medical, fitness. "
+    "Entertainment: streaming, events, games. "
+    "Travel: flights, hotels, car rental. "
+    "Shopping: clothing, electronics, household goods. "
+    "Use Other only when none fit. "
+    "For a receipt's top-level category, choose the category covering the largest share of the total."
 )
 
 

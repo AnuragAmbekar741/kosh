@@ -7,6 +7,8 @@ from ai.client import (
     strict_json_schema,
 )
 from ai.schemas import (
+    SCHEMA_VERSION,
+    Category,
     Extraction,
     LineItem,
     ReceiptExtraction,
@@ -15,6 +17,8 @@ from ai.schemas import (
 )
 
 __all__ = [
+    "SCHEMA_VERSION",
+    "Category",
     "ExtractError",
     "ExtractMeta",
     "Extraction",
