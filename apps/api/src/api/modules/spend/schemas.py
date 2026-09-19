@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -8,7 +9,15 @@ __all__ = [
     "SpendItemCreate",
     "SpendItemPublic",
     "SpendItemUpdate",
+    "SpendPeriod",
+    "SpendQuery",
+    "SpendSummary",
+    "SpendSummaryCategory",
+    "SpendSummaryComparison",
+    "SpendSummaryQuery",
 ]
+
+SpendPeriod = Literal["day", "week", "month", "custom"]
 
 
 def _require_positive_amount(value: Decimal) -> Decimal:
@@ -74,3 +83,38 @@ class SpendItemPublic(BaseModel):
     user_edited: bool = False
     created_at: datetime
     updated_at: datetime
+
+
+class SpendQuery(BaseModel):
+    spent_from: date | None = None
+    spent_to: date | None = None
+    category: list[str] | None = None
+    merchant: str | None = None
+    source: str | None = None
+    q: str | None = None
+
+
+class SpendSummaryQuery(SpendQuery):
+    period: SpendPeriod | None = None
+
+
+class SpendSummaryComparison(BaseModel):
+    delta_percent: float
+    previous_label: str
+
+
+class SpendSummaryCategory(BaseModel):
+    name: str
+    amount: Decimal
+    percent: float
+
+
+class SpendSummary(BaseModel):
+    currency: str
+    total: Decimal
+    bill_count: int
+    item_count: int
+    avg_per_bill: Decimal
+    has_spend: bool
+    comparison: SpendSummaryComparison | None
+    categories: list[SpendSummaryCategory]

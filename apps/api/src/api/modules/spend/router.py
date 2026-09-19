@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Annotated
 from uuid import UUID
 
@@ -8,7 +7,14 @@ from security import CurrentUserDep
 from api.common.dependencies import SessionDep
 from api.modules.spend import service
 from api.modules.spend.presenter import to_public
-from api.modules.spend.schemas import SpendItemCreate, SpendItemPublic, SpendItemUpdate
+from api.modules.spend.schemas import (
+    SpendItemCreate,
+    SpendItemPublic,
+    SpendItemUpdate,
+    SpendQuery,
+    SpendSummary,
+    SpendSummaryQuery,
+)
 
 router = APIRouter(prefix="/spend-items", tags=["spend"])
 
@@ -24,24 +30,39 @@ def create(
 def list_items(
     user: CurrentUserDep,
     session: SessionDep,
-    spent_from: Annotated[date | None, Query()] = None,
-    spent_to: Annotated[date | None, Query()] = None,
-    category: Annotated[str | None, Query()] = None,
-    merchant: Annotated[str | None, Query()] = None,
-    source: Annotated[str | None, Query()] = None,
+    query: Annotated[SpendQuery, Query()],
 ) -> list[SpendItemPublic]:
     return [
         to_public(item)
         for item in service.list_items(
             session,
             user.id,
-            spent_from=spent_from,
-            spent_to=spent_to,
-            category=category,
-            merchant=merchant,
-            source=source,
+            spent_from=query.spent_from,
+            spent_to=query.spent_to,
+            category=query.category,
+            merchant=query.merchant,
+            source=query.source,
+            q=query.q,
         )
     ]
+
+
+@router.get("/summary")
+def get_summary(
+    user: CurrentUserDep,
+    session: SessionDep,
+    query: Annotated[SpendSummaryQuery, Query()],
+) -> SpendSummary:
+    return service.summarize(
+        session,
+        user.id,
+        spent_from=query.spent_from,
+        spent_to=query.spent_to,
+        category=query.category,
+        source=query.source,
+        q=query.q,
+        period=query.period,
+    )
 
 
 @router.get("/{item_id}")
