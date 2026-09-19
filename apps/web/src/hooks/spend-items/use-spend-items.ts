@@ -1,17 +1,35 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 
 import {
   deleteSpendItem,
   getSpendItems,
+  getSpendSummary,
   updateSpendItem,
 } from "@/api/spend-items/spend-items"
-import type { SpendItem } from "@/api/spend-items/spend-items.types"
+import type {
+  SpendQuery,
+  SpendSummaryQuery,
+} from "@/api/spend-items/spend-items.types"
 import { spendItemQueryKeys } from "@/hooks/spend-items/query-keys"
 
-export function useSpendItems() {
+export function useSpendItems(query: SpendQuery) {
   return useQuery({
-    queryKey: spendItemQueryKeys.all,
-    queryFn: ({ signal }) => getSpendItems(signal),
+    queryKey: spendItemQueryKeys.list(query),
+    queryFn: ({ signal }) => getSpendItems(query, signal),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useSpendSummary(query: SpendSummaryQuery) {
+  return useQuery({
+    queryKey: spendItemQueryKeys.summary(query),
+    queryFn: ({ signal }) => getSpendSummary(query, signal),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -19,10 +37,7 @@ export function useDeleteSpendItem() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: deleteSpendItem,
-    onSuccess: (_, deletedId) => {
-      queryClient.setQueryData<SpendItem[]>(spendItemQueryKeys.all, (items) =>
-        items?.filter((item) => item.id !== deletedId)
-      )
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: spendItemQueryKeys.all })
     },
   })
@@ -32,10 +47,7 @@ export function useUpdateSpendItem() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: updateSpendItem,
-    onSuccess: (updated) => {
-      queryClient.setQueryData<SpendItem[]>(spendItemQueryKeys.all, (items) =>
-        items?.map((item) => (item.id === updated.id ? updated : item))
-      )
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: spendItemQueryKeys.all })
     },
   })
