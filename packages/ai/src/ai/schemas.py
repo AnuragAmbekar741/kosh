@@ -4,11 +4,27 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 __all__ = [
+    "SCHEMA_VERSION",
+    "Category",
     "Extraction",
     "LineItem",
     "ReceiptExtraction",
     "StatementExtraction",
     "Transaction",
+]
+
+SCHEMA_VERSION = 2
+
+Category = Literal[
+    "Food",
+    "Transport",
+    "Housing",
+    "Entertainment",
+    "Shopping",
+    "Health",
+    "Utilities",
+    "Travel",
+    "Other",
 ]
 
 
@@ -30,6 +46,7 @@ class LineItem(_Strict):
     quantity: PositiveDecimalText | None = None
     unit_price: MoneyText | None = None
     line_total: MoneyText
+    category: Category
     confidence: float = Field(ge=0, le=1)
     requires_review: bool
 
@@ -43,6 +60,7 @@ class ReceiptExtraction(_Strict):
     subtotal: MoneyText | None = None
     tax: MoneyText | None = None
     total: MoneyText
+    category: Category
     line_items: list[LineItem]
 
 
@@ -51,7 +69,7 @@ class Transaction(_Strict):
     amount: MoneyText
     spent_at: date
     direction: Literal["debit", "credit"] = "debit"
-    category: str | None = None
+    category: Category
     confidence: float = Field(ge=0, le=1)
     requires_review: bool = False
 

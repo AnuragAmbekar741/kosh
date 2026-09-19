@@ -168,8 +168,9 @@ function ReadyDocument({
 
           {mode === "total" && totalDraft ? (
             <p className="text-sm leading-relaxed text-muted-foreground">
-              One spending entry will be added. The original document remains
-              available as its source.
+              {totalDraft.category
+                ? `One ${totalDraft.category} entry will be added. The original document remains available as its source.`
+                : "One spending entry will be added. The original document remains available as its source."}
             </p>
           ) : (
             <div className="flex flex-col gap-2">
@@ -230,7 +231,9 @@ function ReadyDocument({
                       </div>
                       <AccordionContent className="pl-7 text-xs text-muted-foreground">
                         {extracted && "raw_description" in extracted
-                          ? `Receipt text: ${extracted.raw_description}`
+                          ? draft.category
+                            ? `Receipt text: ${extracted.raw_description} · ${draft.category}`
+                            : `Receipt text: ${extracted.raw_description}`
                           : [formatDate(draft.spent_at), draft.category]
                               .filter(Boolean)
                               .join(" · ")}

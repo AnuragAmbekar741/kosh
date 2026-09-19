@@ -33,6 +33,7 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 | Local auth + Google (`POST /auth/google`) + `GET /users/me` | |
 | SpendItem CRUD | |
 | Documents upload + worker extraction via OpenRouter | |
+| Categories assigned during extraction | |
 
 
 When a planning decision changes, update `architecture/decisions.md` first, then `architecture/overview.md` and `product/scope.md`.

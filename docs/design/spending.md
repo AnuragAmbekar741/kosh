@@ -14,8 +14,10 @@ monochrome visual system.
    `GET /documents/{id}` and shows processing, failure, and ready states.
 4. A ready receipt with a total draft can be saved as one total or itemized
    rows. Statements are itemized. All extracted rows start selected; flagged
-   lines remain called out in the item Accordion. Duplicate hashes and
-   mismatched totals produce review warnings.
+   lines remain called out in the item Accordion. Review shows a category per
+   row and for the one-total entry. The ledger shows the existing chip when
+   category is set. Duplicate hashes and mismatched totals produce review
+   warnings.
 5. `POST /documents/{id}/confirm` adds selected drafts to Spending and refreshes
    the ledger.
 
