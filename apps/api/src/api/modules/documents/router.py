@@ -14,9 +14,11 @@ from api.modules.documents.schemas import (
     DocumentDetail,
     DocumentSummary,
     DocumentUploadResponse,
+    ManualDocumentCreate,
 )
 from api.modules.documents.services.add_line_item import add_line_item
 from api.modules.documents.services.confirm import confirm as confirm_document
+from api.modules.documents.services.create_manual import create_manual
 from api.modules.documents.services.delete import delete_document
 from api.modules.documents.services.upload import store_upload
 from api.modules.spend.presenter import to_public
@@ -47,6 +49,15 @@ async def upload(
         idempotency_key=key,
     )
     return DocumentUploadResponse(id=document.id, status=document.status)
+
+
+@router.post("/manual", status_code=status.HTTP_201_CREATED)
+def create_manual_document(
+    body: ManualDocumentCreate,
+    user: CurrentUserDep,
+    session: SessionDep,
+) -> DocumentSummary:
+    return to_summary(create_manual(session, user_id=user.id, body=body))
 
 
 @router.get("")

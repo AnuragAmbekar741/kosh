@@ -17,6 +17,7 @@ class DocumentStatus(StrEnum):
 class DocumentSource(StrEnum):
     DASHBOARD = "dashboard"
     WHATSAPP = "whatsapp"
+    MANUAL = "manual"
 
 
 class Document(SQLModel, table=True):

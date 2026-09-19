@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from api.modules.spend.schemas import SpendItemPublic
 
@@ -13,6 +13,7 @@ __all__ = [
     "DocumentDetail",
     "DocumentSummary",
     "DocumentUploadResponse",
+    "ManualDocumentCreate",
 ]
 
 
@@ -49,3 +50,15 @@ class AddDocumentLineItemRequest(BaseModel):
     description: str = Field(min_length=1)
     amount: Decimal = Field(gt=0)
     category: str | None = None
+
+
+class ManualDocumentCreate(BaseModel):
+    title: str = Field(min_length=1)
+
+    @field_validator("title")
+    @classmethod
+    def title_stripped(cls, value: str) -> str:
+        title = value.strip()
+        if not title:
+            raise ValueError("title must not be blank")
+        return title
