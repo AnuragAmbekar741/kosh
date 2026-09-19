@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from ai import ExtractMeta
+from ai import SCHEMA_VERSION, ExtractMeta
 from ai.settings import get_settings as get_ai_settings
 from sqlmodel import Session
 from storage.crud.document import create_extraction_attempt, next_attempt_no
@@ -35,6 +35,7 @@ def write_success(
             attempt_no=next_attempt_no(session, document_id),
             model=meta.model,
             provider=meta.provider,
+            schema_version=SCHEMA_VERSION,
             payload=payload,
             prompt_tokens=meta.prompt_tokens,
             completion_tokens=meta.completion_tokens,

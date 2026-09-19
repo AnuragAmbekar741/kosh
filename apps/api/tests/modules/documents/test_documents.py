@@ -57,6 +57,7 @@ def _receipt(*, total: str = "56.71", line_total: str = "56.71") -> ReceiptExtra
         subtotal=total,
         tax=None,
         total=total,
+        category="Food",
         line_items=[
             LineItem(
                 raw_description="ORGAIN VAN 1",
@@ -65,6 +66,7 @@ def _receipt(*, total: str = "56.71", line_total: str = "56.71") -> ReceiptExtra
                 quantity="1",
                 unit_price=line_total,
                 line_total=line_total,
+                category="Food",
                 confidence=0.9,
                 requires_review=False,
             )
@@ -82,6 +84,7 @@ def _receipt_two_lines() -> ReceiptExtraction:
         subtotal="30.00",
         tax=None,
         total="30.00",
+        category="Food",
         line_items=[
             LineItem(
                 raw_description="MILK",
@@ -90,6 +93,7 @@ def _receipt_two_lines() -> ReceiptExtraction:
                 quantity="1",
                 unit_price="10.00",
                 line_total="10.00",
+                category="Food",
                 confidence=0.9,
                 requires_review=False,
             ),
@@ -100,6 +104,7 @@ def _receipt_two_lines() -> ReceiptExtraction:
                 quantity="1",
                 unit_price="20.00",
                 line_total="20.00",
+                category="Food",
                 confidence=0.9,
                 requires_review=False,
             ),
@@ -119,7 +124,7 @@ def _statement() -> StatementExtraction:
                 merchant="Starbucks",
                 amount="4.50",
                 spent_at=date(2024, 10, 19),
-                category="coffee",
+                category="Food",
                 confidence=0.9,
             )
         ],
@@ -238,8 +243,13 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     assert body["status"] == "ready"
     assert body["extraction"]["merchant"] == "Walmart Neighborhood Market"
     drafts = body["drafts"]
-    assert any(item["line_index"] is None for item in drafts)
+    total = next(item for item in drafts if item["line_index"] is None)
     line = next(item for item in drafts if item["line_index"] == 0)
+    assert total["category"] == "Food"
+    assert line["category"] == "Food"
+    with Session(database.engine) as session:
+        attempts = list_extraction_attempts(session, UUID(document_id))
+        assert attempts[0].schema_version == 2
     assert client.get("/spend-items", headers=headers).json() == []
     patched = client.patch(
         f"/spend-items/{line['id']}",
@@ -457,6 +467,8 @@ def test_add_line_item_rejects_unconfirmed_document(client, monkeypatch) -> None
 def test_add_line_item_rejects_statement(client, monkeypatch) -> None:
     headers = _auth(client)
     document_id = _process(client, monkeypatch, headers, _statement())
+    detail = client.get(f"/documents/{document_id}", headers=headers).json()
+    assert [item["category"] for item in detail["drafts"]] == ["Food"]
     client.post(
         f"/documents/{document_id}/confirm",
         json={"mode": "line_items"},

@@ -13,6 +13,7 @@ def test_sum_check() -> None:
         subtotal="56.71",
         tax=None,
         total="56.71",
+        category="Food",
         line_items=[
             LineItem(
                 raw_description="A",
@@ -20,6 +21,7 @@ def test_sum_check() -> None:
                 quantity="1",
                 unit_price="10.00",
                 line_total="10.00",
+                category="Food",
                 confidence=1,
                 requires_review=False,
             )
