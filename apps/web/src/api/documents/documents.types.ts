@@ -72,3 +72,14 @@ export type ConfirmDocumentInput = {
   mode: "total" | "line_items"
   itemIds?: string[]
 }
+
+export type ManualDocumentCreate = {
+  title: string
+}
+
+export type AddDocumentLineItemInput = {
+  documentId: string
+  description: string
+  amount: string
+  category?: string | null
+}

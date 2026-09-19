@@ -29,6 +29,7 @@ type ConfirmationMode = "total" | "line_items"
 
 type DocumentReviewProps = {
   documentId: string
+  onBack: () => void
   onConfirmed: () => void
   onTryAnother: () => void
 }
@@ -59,9 +60,11 @@ function ExtractionStatus({ filename }: { filename?: string }) {
 
 function ReadyDocument({
   document,
+  onBack,
   onConfirmed,
 }: {
   document: DocumentDetail
+  onBack: () => void
   onConfirmed: () => void
 }) {
   const extraction = document.extraction!
@@ -287,6 +290,9 @@ function ReadyDocument({
             Selected {formatMoney(selectedTotal, extraction.currency)}
           </span>
         ) : null}
+        <Button onClick={onBack} type="button" variant="outline">
+          Back
+        </Button>
         <Button
           disabled={
             confirm.isPending || (mode === "line_items" && selected.size === 0)
@@ -307,6 +313,7 @@ function ReadyDocument({
 
 export function DocumentReview({
   documentId,
+  onBack,
   onConfirmed,
   onTryAnother,
 }: DocumentReviewProps) {
@@ -351,6 +358,7 @@ export function DocumentReview({
     <ReadyDocument
       document={document.data}
       key={document.data.id}
+      onBack={onBack}
       onConfirmed={onConfirmed}
     />
   )

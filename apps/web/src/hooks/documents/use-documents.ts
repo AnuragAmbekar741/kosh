@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
+  addDocumentLineItem,
   confirmDocument,
+  createManualDocument,
   deleteDocument,
   getDocument,
   getDocuments,
@@ -44,6 +46,35 @@ export function useConfirmDocument() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: confirmDocument,
+    onSuccess: (_data, input) => {
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: documentQueryKeys.all }),
+        queryClient.invalidateQueries({
+          queryKey: documentQueryKeys.detail(input.documentId),
+        }),
+        queryClient.invalidateQueries({ queryKey: spendItemQueryKeys.all }),
+      ])
+    },
+  })
+}
+
+export function useCreateManualDocument() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: createManualDocument,
+    onSuccess: () => {
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: documentQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: spendItemQueryKeys.all }),
+      ])
+    },
+  })
+}
+
+export function useAddDocumentLineItem() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: addDocumentLineItem,
     onSuccess: (_data, input) => {
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: documentQueryKeys.all }),
