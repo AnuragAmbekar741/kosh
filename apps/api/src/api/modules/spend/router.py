@@ -5,13 +5,14 @@ from fastapi import APIRouter, Query, Response, status
 from security import CurrentUserDep
 
 from api.common.dependencies import SessionDep
+from api.common.pagination import Paginated
 from api.modules.spend import service
 from api.modules.spend.presenter import to_public
 from api.modules.spend.schemas import (
     SpendItemCreate,
     SpendItemPublic,
     SpendItemUpdate,
-    SpendQuery,
+    SpendListQuery,
     SpendSummary,
     SpendSummaryQuery,
 )
@@ -30,21 +31,21 @@ def create(
 def list_items(
     user: CurrentUserDep,
     session: SessionDep,
-    query: Annotated[SpendQuery, Query()],
-) -> list[SpendItemPublic]:
-    return [
-        to_public(item)
-        for item in service.list_items(
-            session,
-            user.id,
-            spent_from=query.spent_from,
-            spent_to=query.spent_to,
-            category=query.category,
-            merchant=query.merchant,
-            source=query.source,
-            q=query.q,
-        )
-    ]
+    query: Annotated[SpendListQuery, Query()],
+) -> Paginated[SpendItemPublic]:
+    items, total = service.list_items(
+        session,
+        user.id,
+        skip=query.skip,
+        limit=query.limit,
+        spent_from=query.spent_from,
+        spent_to=query.spent_to,
+        category=query.category,
+        merchant=query.merchant,
+        source=query.source,
+        q=query.q,
+    )
+    return Paginated(data=[to_public(item) for item in items], total=total)
 
 
 @router.get("/summary")

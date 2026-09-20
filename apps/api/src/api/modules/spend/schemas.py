@@ -5,10 +5,13 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from api.common.pagination import Page
+
 __all__ = [
     "SpendItemCreate",
     "SpendItemPublic",
     "SpendItemUpdate",
+    "SpendListQuery",
     "SpendPeriod",
     "SpendQuery",
     "SpendSummary",
@@ -92,6 +95,10 @@ class SpendQuery(BaseModel):
     merchant: str | None = None
     source: str | None = None
     q: str | None = None
+
+
+class SpendListQuery(SpendQuery, Page):
+    pass
 
 
 class SpendSummaryQuery(SpendQuery):

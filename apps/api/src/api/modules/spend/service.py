@@ -11,6 +11,7 @@ from storage.crud.spend import (
     delete_spend_item,
     get_spend_item,
     list_spend_items,
+    list_spend_items_page,
     update_spend_item,
     user_has_confirmed_spend,
 )
@@ -47,16 +48,20 @@ def list_items(
     session: Session,
     user_id: UUID,
     *,
+    skip: int,
+    limit: int,
     spent_from: date | None,
     spent_to: date | None,
     category: Sequence[str] | None,
     merchant: str | None,
     source: str | None,
     q: str | None,
-) -> list[SpendItem]:
-    return list_spend_items(
+) -> tuple[list[SpendItem], int]:
+    return list_spend_items_page(
         session,
         user_id=user_id,
+        skip=skip,
+        limit=limit,
         spent_from=spent_from,
         spent_to=spent_to,
         category=category,
