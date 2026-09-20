@@ -1,6 +1,7 @@
 import { AlertCircleIcon, ReceiptTextIcon } from "lucide-react"
 
 import { SpendingAccordion } from "@/components/spending/SpendingAccordion"
+import { SpendingItemsPager } from "@/components/spending/SpendingItemsPager"
 import { SpendingItemsTable } from "@/components/spending/SpendingItemsTable"
 import { SpendingLedgerSkeleton } from "@/components/spending/SpendingLedgerSkeleton"
 import {
@@ -36,9 +37,10 @@ function openAddSpending() {
 
 export function SpendingPage() {
   const filters = useSpendFilters()
-  const spendItems = useSpendItems(filters.query)
+  const spendItems = useSpendItems(filters.query, filters.pageParams)
   const summary = useSpendSummary(filters.summaryQuery)
   const documents = useDocuments()
+  const items = spendItems.data?.data ?? []
   const hasContentFilters = Boolean(
     filters.query.category?.length || filters.query.source || filters.query.q
   )
@@ -47,7 +49,7 @@ export function SpendingPage() {
       ? (documents.data ?? []).filter(
           (document) =>
             document.source === "manual" &&
-            !spendItems.data?.some((item) => item.document_id === document.id) &&
+            !items.some((item) => item.document_id === document.id) &&
             !hasContentFilters &&
             dateInRange(
               document.created_at,
@@ -58,8 +60,7 @@ export function SpendingPage() {
       : []
   const firstUse = summary.data?.has_spend === false
   const loading = spendItems.isPending || summary.isPending
-  const hasLedger =
-    Boolean(spendItems.data?.length) || emptyManual.length > 0
+  const hasLedger = items.length > 0 || emptyManual.length > 0
   const filterEmpty = Boolean(
     summary.data?.has_spend &&
       summary.data.total === "0.00" &&
@@ -68,7 +69,7 @@ export function SpendingPage() {
   )
   const count =
     filters.view === "items"
-      ? (summary.data?.item_count ?? spendItems.data?.length ?? 0)
+      ? (spendItems.data?.total ?? items.length)
       : (summary.data?.bill_count ?? 0) + emptyManual.length
 
   return (
@@ -177,13 +178,17 @@ export function SpendingPage() {
             </div>
           ) : hasLedger ? (
             filters.view === "items" ? (
-              <SpendingItemsTable items={spendItems.data ?? []} />
+              <div className="flex min-h-0 flex-1 flex-col gap-3">
+                <SpendingItemsTable items={items} />
+                <SpendingItemsPager
+                  onPageChange={filters.setPage}
+                  page={filters.page}
+                  total={spendItems.data?.total ?? 0}
+                />
+              </div>
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <SpendingAccordion
-                  emptyManual={emptyManual}
-                  items={spendItems.data ?? []}
-                />
+                <SpendingAccordion emptyManual={emptyManual} items={items} />
               </div>
             )
           ) : null}

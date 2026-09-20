@@ -2,6 +2,7 @@ import { useCallback } from "react"
 import { useSearchParams } from "react-router"
 
 import type {
+  PageParams,
   SpendPeriod,
   SpendQuery,
   SpendSource,
@@ -21,6 +22,8 @@ import {
 const PERIODS = ["day", "week", "month", "custom"] as const
 const SOURCES = ["manual", "document"] as const
 const KNOWN_CATEGORIES = new Set<string>(CATEGORIES)
+export const PAGE_SIZE = 50
+const BILLS_LIMIT = 200
 
 type FilterPatch = {
   period?: SpendPeriod
@@ -30,6 +33,7 @@ type FilterPatch = {
   source?: SpendSource | null
   q?: string | null
   view?: "bills" | "items"
+  page?: number
 }
 
 function parsePeriod(value: string | null): SpendPeriod {
@@ -61,6 +65,13 @@ export function useSpendFilters() {
   const source = parseSource(searchParams.get("source"))
   const q = searchParams.get("q")?.trim() || undefined
   const view = parseView(searchParams.get("view"))
+  const parsedPage = Number.parseInt(searchParams.get("page") ?? "1", 10)
+  const page = Number.isFinite(parsedPage) && parsedPage > 1 ? parsedPage : 1
+  const pageParams: PageParams =
+    view === "bills"
+      ? // ponytail: bills groups client-side; a row page would split a bill total
+        { skip: 0, limit: BILLS_LIMIT }
+      : { skip: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE }
 
   const query: SpendQuery = {
     spent_from: range.from,
@@ -100,6 +111,12 @@ export function useSpendFilters() {
         }
         if (patch.view === "items") next.set("view", "items")
         if (patch.view === "bills") next.delete("view")
+        if ("page" in patch && Object.keys(patch).length === 1) {
+          if (patch.page && patch.page > 1) next.set("page", String(patch.page))
+          else next.delete("page")
+        } else {
+          next.delete("page")
+        }
         return next
       })
     },
@@ -152,6 +169,7 @@ export function useSpendFilters() {
     (next: "bills" | "items") => write({ view: next }),
     [write]
   )
+  const setPage = useCallback((next: number) => write({ page: next }), [write])
   const clearFilters = useCallback(
     () => write({ category: null, source: null, q: null }),
     [write]
@@ -165,6 +183,8 @@ export function useSpendFilters() {
     source,
     q,
     view,
+    page,
+    pageParams,
     query,
     summaryQuery,
     label: periodLabel(period, range.from, range.to),
@@ -177,6 +197,7 @@ export function useSpendFilters() {
     setSource,
     setQ,
     setView,
+    setPage,
     clearFilters,
   }
 }

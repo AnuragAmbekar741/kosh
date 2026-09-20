@@ -26,6 +26,16 @@ export type SpendPeriod = "day" | "week" | "month" | "custom"
 
 export type SpendSource = "manual" | "document"
 
+export type PageParams = {
+  skip: number
+  limit: number
+}
+
+export type Paginated<T> = {
+  data: T[]
+  total: number
+}
+
 export type SpendQuery = {
   spent_from: string
   spent_to: string

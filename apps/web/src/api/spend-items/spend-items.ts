@@ -1,5 +1,7 @@
 import { client } from "@/api/client"
 import type {
+  PageParams,
+  Paginated,
   SpendItem,
   SpendItemUpdate,
   SpendPeriod,
@@ -8,7 +10,7 @@ import type {
   SpendSummaryQuery,
 } from "@/api/spend-items/spend-items.types"
 
-function toParams(query: SpendQuery, period?: SpendPeriod) {
+function toParams(query: SpendQuery, period?: SpendPeriod, page?: PageParams) {
   const params = new URLSearchParams()
   params.set("spent_from", query.spent_from)
   params.set("spent_to", query.spent_to)
@@ -18,15 +20,20 @@ function toParams(query: SpendQuery, period?: SpendPeriod) {
     params.append("category", category)
   }
   if (period) params.set("period", period)
+  if (page) {
+    params.set("skip", String(page.skip))
+    params.set("limit", String(page.limit))
+  }
   return params
 }
 
 export async function getSpendItems(
   query: SpendQuery,
+  page: PageParams,
   signal?: AbortSignal
-): Promise<SpendItem[]> {
-  const { data } = await client.get<SpendItem[]>("/spend-items", {
-    params: toParams(query),
+): Promise<Paginated<SpendItem>> {
+  const { data } = await client.get<Paginated<SpendItem>>("/spend-items", {
+    params: toParams(query, undefined, page),
     signal,
   })
   return data

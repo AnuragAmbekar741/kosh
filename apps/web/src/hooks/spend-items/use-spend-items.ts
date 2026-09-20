@@ -12,15 +12,16 @@ import {
   updateSpendItem,
 } from "@/api/spend-items/spend-items"
 import type {
+  PageParams,
   SpendQuery,
   SpendSummaryQuery,
 } from "@/api/spend-items/spend-items.types"
 import { spendItemQueryKeys } from "@/hooks/spend-items/query-keys"
 
-export function useSpendItems(query: SpendQuery) {
+export function useSpendItems(query: SpendQuery, page: PageParams) {
   return useQuery({
-    queryKey: spendItemQueryKeys.list(query),
-    queryFn: ({ signal }) => getSpendItems(query, signal),
+    queryKey: spendItemQueryKeys.list(query, page),
+    queryFn: ({ signal }) => getSpendItems(query, page, signal),
     placeholderData: keepPreviousData,
   })
 }
