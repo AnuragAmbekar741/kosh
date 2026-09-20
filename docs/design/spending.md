@@ -46,6 +46,7 @@ month and the Bills view. Defaults are not written on first paint.
 | `source` | none (`manual` or `document`) |
 | `q` | none |
 | `view` | `bills` (`items` = table) |
+| `page` | `1` (1-based; written only when greater than 1) |
 
 The toolbar is a connected Day / Week / Month toggle (`spacing={0}`). The
 selected segment uses `bg-primary text-primary-foreground` so it reads on
@@ -56,7 +57,11 @@ draft dates stay local until Apply. Search is local and writes `q` after
 300ms. There is no chip row; filters live on the controls themselves.
 Below `md`, Category / source / search collapse into one Filters sheet.
 `GET /spend-items` and `GET /spend-items/summary` share the same query;
-summary also receives `period`.
+summary also receives `period`. The list is a `{data, total}` page.
+Items view sends `skip`/`limit` of 50 and shows a numbered pager footer
+(`Showing X–Y of N`) when `total` exceeds 50. Changing any filter resets
+`page`. Bills view requests `limit=200` and is not paged — grouping and
+bill totals are computed client-side from the returned rows.
 
 The summary strip is the live summary payload: total, “spent in {label}”,
 optional month-over-month comparison, bill/item counts, avg per bill, a CSS
@@ -160,6 +165,7 @@ src/components/spending/
   SpendingAccordion.tsx
   SpendingAddLineRow.tsx
   SpendingItemsTable.tsx
+  SpendingItemsPager.tsx
   SpendingLedgerSkeleton.tsx
   SpendingSummary.tsx
   SpendingToolbar.tsx

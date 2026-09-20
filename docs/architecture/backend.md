@@ -54,7 +54,8 @@ apps/api/src/api/
         upload.py            sniff, hash, idempotency, blob write  (from api/documents.py)
         confirm.py           mode resolution + eligibility          (from router:155-210)
   common/
-    dependencies.py          SessionDep, CurrentUserDep, pagination
+    dependencies.py          SessionDep, CurrentUserDep
+    pagination.py            Page mixin, Paginated[T] envelope
     errors.py                DomainError base + subclasses
     exception_handlers.py    DomainError → HTTPException
 ```
