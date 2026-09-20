@@ -32,26 +32,75 @@ Closing the Dialog during extraction does not discard its local progress;
 reopening the top-bar action returns to the current document while the shell
 remains mounted.
 
+## Filters and summary
+
+Filter state is the URL. `useSpendFilters()` reads and writes search params;
+there is no React context. Bare `/spending` is the current local calendar
+month and the Bills view. Defaults are not written on first paint.
+
+| Param | Default when omitted |
+|---|---|
+| `period` | `month` (`day` / `week` / `month` / `custom`) |
+| `from`, `to` | current month, ISO dates |
+| `category` | none (repeatable) |
+| `source` | none (`manual` or `document`) |
+| `q` | none |
+| `view` | `bills` (`items` = table) |
+| `page` | `1` (1-based; written only when greater than 1) |
+
+The toolbar is a connected Day / Week / Month toggle (`spacing={0}`). The
+selected segment uses `bg-primary text-primary-foreground` so it reads on
+both themes. Custom, prev/next, the period label, Category, All sources, and
+search sit beside it. Custom opens a
+dual-month range popover;
+draft dates stay local until Apply. Search is local and writes `q` after
+300ms. There is no chip row; filters live on the controls themselves.
+Below `md`, Category / source / search collapse into one Filters sheet.
+`GET /spend-items` and `GET /spend-items/summary` share the same query;
+summary also receives `period`. The list is a `{data, total}` page.
+Items view sends `skip`/`limit` of 50 and shows a numbered pager footer
+(`Showing X–Y of N`) when `total` exceeds 50. Changing any filter resets
+`page`. Bills view requests `limit=200` and is not paged — grouping and
+bill totals are computed client-side from the returned rows.
+
+The summary strip is the live summary payload: total, “spent in {label}”,
+optional month-over-month comparison, bill/item counts, avg per bill, a CSS
+stacked mix bar, and legend chips that toggle the same `category` filter.
+Comparison is text plus `text-chart-2` / `text-destructive` — not color
+alone. First-use (`has_spend === false`) fades the toolbar and hides the
+strip. A filtered empty period (`has_spend` and `total === "0.00"`) keeps a
+muted $0 strip and a Clear filters empty state.
+
 ## Ledger
 
 Confirmed `GET /spend-items` rows are grouped by source document. Fileless
 manual bills use the same `document_id` grouping; leftover ungrouped
 `POST /spend-items` rows remain individual entries. Empty manual documents
 from `GET /documents` (`source=manual` with no spend items) render as bills
-with a zero total. Each group is a shadcn Accordion item. The trigger is one
+with a zero total when no category, source, or search filter is set and
+`created_at` falls in the visible range. They stay hidden in Items view.
+Each group is a shadcn Accordion item. The trigger is one
 row: merchant title, then outline pill Badges for date, source (`Document` or
-`Manual entry` from spend `source`, or the empty manual document), and item
-count (`1 item` / `N items`). The group total stays on the right, followed by
+`Manual entry` from spend `source`, or the empty manual document), item
+count (`1 item` / `N items`), and a read-only category badge per unique
+item category. The merchant tile is a pencil for manual bills and a document
+icon otherwise. The group total stays on the right, followed by
 an accent three-dot tile that matches the merchant icon. That control does not
 toggle the accordion. It opens a dropdown: Edit expands the bill; Delete opens
 a confirmation Dialog and, on confirm, removes the whole bill. Uploaded
 document groups call `DELETE /documents/{id}` and remove the source file with
 every line. Manual document groups call the same delete and skip blob cleanup.
 Legacy ungrouped manual rows call `DELETE /spend-items/{id}`. Expanding a
-group reveals numbered products nested under the bill: indented to the
+group reveals products nested under the bill: indented to the
 merchant text column, quieter type, a tinted category badge on the same row
-as the item name, and amounts. The name truncates; the badge stays `w-fit`
+as the item name, and amounts. Line-index numbers are omitted. The name
+truncates; the badge stays `w-fit`
 and does not wrap underneath.
+
+The Transactions heading includes a connected Bills / Items toggle
+(`spacing={0}`, same primary invert when selected) and a static
+“Newest first” label (hidden below `md`). Items is a read-only table:
+Date, Item, Merchant, Category, Source, Amount. Row edit is later.
 Clicking the badge opens a DropdownMenu of the nine extraction categories
 (Food, Transport, Housing, Entertainment, Shopping, Health, Utilities,
 Travel, Other). The current value is checked. A row with no category shows
@@ -74,16 +123,17 @@ first by the first entry's spend date, or the document `created_at` when the
 bill is still empty.
 
 The ledger fills the dashboard content panel below `2xl`; at `2xl` it uses a
-wide centered maximum for readability. The page itself does not scroll; the
-bill list below the Transactions heading is the only overflow region, so an
-open bill does not clip mid-row or leave an empty strip after the last product.
+wide centered maximum for readability. The page itself does not scroll. Many
+bills scroll the list under Transactions. The accordion card hugs its rows.
+Every bill including the last has a `border-b` hairline. An expanded bill
+draws one `border-t` on the panel under the title and animates to content
+height. The open panel caps at `max-h-72` (about seven lines) and scrolls
+after that. The items table keeps its own overflow.
 Accordion triggers intentionally omit disclosure icons, use a pointer cursor,
 and reveal a muted hover state while closed. The accordion is a 1px card box
-with `rounded-xl` corners; inner rows stay square. One hairline divides bills
-(`AccordionItem` `not-last:border-b`). An expanded bill draws one `border-t`
-on the panel under the title. Products use `not-first:border-t` so the last
-product does not stack a second rule on the bill divider. The open panel hugs
-its rows (`h-auto`).
+with `rounded-xl` corners; inner rows stay square. Products use
+`not-first:border-t` so the last product does not stack a second rule on the
+bill divider.
 
 The surface stays flat and monochrome: semantic neutral backgrounds and muted
 fills establish hierarchy. Category badges are the only chromatic marks in
@@ -91,19 +141,22 @@ the ledger — soft fills with matching ink, label always present. Geist,
 compact type, and tabular numerals keep the dense financial content
 scannable; depth does not rely on shadows.
 
-Loading uses an accordion-shaped Skeleton: a bordered `rounded-xl` stack of
+Loading keeps the toolbar live and uses a summary skeleton plus an
+accordion-shaped Skeleton: a bordered `rounded-xl` stack of
 bill rows (icon tile, merchant bar, badge chips, trailing amount, kebab
-tile). Failure
-uses Alert. An empty ledger uses a compact dashed Empty frame centered under
-the Transactions heading, hugging its copy, pointing at the top-bar action,
-and including an EmptyContent button that opens the same Add spending
-dialog. Long extraction reviews also use a ScrollArea so the Dialog header
-and confirmation action stay reachable.
+tile). Failure of the list uses Alert; a summary failure hides the strip
+and still shows the ledger. First-use uses a compact dashed Empty frame
+centered under the Transactions heading, hugging its copy, pointing at the
+top-bar action, and including an EmptyContent button that opens the same Add
+spending dialog. A filtered empty period uses the same Empty frame with
+Clear filters. Long extraction reviews also use a ScrollArea so the Dialog
+header and confirmation action stay reachable.
 
 ## Structure
 
 ```text
 src/pages/spending/SpendingPage.tsx
+src/hooks/spend-items/use-spend-filters.ts
 src/components/spending/
   AddSpendingDialog.tsx
   AddDocumentDialog.tsx
@@ -111,6 +164,11 @@ src/components/spending/
   DocumentReview.tsx
   SpendingAccordion.tsx
   SpendingAddLineRow.tsx
+  SpendingItemsTable.tsx
+  SpendingItemsPager.tsx
   SpendingLedgerSkeleton.tsx
+  SpendingSummary.tsx
+  SpendingToolbar.tsx
+  spend-period.ts
   spending-formatters.ts
 ```

@@ -1,13 +1,52 @@
 import { client } from "@/api/client"
 import type {
+  PageParams,
+  Paginated,
   SpendItem,
   SpendItemUpdate,
+  SpendPeriod,
+  SpendQuery,
+  SpendSummary,
+  SpendSummaryQuery,
 } from "@/api/spend-items/spend-items.types"
 
+function toParams(query: SpendQuery, period?: SpendPeriod, page?: PageParams) {
+  const params = new URLSearchParams()
+  params.set("spent_from", query.spent_from)
+  params.set("spent_to", query.spent_to)
+  if (query.source) params.set("source", query.source)
+  if (query.q) params.set("q", query.q)
+  for (const category of query.category ?? []) {
+    params.append("category", category)
+  }
+  if (period) params.set("period", period)
+  if (page) {
+    params.set("skip", String(page.skip))
+    params.set("limit", String(page.limit))
+  }
+  return params
+}
+
 export async function getSpendItems(
+  query: SpendQuery,
+  page: PageParams,
   signal?: AbortSignal
-): Promise<SpendItem[]> {
-  const { data } = await client.get<SpendItem[]>("/spend-items", { signal })
+): Promise<Paginated<SpendItem>> {
+  const { data } = await client.get<Paginated<SpendItem>>("/spend-items", {
+    params: toParams(query, undefined, page),
+    signal,
+  })
+  return data
+}
+
+export async function getSpendSummary(
+  query: SpendSummaryQuery,
+  signal?: AbortSignal
+): Promise<SpendSummary> {
+  const { data } = await client.get<SpendSummary>("/spend-items/summary", {
+    params: toParams(query, query.period),
+    signal,
+  })
   return data
 }
 

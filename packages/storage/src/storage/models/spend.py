@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, Numeric
+from sqlalchemy import Column, Index, Numeric, column
 from sqlmodel import Field, SQLModel
 
 
@@ -20,6 +20,14 @@ class SpendStatus(StrEnum):
 
 class SpendItem(SQLModel, table=True):
     __tablename__ = "spend_items"
+    __table_args__ = (
+        Index(
+            "ix_spend_items_user_spent_id",
+            "user_id",
+            column("spent_at").desc(),
+            column("id").desc(),
+        ),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     user_id: UUID = Field(foreign_key="users.id", index=True)

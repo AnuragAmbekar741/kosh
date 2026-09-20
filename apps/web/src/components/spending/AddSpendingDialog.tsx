@@ -74,7 +74,10 @@ export function AddSpendingDialog() {
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogTrigger data-slot="add-spending-trigger" render={<Button />}>
+      <DialogTrigger
+        data-slot="add-spending-trigger"
+        render={<Button size="sm" />}
+      >
         <PlusIcon data-icon="inline-start" />
         Add spending
       </DialogTrigger>

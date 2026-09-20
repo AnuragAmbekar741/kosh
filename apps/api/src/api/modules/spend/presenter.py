@@ -1,6 +1,16 @@
+from collections.abc import Sequence
+from decimal import Decimal
+
 from storage.models.spend import SpendItem
 
-from api.modules.spend.schemas import SpendItemPublic
+from api.modules.spend.schemas import (
+    SpendItemPublic,
+    SpendSummary,
+    SpendSummaryCategory,
+    SpendSummaryComparison,
+)
+
+_CENTS = Decimal("0.01")
 
 
 def to_public(item: SpendItem) -> SpendItemPublic:
@@ -20,3 +30,32 @@ def to_public(item: SpendItem) -> SpendItemPublic:
         created_at=item.created_at,
         updated_at=item.updated_at,
     )
+
+
+def to_summary(
+    *,
+    total: Decimal,
+    bill_count: int,
+    item_count: int,
+    has_spend: bool,
+    comparison: SpendSummaryComparison | None,
+    categories: Sequence[SpendSummaryCategory],
+) -> SpendSummary:
+    return SpendSummary(
+        currency="USD",
+        total=_money(total),
+        bill_count=bill_count,
+        item_count=item_count,
+        avg_per_bill=_money(total / bill_count) if bill_count else Decimal("0.00"),
+        has_spend=has_spend,
+        comparison=comparison,
+        categories=list(categories),
+    )
+
+
+def money(value: Decimal) -> Decimal:
+    return value.quantize(_CENTS)
+
+
+def _money(value: Decimal) -> Decimal:
+    return money(value)

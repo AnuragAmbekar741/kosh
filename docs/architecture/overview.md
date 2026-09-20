@@ -21,11 +21,11 @@ Paths below are what exists today. Layering inside `apps/api` and `apps/worker` 
 apps/api/src/api/          FastAPI app factory + feature modules
   main.py                  lifespan: logging, env + Postgres ping; CORS from CORS_ORIGINS
   bootstrap.py             register routers + exception handlers
-  common/                  SessionDep, DomainError, handlers, request logging middleware
+  common/                  SessionDep, Page mixin, Paginated envelope, DomainError, handlers
   modules/health/          GET /health
   modules/auth/            register, login, google, refresh, logout
   modules/users/           GET /users/me; UserPublic
-  modules/spend/           SpendItem CRUD + presenter
+  modules/spend/           SpendItem CRUD + summary + presenter
   modules/documents/       upload, manual create, list, detail, confirm, line items
 
 packages/storage/src/storage/
@@ -35,6 +35,7 @@ packages/storage/src/storage/
   crud/user.py             identity queries
   crud/spend.py            ledger + draft upsert
   crud/document.py         upload metadata, claim_next, reclaim_stuck
+  pagination.py            skip/limit + count helper for list statements
   blobs.py                 S3 put/get (Neon Object Storage, path-style)
   settings.py              DATABASE_URL, documents bucket
   database.py              engine, ping

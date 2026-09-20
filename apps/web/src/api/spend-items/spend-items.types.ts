@@ -21,3 +21,51 @@ export type SpendItemUpdate = Partial<
     "merchant" | "description" | "amount" | "currency" | "spent_at" | "category"
   >
 >
+
+export type SpendPeriod = "day" | "week" | "month" | "custom"
+
+export type SpendSource = "manual" | "document"
+
+export type PageParams = {
+  skip: number
+  limit: number
+}
+
+export type Paginated<T> = {
+  data: T[]
+  total: number
+}
+
+export type SpendQuery = {
+  spent_from: string
+  spent_to: string
+  category?: string[]
+  source?: SpendSource
+  q?: string
+}
+
+export type SpendSummaryQuery = SpendQuery & {
+  period: SpendPeriod
+}
+
+export type SpendSummaryComparison = {
+  delta_percent: number
+  previous_label: string
+}
+
+export type SpendSummaryCategory = {
+  name: string
+  amount: string
+  percent: number
+}
+
+export type SpendSummary = {
+  currency: string
+  total: string
+  bill_count: number
+  item_count: number
+  avg_per_bill: string
+  has_spend: boolean
+  comparison: SpendSummaryComparison | null
+  categories: SpendSummaryCategory[]
+}

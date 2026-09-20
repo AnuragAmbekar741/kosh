@@ -56,6 +56,9 @@ Revisit when: ...
 | 40 | Document bill delete | Explicit ordered deletes (spend items → attempts → document) then blob; no FK CASCADE; rollback DB if blob cleanup fails |
 | 41 | Category badge colors | Chrome stays monochrome; spend category badges use muted categorical tints |
 | 42 | Dialog width | One `DialogContent` width (`sm:max-w-lg`) for every modal |
+| 43 | Spend ledger analytics | **`GET /spend-items/summary`** computed per request; `GET /overview` stays the later dashboard snapshot |
+| 44 | Spend page filters | **URL search params** on `/spending`; no React context |
+| 45 | List pagination | Shared `Page` mixin + `{data, total}` envelope; `skip`/`limit` |
 
 ### Locked detail rows
 
@@ -275,6 +278,27 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Grouping loose `POST /spend-items` rows by merchant; a new bill table
 - Why: Ledger grouping and bill delete already key on `document_id`. Worker only claims `uploaded`, so a `ready` shell is never extracted.
 - Revisit when: Manual bills need a date or currency at create time, or file metadata should be nullable instead of sentinels
+
+**Spend ledger analytics vs overview**
+
+- Chosen: `GET /spend-items/summary` on the spend module, computed per request by reducing the same filtered confirmed rows as the list. `GET /overview` remains the later dashboard snapshot.
+- Rejected: A dedicated summary table; shipping `/overview` now as the spending-page strip
+- Why: Same filters as the ledger; personal-ledger size does not need SQL `GROUP BY`; overview is a different product surface
+- Revisit when: item volume makes two list scans expensive, or the dashboard route is built
+
+**Spend page filters live in the URL**
+
+- Chosen: Period, range, category, source, search, and Bills/Items view are `useSearchParams` on `/spending`. `useSpendFilters()` is a hook, not a provider.
+- Rejected: A `SpendingFiltersProvider` context; session-only state that dies on refresh
+- Why: Deep links, back/forward, and shareable filtered views. The page is a few siblings, not a deep tree; a provider would re-render the ledger on every search keystroke. React Router already broadcasts the URL.
+- Revisit when: a portal outside `/spending` needs the same state without a URL
+
+**List pagination is a mixin plus envelope**
+
+- Chosen: `Page` mixin (`skip`, `limit`) inherited by resource list query models; `paginate()` in storage; `{data, total}` envelope. Items view pages at 50. Bills view requests `limit=200` so client-side bill grouping cannot split.
+- Rejected: Stamina's JSON-string `filters=` param (loses OpenAPI typing, breaks Axios params and `useSpendFilters`); a second `Query()`/`Depends()` pagination param (broken OpenAPI / 422); cursor pagination (no numbered pager)
+- Why: The next list endpoint paginates by inheriting one model and calling one helper
+- Revisit when: Bills view needs true paging or deep offsets get slow
 
 **Document bill delete is explicit and blob-gated**
 
