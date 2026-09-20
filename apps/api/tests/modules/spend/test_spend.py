@@ -75,7 +75,8 @@ def test_get_and_list_spend_items(client) -> None:
     assert got.json()["id"] == item_id
     listed = client.get("/spend-items", headers=headers)
     assert listed.status_code == 200
-    assert len(listed.json()) == 1
+    assert len(listed.json()["data"]) == 1
+    assert listed.json()["total"] == 1
 
 
 def test_filters(client) -> None:
@@ -94,20 +95,20 @@ def test_filters(client) -> None:
     groceries = client.get(
         "/spend-items", params={"category": "groceries"}, headers=headers
     )
-    assert len(groceries.json()) == 1
-    assert groceries.json()[0]["merchant"] == "Walmart"
+    assert len(groceries.json()["data"]) == 1
+    assert groceries.json()["data"][0]["merchant"] == "Walmart"
     coffee = client.get(
         "/spend-items", params={"merchant": "Starbucks"}, headers=headers
     )
-    assert len(coffee.json()) == 1
+    assert len(coffee.json()["data"]) == 1
     ranged = client.get(
         "/spend-items",
         params={"spent_from": "2024-11-01", "spent_to": "2024-11-30"},
         headers=headers,
     )
-    assert len(ranged.json()) == 1
+    assert len(ranged.json()["data"]) == 1
     manual = client.get("/spend-items", params={"source": "manual"}, headers=headers)
-    assert len(manual.json()) == 2
+    assert len(manual.json()["data"]) == 2
 
 
 def test_patch_and_delete(client) -> None:
@@ -144,7 +145,8 @@ def test_user_cannot_access_another_users_item(client) -> None:
         client.delete(f"/spend-items/{item_id}", headers=headers_b).status_code == 404
     )
     listed = client.get("/spend-items", headers=headers_b)
-    assert listed.json() == []
+    assert listed.json()["data"] == []
+    assert listed.json()["total"] == 0
 
 
 def test_repeatable_category_and_q(client) -> None:
@@ -171,15 +173,20 @@ def test_repeatable_category_and_q(client) -> None:
         params=[("category", "groceries"), ("category", "coffee")],
         headers=headers,
     )
-    assert {row["merchant"] for row in both.json()} == {"Walmart", "Starbucks"}
+    assert {row["merchant"] for row in both.json()["data"]} == {
+        "Walmart",
+        "Starbucks",
+    }
     by_merchant = client.get("/spend-items", params={"q": "STAR"}, headers=headers)
-    assert [row["merchant"] for row in by_merchant.json()] == ["Starbucks"]
+    assert [row["merchant"] for row in by_merchant.json()["data"]] == ["Starbucks"]
     by_description = client.get("/spend-items", params={"q": "latte"}, headers=headers)
-    assert [row["merchant"] for row in by_description.json()] == ["Starbucks"]
+    assert [row["merchant"] for row in by_description.json()["data"]] == [
+        "Starbucks"
+    ]
     exact = client.get("/spend-items", params={"merchant": "Walmart"}, headers=headers)
-    assert len(exact.json()) == 1
+    assert len(exact.json()["data"]) == 1
     missed = client.get("/spend-items", params={"merchant": "wal"}, headers=headers)
-    assert missed.json() == []
+    assert missed.json()["data"] == []
 
 
 def test_summary_totals_and_bill_count(client) -> None:
@@ -369,7 +376,7 @@ def test_summary_excludes_pending_review_and_other_users(client, db_engine) -> N
     assert other["has_spend"] is False
     assert other["total"] == "0.00"
     listed = client.get("/spend-items", headers=headers_b)
-    assert listed.json() == []
+    assert listed.json()["data"] == []
 
 
 def test_summary_is_not_captured_as_item_id(client) -> None:
@@ -377,3 +384,107 @@ def test_summary_is_not_captured_as_item_id(client) -> None:
     response = client.get("/spend-items/summary", headers=headers)
     assert response.status_code == 200, response.json()
     assert "has_spend" in response.json()
+
+
+def test_list_defaults_to_first_page(client) -> None:
+    headers = _auth(client)
+    for index in range(51):
+        client.post(
+            "/spend-items",
+            json=_payload(
+                merchant=f"Store {index}", amount="1.00", spent_at="2024-10-01"
+            ),
+            headers=headers,
+        )
+    listed = client.get("/spend-items", headers=headers).json()
+    assert listed["total"] == 51
+    assert len(listed["data"]) == 50
+
+
+def test_list_skip_limit_and_filtered_total(client) -> None:
+    headers = _auth(client)
+    for category, count in (("groceries", 3), ("coffee", 2)):
+        for index in range(count):
+            client.post(
+                "/spend-items",
+                json=_payload(
+                    merchant=f"{category} {index}",
+                    amount="1.00",
+                    category=category,
+                    spent_at="2024-10-01",
+                ),
+                headers=headers,
+            )
+    page = client.get(
+        "/spend-items",
+        params={"skip": 0, "limit": 2, "category": "groceries"},
+        headers=headers,
+    ).json()
+    assert page["total"] == 3
+    assert len(page["data"]) == 2
+    past = client.get(
+        "/spend-items",
+        params={"skip": 3, "limit": 2, "category": "groceries"},
+        headers=headers,
+    ).json()
+    assert past["data"] == []
+    assert past["total"] == 3
+
+
+def test_list_rejects_invalid_page(client) -> None:
+    headers = _auth(client)
+    assert (
+        client.get("/spend-items", params={"limit": 0}, headers=headers).status_code
+        == 422
+    )
+    assert (
+        client.get("/spend-items", params={"limit": 201}, headers=headers).status_code
+        == 422
+    )
+    assert (
+        client.get("/spend-items", params={"skip": -1}, headers=headers).status_code
+        == 422
+    )
+
+
+def test_list_pages_cover_all_ids(client) -> None:
+    headers = _auth(client)
+    for index in range(25):
+        client.post(
+            "/spend-items",
+            json=_payload(
+                merchant=f"Same Day {index}",
+                amount="1.00",
+                spent_at="2024-10-01",
+            ),
+            headers=headers,
+        )
+    seen: list[str] = []
+    for skip in (0, 10, 20):
+        body = client.get(
+            "/spend-items",
+            params={"skip": skip, "limit": 10},
+            headers=headers,
+        ).json()
+        assert body["total"] == 25
+        seen.extend(item["id"] for item in body["data"])
+    assert len(seen) == 25
+    assert len(set(seen)) == 25
+
+
+def test_paging_does_not_change_summary(client) -> None:
+    headers = _auth(client)
+    for index in range(3):
+        client.post(
+            "/spend-items",
+            json=_payload(merchant=f"Shop {index}", amount="10.00"),
+            headers=headers,
+        )
+    full = client.get("/spend-items/summary", headers=headers).json()
+    paged = client.get(
+        "/spend-items/summary",
+        params={"skip": 1, "limit": 1},
+        headers=headers,
+    ).json()
+    assert paged["total"] == full["total"]
+    assert paged["item_count"] == full["item_count"]

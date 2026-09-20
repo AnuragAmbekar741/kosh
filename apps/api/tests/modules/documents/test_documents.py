@@ -250,7 +250,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     with Session(database.engine) as session:
         attempts = list_extraction_attempts(session, UUID(document_id))
         assert attempts[0].schema_version == 2
-    assert client.get("/spend-items", headers=headers).json() == []
+    assert client.get("/spend-items", headers=headers).json()["data"] == []
     patched = client.patch(
         f"/spend-items/{line['id']}",
         json={"merchant": "Edited Merchant"},
@@ -276,7 +276,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     assert confirmed.status_code == 200
     assert confirmed.json()[0]["status"] == "confirmed"
     assert Decimal(confirmed.json()[0]["amount"]) == Decimal("56.71")
-    ledger = client.get("/spend-items", headers=headers).json()
+    ledger = client.get("/spend-items", headers=headers).json()["data"]
     assert len(ledger) == 1
     assert Decimal(ledger[0]["amount"]) == Decimal("56.71")
     pending = [
@@ -340,7 +340,7 @@ def test_reextraction_never_changes_confirmed_ledger(client, monkeypatch) -> Non
     current["total"] = "99.00"
     process_document(document_id, _claim(document_id, requeue=True))
 
-    ledger = client.get("/spend-items", headers=headers).json()
+    ledger = client.get("/spend-items", headers=headers).json()["data"]
     assert len(ledger) == 1
     assert ledger[0]["id"] == confirmed_id
     assert ledger[0]["amount"] == "56.71"
@@ -409,7 +409,7 @@ def test_add_line_item_to_confirmed_itemized_bill(client, monkeypatch) -> None:
     assert body["source"] == "document"
     assert body["status"] == "confirmed"
     assert body["user_edited"] is True
-    ledger = client.get("/spend-items", headers=headers).json()
+    ledger = client.get("/spend-items", headers=headers).json()["data"]
     assert any(item["id"] == body["id"] for item in ledger)
 
 
@@ -546,7 +546,7 @@ def test_delete_confirmed_document_bill(client, monkeypatch) -> None:
     deleted = client.delete(f"/documents/{document_id}", headers=headers)
     assert deleted.status_code == 204
     assert client.get(f"/documents/{document_id}", headers=headers).status_code == 404
-    assert client.get("/spend-items", headers=headers).json() == []
+    assert client.get("/spend-items", headers=headers).json()["data"] == []
     listed = client.get("/documents", headers=headers).json()
     assert listed == []
 
@@ -629,7 +629,7 @@ def test_delete_document_leaves_other_bills(client, monkeypatch) -> None:
         headers=headers,
     )
     client.delete(f"/documents/{drop_id}", headers=headers)
-    ledger = client.get("/spend-items", headers=headers).json()
+    ledger = client.get("/spend-items", headers=headers).json()["data"]
     assert len(ledger) == 1
     assert ledger[0]["document_id"] == keep_id
     assert client.get(f"/documents/{keep_id}", headers=headers).status_code == 200
@@ -714,7 +714,7 @@ def test_add_line_item_to_empty_manual_document(client) -> None:
     assert second.json()["line_index"] == 1
     assert second.json()["merchant"] == "Groceries"
     assert second.json()["spent_at"] == body["spent_at"]
-    ledger = client.get("/spend-items", headers=headers).json()
+    ledger = client.get("/spend-items", headers=headers).json()["data"]
     assert {item["description"] for item in ledger} == {"Bananas", "Milk"}
 
 
@@ -739,5 +739,5 @@ def test_delete_manual_document_skips_blob(client, monkeypatch, blob_store) -> N
     deleted = client.delete(f"/documents/{document_id}", headers=headers)
     assert deleted.status_code == 204
     assert client.get(f"/documents/{document_id}", headers=headers).status_code == 404
-    assert client.get("/spend-items", headers=headers).json() == []
+    assert client.get("/spend-items", headers=headers).json()["data"] == []
     assert blob_store == {}
