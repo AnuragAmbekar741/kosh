@@ -7,6 +7,7 @@ from sqlalchemy import func, or_
 from sqlmodel import Session, col, select
 
 from storage.models.spend import SpendItem, SpendSource, SpendStatus
+from storage.pagination import paginate
 
 __all__ = [
     "confirm_document_items",
@@ -15,6 +16,7 @@ __all__ = [
     "get_spend_item",
     "list_document_spend_items",
     "list_spend_items",
+    "list_spend_items_page",
     "update_spend_item",
     "upsert_drafts",
     "user_has_confirmed_spend",
@@ -70,8 +72,7 @@ def get_spend_item(
     return item
 
 
-def list_spend_items(
-    session: Session,
+def _spend_items_statement(
     *,
     user_id: UUID,
     spent_from: date | None = None,
@@ -81,7 +82,7 @@ def list_spend_items(
     source: str | None = None,
     q: str | None = None,
     status: str | None = SpendStatus.CONFIRMED,
-) -> list[SpendItem]:
+):
     statement = select(SpendItem).where(SpendItem.user_id == user_id)
     if spent_from is not None:
         statement = statement.where(SpendItem.spent_at >= spent_from)
@@ -104,10 +105,70 @@ def list_spend_items(
         )
     if status is not None:
         statement = statement.where(SpendItem.status == status)
-    statement = statement.order_by(
-        col(SpendItem.spent_at).desc(), col(SpendItem.created_at).desc()
+    return statement.order_by(
+        col(SpendItem.spent_at).desc(),
+        col(SpendItem.created_at).desc(),
+        col(SpendItem.id).desc(),
     )
-    return list(session.exec(statement).all())
+
+
+def list_spend_items(
+    session: Session,
+    *,
+    user_id: UUID,
+    spent_from: date | None = None,
+    spent_to: date | None = None,
+    category: Sequence[str] | None = None,
+    merchant: str | None = None,
+    source: str | None = None,
+    q: str | None = None,
+    status: str | None = SpendStatus.CONFIRMED,
+) -> list[SpendItem]:
+    return list(
+        session.exec(
+            _spend_items_statement(
+                user_id=user_id,
+                spent_from=spent_from,
+                spent_to=spent_to,
+                category=category,
+                merchant=merchant,
+                source=source,
+                q=q,
+                status=status,
+            )
+        ).all()
+    )
+
+
+def list_spend_items_page(
+    session: Session,
+    *,
+    user_id: UUID,
+    skip: int,
+    limit: int,
+    spent_from: date | None = None,
+    spent_to: date | None = None,
+    category: Sequence[str] | None = None,
+    merchant: str | None = None,
+    source: str | None = None,
+    q: str | None = None,
+    status: str | None = SpendStatus.CONFIRMED,
+) -> tuple[list[SpendItem], int]:
+    return paginate(
+        session,
+        _spend_items_statement(
+            user_id=user_id,
+            spent_from=spent_from,
+            spent_to=spent_to,
+            category=category,
+            merchant=merchant,
+            source=source,
+            q=q,
+            status=status,
+        ),
+        skip=skip,
+        limit=limit,
+    )
 
 
 def user_has_confirmed_spend(session: Session, *, user_id: UUID) -> bool:
