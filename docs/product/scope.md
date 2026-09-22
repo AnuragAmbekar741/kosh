@@ -4,12 +4,12 @@ Distilled from [BUILD_AND_LEARN.md](./BUILD_AND_LEARN.md) §§1–5, 12–16. Da
 
 ## Principle
 
-```text
+```te
 The Agent is NOT the application.
 The Agent is one client on top of the same services as the dashboard.
 ```
 
-```text
+```tex
 Agent → Tool → Service/crud → Database
 ```
 
