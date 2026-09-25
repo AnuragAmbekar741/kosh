@@ -44,7 +44,9 @@ export async function confirmDocument({
   documentId,
 }: ConfirmDocumentInput): Promise<SpendItem[]> {
   const { data } = await client.post<SpendItem[]>(
-    `/documents/${documentId}/confirm`
+    `/documents/${documentId}/confirm`,
+    // Keep rolling deployments compatible with the previous required body.
+    { mode: "line_items" }
   )
   return data
 }

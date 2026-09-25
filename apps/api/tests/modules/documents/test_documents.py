@@ -263,7 +263,11 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     after = client.get(f"/documents/{document_id}", headers=headers).json()
     edited = next(item for item in after["drafts"] if item["id"] == line["id"])
     assert edited["merchant"] == "Edited Merchant"
-    confirmed = client.post(f"/documents/{document_id}/confirm", headers=headers)
+    confirmed = client.post(
+        f"/documents/{document_id}/confirm",
+        json={"mode": "line_items"},
+        headers=headers,
+    )
     assert confirmed.status_code == 200
     assert confirmed.json()[0]["status"] == "confirmed"
     assert Decimal(confirmed.json()[0]["amount"]) == Decimal("56.71")
