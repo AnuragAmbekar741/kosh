@@ -34,7 +34,7 @@ import { formatDate, formatMoney } from "./spending-formatters"
 type DocumentReviewProps = {
   documentId: string
   onBack: () => void
-  onConfirmed: () => void
+  onConfirmed: (spentAt?: string) => void
   onTryAnother: () => void
 }
 
@@ -75,7 +75,7 @@ function ReadyDocument({
 }: {
   document: DocumentDetail
   onBack: () => void
-  onConfirmed: () => void
+  onConfirmed: (spentAt?: string) => void
 }) {
   const extraction = document.extraction!
   const lineDrafts = document.drafts.filter((item) => item.line_index !== null)
@@ -154,8 +154,10 @@ function ReadyDocument({
             : [updateItem.mutateAsync({ id: item.id, updates })]
         })
       )
-      await confirm.mutateAsync({ documentId: document.id })
-      onConfirmed()
+      const confirmed = await confirm.mutateAsync({ documentId: document.id })
+      const spentAt =
+        confirmed[0]?.spent_at ?? documentDate ?? lineDrafts[0]?.spent_at
+      onConfirmed(spentAt ?? undefined)
     } catch {
       // Mutation state renders the API error below the review.
     }

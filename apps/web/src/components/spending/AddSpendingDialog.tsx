@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useCreateManualDocument } from "@/hooks/documents/use-documents"
+import { useSpendFilters } from "@/hooks/spend-items/use-spend-filters"
 
 type Step = "choose" | "upload" | "manual"
 
@@ -41,6 +42,7 @@ export function AddSpendingDialog() {
   const [title, setTitle] = useState("")
   const [validationError, setValidationError] = useState("")
   const createManual = useCreateManualDocument()
+  const filters = useSpendFilters()
   const error = validationError || apiDetail(createManual.error)
 
   function goToChooser() {
@@ -57,7 +59,8 @@ export function AddSpendingDialog() {
     }
   }
 
-  function finishUpload() {
+  function finishUpload(spentAt?: string) {
+    if (spentAt) filters.revealDate(spentAt)
     setUploadStarted(false)
     handleOpenChange(false)
   }

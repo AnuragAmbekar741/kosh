@@ -20,8 +20,9 @@ the global monochrome visual system.
    item Accordion. The ledger shows the same tinted category badge beside the
    item name. Duplicate hashes and mismatched totals produce review warnings.
 5. `POST /documents/{id}/confirm` adds all reviewed drafts to Spending and
-   refreshes the ledger. There is no total-versus-itemized choice or partial
-   selection.
+   refreshes the ledger. If the receipt date falls outside the current period
+   filter, Spending jumps to that month so the new bill is visible. There is
+   no total-versus-itemized choice or partial selection.
 6. Add manually asks only for a bill name. `POST /documents/manual` creates a
    fileless ready document. The bill appears in the ledger immediately, even
    with zero lines, and opens so the add-row is visible.

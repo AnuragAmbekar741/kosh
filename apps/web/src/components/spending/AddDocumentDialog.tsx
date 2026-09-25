@@ -31,7 +31,7 @@ const acceptedExtensions = new Set([
 
 type AddDocumentFlowProps = {
   onBack: () => void
-  onConfirmed: () => void
+  onConfirmed: (spentAt?: string) => void
 }
 
 function isPdf(file: File) {
