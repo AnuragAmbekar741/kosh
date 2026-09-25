@@ -4,24 +4,17 @@ import { AlertCircleIcon, AlertTriangleIcon, CheckIcon } from "lucide-react"
 import { apiDetail } from "@/api/client"
 import type { DocumentDetail } from "@/api/documents/documents.types"
 import type { SpendItem } from "@/api/spend-items/spend-items.types"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   useConfirmDocument,
   useDocument,
@@ -48,6 +41,19 @@ type DraftEdit = {
   category: string | null
 }
 
+type EditingField = "name" | "amount"
+
+type DocumentReviewLineRowProps = {
+  amount: string
+  category: string | null
+  currency: string
+  index: number
+  name: string
+  onUpdate: (updates: Partial<DraftEdit>) => void
+  requiresReview: boolean
+  spendItemId: string
+}
+
 function ExtractionStatus({ filename }: { filename?: string }) {
   return (
     <div
@@ -63,6 +69,205 @@ function ExtractionStatus({ filename }: { filename?: string }) {
             ? `${filename} is being read. This usually takes a moment.`
             : "Your document is being read. This usually takes a moment."}
         </p>
+      </div>
+    </div>
+  )
+}
+
+function DocumentReviewLineRow({
+  amount,
+  category,
+  currency,
+  index,
+  name,
+  onUpdate,
+  requiresReview,
+  spendItemId,
+}: DocumentReviewLineRowProps) {
+  const [editingField, setEditingField] = useState<EditingField | null>(null)
+  const [draftNameValue, setDraftNameValue] = useState(name)
+  const [draftAmount, setDraftAmount] = useState(amount)
+  const [fieldError, setFieldError] = useState("")
+  const nameId = `draft-name-${spendItemId}`
+  const amountId = `draft-amount-${spendItemId}`
+
+  function beginNameEdit() {
+    setDraftNameValue(name)
+    setFieldError("")
+    setEditingField("name")
+  }
+
+  function beginAmountEdit() {
+    setDraftAmount(amount)
+    setFieldError("")
+    setEditingField("amount")
+  }
+
+  function cancelEditing() {
+    setDraftNameValue(name)
+    setDraftAmount(amount)
+    setFieldError("")
+    setEditingField(null)
+  }
+
+  function commitName() {
+    const trimmed = draftNameValue.trim()
+    if (!trimmed) {
+      setFieldError("Enter an item name.")
+      return
+    }
+    if (trimmed !== name) onUpdate({ name: trimmed })
+    setFieldError("")
+    setEditingField(null)
+  }
+
+  function commitAmount() {
+    if (!Number.isFinite(Number(draftAmount)) || Number(draftAmount) <= 0) {
+      setFieldError("Enter an amount greater than zero.")
+      return
+    }
+    if (draftAmount !== amount) onUpdate({ amount: draftAmount })
+    setFieldError("")
+    setEditingField(null)
+  }
+
+  const categoryBadge = (
+    <CategoryBadge
+      category={category}
+      onSelect={(nextCategory) => onUpdate({ category: nextCategory })}
+    />
+  )
+
+  return (
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-2 not-first:border-t">
+      <span className="w-5 text-xs text-muted-foreground tabular-nums">
+        {index + 1}
+      </span>
+      <div className="min-w-0">
+        {editingField === "name" ? (
+          <Field className="gap-1" data-invalid={Boolean(fieldError)}>
+            <FieldLabel className="sr-only" htmlFor={nameId}>
+              Item name
+            </FieldLabel>
+            <div className="inline-flex w-full max-w-full flex-nowrap items-center gap-2">
+              <Input
+                aria-invalid={Boolean(fieldError)}
+                autoFocus
+                className="w-1/2 min-w-0 shrink-0"
+                id={nameId}
+                onBlur={commitName}
+                onChange={(event) => {
+                  setDraftNameValue(event.target.value)
+                  setFieldError("")
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault()
+                    event.currentTarget.blur()
+                  }
+                  if (event.key === "Escape") {
+                    event.preventDefault()
+                    cancelEditing()
+                  }
+                }}
+                value={draftNameValue}
+              />
+              {categoryBadge}
+            </div>
+            {fieldError ? (
+              <FieldError className="text-xs">{fieldError}</FieldError>
+            ) : null}
+          </Field>
+        ) : (
+          <div className="inline-flex max-w-full flex-nowrap items-center gap-2">
+            <button
+              aria-label={`Edit ${name}. Double-click, or press Enter.`}
+              className="max-w-full shrink cursor-text truncate rounded-sm text-left text-sm outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={(event) => {
+                if (event.detail === 0) beginNameEdit()
+              }}
+              onDoubleClick={beginNameEdit}
+              onPointerUp={(event) => {
+                if (event.pointerType === "touch") beginNameEdit()
+              }}
+              title="Double-click to edit"
+              type="button"
+            >
+              {name}
+            </button>
+            {categoryBadge}
+            {requiresReview ? (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      aria-label="Check this item"
+                      className="inline-flex shrink-0 text-muted-foreground hover:text-foreground"
+                      type="button"
+                    />
+                  }
+                >
+                  <AlertTriangleIcon className="size-3.5" />
+                </TooltipTrigger>
+                <TooltipContent>Check this item</TooltipContent>
+              </Tooltip>
+            ) : null}
+          </div>
+        )}
+      </div>
+      <div className="shrink-0">
+        {editingField === "amount" ? (
+          <Field className="gap-1" data-invalid={Boolean(fieldError)}>
+            <FieldLabel className="sr-only" htmlFor={amountId}>
+              Amount
+            </FieldLabel>
+            <Input
+              aria-invalid={Boolean(fieldError)}
+              autoFocus
+              className="w-24 text-right"
+              id={amountId}
+              inputMode="decimal"
+              min="0.01"
+              onBlur={commitAmount}
+              onChange={(event) => {
+                setDraftAmount(event.target.value)
+                setFieldError("")
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault()
+                  event.currentTarget.blur()
+                }
+                if (event.key === "Escape") {
+                  event.preventDefault()
+                  cancelEditing()
+                }
+              }}
+              step="0.01"
+              type="number"
+              value={draftAmount}
+            />
+            {fieldError ? (
+              <FieldError className="text-xs">{fieldError}</FieldError>
+            ) : null}
+          </Field>
+        ) : (
+          <button
+            aria-label={`Edit amount ${formatMoney(amount, currency)}. Double-click, or press Enter.`}
+            className="cursor-text rounded-sm text-sm font-medium tabular-nums outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={(event) => {
+              if (event.detail === 0) beginAmountEdit()
+            }}
+            onDoubleClick={beginAmountEdit}
+            onPointerUp={(event) => {
+              if (event.pointerType === "touch") beginAmountEdit()
+            }}
+            title="Double-click to edit"
+            type="button"
+          >
+            {formatMoney(amount, currency)}
+          </button>
+        )}
       </div>
     </div>
   )
@@ -107,10 +312,6 @@ function ReadyDocument({
     extraction.document_kind === "receipt"
       ? extraction.total
       : lineDrafts.reduce((sum, item) => sum + Number(item.amount), 0)
-  const reviewedTotal = lineDrafts.reduce(
-    (sum, item) => sum + Number(edits[item.id]?.amount ?? item.amount),
-    0
-  )
 
   function updateEdit(id: string, updates: Partial<DraftEdit>) {
     setValidationError("")
@@ -177,153 +378,89 @@ function ReadyDocument({
 
   return (
     <>
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="flex flex-col gap-5 px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-3 border-b pb-5 sm:flex-row sm:items-end sm:justify-between">
-            <div className="min-w-0">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 px-5 py-4 sm:px-6">
+        <div className="flex flex-col gap-2 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-2">
               <p className="truncate text-lg font-medium">{merchant}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {documentDate ? formatDate(documentDate) : "Date not found"} ·{" "}
-                {document.filename}
-              </p>
+              {document.hash_matches_existing ? (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        aria-label="Possible duplicate"
+                        className="inline-flex shrink-0 text-muted-foreground hover:text-foreground"
+                        type="button"
+                      />
+                    }
+                  >
+                    <AlertTriangleIcon className="size-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Possible duplicate. A matching document was uploaded before.
+                    Confirm only if this is a separate expense.
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
             </div>
-            <p className="shrink-0 text-2xl font-medium tabular-nums">
-              {formatMoney(total, extraction.currency)}
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {documentDate ? formatDate(documentDate) : "Date not found"} ·{" "}
+              {document.filename}
             </p>
           </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-sm font-medium">
-                Review {lineDrafts.length}{" "}
-                {lineDrafts.length === 1 ? "item" : "items"}
-              </p>
-              <p className="text-sm text-muted-foreground tabular-nums">
-                {formatMoney(reviewedTotal, extraction.currency)}
-              </p>
-            </div>
-
-            <Accordion className="border-y">
-              {lineDrafts.map((draft) => {
-                const extracted =
-                  extraction.document_kind === "receipt"
-                    ? extraction.line_items[draft.line_index ?? -1]
-                    : extraction.transactions[draft.line_index ?? -1]
-
-                return (
-                  <AccordionItem key={draft.id} value={draft.id}>
-                    <div className="flex min-h-12 items-start">
-                      <AccordionTrigger className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-x-2 py-3 hover:no-underline">
-                        <span className="min-w-0 pr-2">
-                          <span className="flex min-w-0 items-center gap-2">
-                            <span className="min-w-0 truncate">
-                              {edits[draft.id].name}
-                            </span>
-                            {edits[draft.id].category ? (
-                              <CategoryBadge
-                                category={edits[draft.id].category}
-                              />
-                            ) : null}
-                          </span>
-                          {extracted?.requires_review ? (
-                            <span className="mt-0.5 flex items-center gap-1 text-xs font-normal text-muted-foreground [&_svg]:size-3.5">
-                              <AlertTriangleIcon /> Check this item
-                            </span>
-                          ) : null}
-                        </span>
-                        <span className="shrink-0 font-medium tabular-nums">
-                          {formatMoney(edits[draft.id].amount, draft.currency)}
-                        </span>
-                      </AccordionTrigger>
-                    </div>
-                    <AccordionContent className="flex flex-col gap-3 pb-4">
-                      <FieldGroup className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_auto] sm:items-end">
-                        <Field>
-                          <FieldLabel htmlFor={`draft-name-${draft.id}`}>
-                            Item
-                          </FieldLabel>
-                          <Input
-                            id={`draft-name-${draft.id}`}
-                            onChange={(event) =>
-                              updateEdit(draft.id, { name: event.target.value })
-                            }
-                            value={edits[draft.id].name}
-                          />
-                        </Field>
-                        <Field>
-                          <FieldLabel htmlFor={`draft-amount-${draft.id}`}>
-                            Amount
-                          </FieldLabel>
-                          <Input
-                            id={`draft-amount-${draft.id}`}
-                            inputMode="decimal"
-                            min="0.01"
-                            onChange={(event) =>
-                              updateEdit(draft.id, {
-                                amount: event.target.value,
-                              })
-                            }
-                            step="0.01"
-                            type="number"
-                            value={edits[draft.id].amount}
-                          />
-                        </Field>
-                        <CategoryBadge
-                          category={edits[draft.id].category}
-                          onSelect={(category) =>
-                            updateEdit(draft.id, { category })
-                          }
-                        />
-                      </FieldGroup>
-                      <p className="text-xs text-muted-foreground">
-                        {extracted && "raw_description" in extracted
-                          ? `Receipt text: ${extracted.raw_description}`
-                          : formatDate(draft.spent_at)}
-                      </p>
-                    </AccordionContent>
-                  </AccordionItem>
-                )
-              })}
-            </Accordion>
-          </div>
-
-          {validationError ? <FieldError>{validationError}</FieldError> : null}
-
-          {document.hash_matches_existing ? (
-            <Alert>
-              <AlertTriangleIcon />
-              <AlertTitle>Possible duplicate</AlertTitle>
-              <AlertDescription>
-                A matching document was uploaded before. Confirm only if this is
-                a separate expense.
-              </AlertDescription>
-            </Alert>
-          ) : null}
-
-          {document.error ? (
-            <Alert>
-              <AlertTriangleIcon />
-              <AlertTitle>Check the extracted totals</AlertTitle>
-              <AlertDescription>
-                The itemized amounts may not match the document total. Review
-                the entries before adding them.
-              </AlertDescription>
-            </Alert>
-          ) : null}
-
-          {confirm.isError || updateItem.isError ? (
-            <Alert variant="destructive">
-              <AlertCircleIcon />
-              <AlertTitle>Couldn’t add these entries</AlertTitle>
-              <AlertDescription>
-                {apiDetail(updateItem.error) ||
-                  apiDetail(confirm.error) ||
-                  "Please try again."}
-              </AlertDescription>
-            </Alert>
-          ) : null}
+          <p className="shrink-0 text-xl font-medium tabular-nums">
+            {formatMoney(total, extraction.currency)}
+          </p>
         </div>
-      </ScrollArea>
+
+        <div className="max-h-72 overflow-y-auto">
+          {lineDrafts.map((draft, index) => {
+            const extracted =
+              extraction.document_kind === "receipt"
+                ? extraction.line_items[draft.line_index ?? -1]
+                : extraction.transactions[draft.line_index ?? -1]
+
+            return (
+              <DocumentReviewLineRow
+                amount={edits[draft.id].amount}
+                category={edits[draft.id].category}
+                currency={draft.currency}
+                index={index}
+                key={draft.id}
+                name={edits[draft.id].name}
+                onUpdate={(updates) => updateEdit(draft.id, updates)}
+                requiresReview={Boolean(extracted?.requires_review)}
+                spendItemId={draft.id}
+              />
+            )
+          })}
+        </div>
+
+        {validationError ? <FieldError>{validationError}</FieldError> : null}
+
+        {document.error ? (
+          <Alert>
+            <AlertTriangleIcon />
+            <AlertTitle>Check the extracted totals</AlertTitle>
+            <AlertDescription>
+              The itemized amounts may not match the document total. Review the
+              entries before adding them.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        {confirm.isError || updateItem.isError ? (
+          <Alert variant="destructive">
+            <AlertCircleIcon />
+            <AlertTitle>Couldn’t add these entries</AlertTitle>
+            <AlertDescription>
+              {apiDetail(updateItem.error) ||
+                apiDetail(confirm.error) ||
+                "Please try again."}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+      </div>
 
       <DialogFooter className="m-0 shrink-0 rounded-none bg-popover sm:justify-between">
         <Button onClick={onBack} type="button" variant="outline">

@@ -15,10 +15,12 @@ the global monochrome visual system.
    There is no camera or scan action. `POST /documents` starts extraction. The
    same Dialog polls `GET /documents/{id}` and shows processing, failure, and
    ready states.
-4. A ready document shows every extracted spend item. The user can edit each
-   item's name, amount, and category; flagged lines remain called out in the
-   item Accordion. The ledger shows the same tinted category badge beside the
-   item name. Duplicate hashes and mismatched totals produce review warnings.
+4. A ready document shows every extracted spend item as a numbered flat
+   list. Double-click a name or amount to edit it inline; category uses the
+   same tinted badge dropdown as the ledger. Flagged lines show a warning
+   icon with a tooltip. Duplicate hashes appear as a tooltip on the merchant
+   title. Mismatched totals still produce a review warning. The list caps
+   at `max-h-72` and scrolls so the header and confirm action stay reachable.
 5. `POST /documents/{id}/confirm` adds all reviewed drafts to Spending and
    refreshes the ledger. If the receipt date falls outside the current period
    filter, Spending jumps to that month so the new bill is visible. There is
@@ -148,8 +150,8 @@ and still shows the ledger. First-use uses a compact dashed Empty frame
 centered under the Transactions heading, hugging its copy, pointing at the
 top-bar action, and including an EmptyContent button that opens the same Add
 spending dialog. A filtered empty period uses the same Empty frame with
-Clear filters. Long extraction reviews also use a ScrollArea so the Dialog
-header and confirmation action stay reachable.
+Clear filters. Long extraction reviews cap the numbered item list at
+`max-h-72` so the Dialog header and confirmation action stay reachable.
 
 ## Structure
 
