@@ -5,7 +5,7 @@ from sqlmodel import Session, create_engine
 
 from storage.settings import get_settings
 
-engine = create_engine(get_settings().database_url)
+engine = create_engine(get_settings().database_url, pool_pre_ping=True)
 
 
 def ping() -> None:

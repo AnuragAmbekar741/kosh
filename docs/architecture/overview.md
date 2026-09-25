@@ -38,7 +38,7 @@ packages/storage/src/storage/
   pagination.py            skip/limit + count helper for list statements
   blobs.py                 S3 put/get (Neon Object Storage, path-style)
   settings.py              DATABASE_URL, documents bucket
-  database.py              engine, ping
+  database.py              engine with stale-connection checks, startup ping
 
 packages/security/src/security/   argon2 hash, access JWT, hashed refresh, CurrentUserDep
   google.py                Google ID token verify (JWKS)
