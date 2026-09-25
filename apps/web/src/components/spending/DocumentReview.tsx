@@ -12,20 +12,24 @@ import {
 } from "@/components/ui/accordion"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { DialogFooter } from "@/components/ui/dialog"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   useConfirmDocument,
   useDocument,
 } from "@/hooks/documents/use-documents"
+import { useUpdateSpendItem } from "@/hooks/spend-items/use-spend-items"
 
 import { CategoryBadge } from "./CategoryBadge"
 import { formatDate, formatMoney } from "./spending-formatters"
-
-type ConfirmationMode = "total" | "line_items"
 
 type DocumentReviewProps = {
   documentId: string
@@ -36,6 +40,12 @@ type DocumentReviewProps = {
 
 function draftName(item: SpendItem) {
   return item.description || item.merchant
+}
+
+type DraftEdit = {
+  name: string
+  amount: string
+  category: string | null
 }
 
 function ExtractionStatus({ filename }: { filename?: string }) {
@@ -68,16 +78,22 @@ function ReadyDocument({
   onConfirmed: () => void
 }) {
   const extraction = document.extraction!
-  const isStatement = extraction.document_kind === "statement"
   const lineDrafts = document.drafts.filter((item) => item.line_index !== null)
-  const totalDraft = document.drafts.find((item) => item.line_index === null)
-  const [mode, setMode] = useState<ConfirmationMode>(
-    isStatement ? "line_items" : "total"
+  const [edits, setEdits] = useState<Record<string, DraftEdit>>(() =>
+    Object.fromEntries(
+      lineDrafts.map((item) => [
+        item.id,
+        {
+          name: draftName(item),
+          amount: item.amount,
+          category: item.category,
+        },
+      ])
+    )
   )
-  const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(lineDrafts.map((item) => item.id))
-  )
+  const [validationError, setValidationError] = useState("")
   const confirm = useConfirmDocument()
+  const updateItem = useUpdateSpendItem()
 
   const merchant =
     extraction.document_kind === "receipt"
@@ -91,42 +107,67 @@ function ReadyDocument({
     extraction.document_kind === "receipt"
       ? extraction.total
       : lineDrafts.reduce((sum, item) => sum + Number(item.amount), 0)
-  const selectedTotal = lineDrafts
-    .filter((item) => selected.has(item.id))
-    .reduce((sum, item) => sum + Number(item.amount), 0)
+  const reviewedTotal = lineDrafts.reduce(
+    (sum, item) => sum + Number(edits[item.id]?.amount ?? item.amount),
+    0
+  )
 
-  function toggleItem(id: string, checked: boolean) {
-    setSelected((current) => {
-      const next = new Set(current)
-      if (checked) next.add(id)
-      else next.delete(id)
-      return next
+  function updateEdit(id: string, updates: Partial<DraftEdit>) {
+    setValidationError("")
+    setEdits((current) => ({
+      ...current,
+      [id]: { ...current[id], ...updates },
+    }))
+  }
+
+  async function save() {
+    const invalid = lineDrafts.find((item) => {
+      const edit = edits[item.id]
+      return (
+        !edit.name.trim() ||
+        !Number.isFinite(Number(edit.amount)) ||
+        Number(edit.amount) <= 0
+      )
     })
+    if (invalid) {
+      setValidationError(
+        "Every item needs a name and an amount greater than zero."
+      )
+      return
+    }
+
+    try {
+      await Promise.all(
+        lineDrafts.flatMap((item) => {
+          const edit = edits[item.id]
+          const updates = {
+            description: edit.name.trim(),
+            amount: edit.amount,
+            category: edit.category,
+          }
+          const unchanged =
+            updates.description === draftName(item) &&
+            updates.amount === item.amount &&
+            updates.category === item.category
+          return unchanged
+            ? []
+            : [updateItem.mutateAsync({ id: item.id, updates })]
+        })
+      )
+      await confirm.mutateAsync({ documentId: document.id })
+      onConfirmed()
+    } catch {
+      // Mutation state renders the API error below the review.
+    }
   }
 
-  function save() {
-    confirm.mutate(
-      {
-        documentId: document.id,
-        mode,
-        itemIds:
-          mode === "line_items"
-            ? Array.from(selected)
-            : totalDraft
-              ? [totalDraft.id]
-              : undefined,
-      },
-      { onSuccess: onConfirmed }
-    )
-  }
-
-  if (document.drafts.length === 0) {
+  if (lineDrafts.length === 0) {
     return (
       <div className="flex min-h-64 flex-col items-center justify-center gap-2 px-6 text-center">
-        <CheckIcon className="text-muted-foreground" />
-        <p className="font-medium">Already added to spending</p>
+        <AlertCircleIcon className="text-muted-foreground" />
+        <p className="font-medium">No spend items found</p>
         <p className="max-w-sm text-sm text-muted-foreground">
-          This document has no remaining items to review.
+          This document has no extracted items available to review.
         </p>
       </div>
     )
@@ -134,7 +175,7 @@ function ReadyDocument({
 
   return (
     <>
-      <ScrollArea className="max-h-[min(65svh,42rem)]">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-5 px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-3 border-b pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
@@ -149,106 +190,102 @@ function ReadyDocument({
             </p>
           </div>
 
-          {!isStatement && totalDraft ? (
-            <ToggleGroup
-              aria-label="How to add this receipt"
-              className="grid w-full grid-cols-2"
-              onValueChange={(value) => {
-                const nextMode = value[0] as ConfirmationMode | undefined
-                if (nextMode) setMode(nextMode)
-              }}
-              spacing={2}
-              value={[mode]}
-              variant="outline"
-            >
-              <ToggleGroupItem className="min-h-11" value="total">
-                One total
-              </ToggleGroupItem>
-              <ToggleGroupItem className="min-h-11" value="line_items">
-                Itemized
-              </ToggleGroupItem>
-            </ToggleGroup>
-          ) : null}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-medium">
+                Review {lineDrafts.length}{" "}
+                {lineDrafts.length === 1 ? "item" : "items"}
+              </p>
+              <p className="text-sm text-muted-foreground tabular-nums">
+                {formatMoney(reviewedTotal, extraction.currency)}
+              </p>
+            </div>
 
-          {mode === "total" && totalDraft ? (
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {totalDraft.category
-                ? `One ${totalDraft.category} entry will be added. The original document remains available as its source.`
-                : "One spending entry will be added. The original document remains available as its source."}
-            </p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-medium">
-                  {selected.size} of {lineDrafts.length} items selected
-                </p>
-                <Button
-                  onClick={() =>
-                    setSelected(
-                      selected.size === lineDrafts.length
-                        ? new Set()
-                        : new Set(lineDrafts.map((item) => item.id))
-                    )
-                  }
-                  type="button"
-                  variant="ghost"
-                >
-                  {selected.size === lineDrafts.length
-                    ? "Clear all"
-                    : "Select all"}
-                </Button>
-              </div>
+            <Accordion className="border-y">
+              {lineDrafts.map((draft) => {
+                const extracted =
+                  extraction.document_kind === "receipt"
+                    ? extraction.line_items[draft.line_index ?? -1]
+                    : extraction.transactions[draft.line_index ?? -1]
 
-              <Accordion className="border-y">
-                {lineDrafts.map((draft) => {
-                  const extracted =
-                    extraction.document_kind === "receipt"
-                      ? extraction.line_items[draft.line_index ?? -1]
-                      : extraction.transactions[draft.line_index ?? -1]
-
-                  return (
-                    <AccordionItem key={draft.id} value={draft.id}>
-                      <div className="flex min-h-12 items-center gap-3">
-                        <Checkbox
-                          aria-label={`Include ${draftName(draft)}`}
-                          checked={selected.has(draft.id)}
-                          className="after:-inset-3.5"
-                          onCheckedChange={(checked) =>
-                            toggleItem(draft.id, checked)
-                          }
-                        />
-                        <AccordionTrigger className="min-w-0 py-3 hover:no-underline">
-                          <span className="min-w-0 pr-3">
-                            <span className="flex min-w-0 items-center gap-2">
-                              <span className="min-w-0 truncate">
-                                {draftName(draft)}
-                              </span>
-                              {draft.category ? (
-                                <CategoryBadge category={draft.category} />
-                              ) : null}
+                return (
+                  <AccordionItem key={draft.id} value={draft.id}>
+                    <div className="flex min-h-12 items-start">
+                      <AccordionTrigger className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-x-2 py-3 hover:no-underline">
+                        <span className="min-w-0 pr-2">
+                          <span className="flex min-w-0 items-center gap-2">
+                            <span className="min-w-0 truncate">
+                              {edits[draft.id].name}
                             </span>
-                            {extracted?.requires_review ? (
-                              <span className="mt-0.5 flex items-center gap-1 text-xs font-normal text-muted-foreground [&_svg]:size-3.5">
-                                <AlertTriangleIcon /> Check this item
-                              </span>
+                            {edits[draft.id].category ? (
+                              <CategoryBadge
+                                category={edits[draft.id].category}
+                              />
                             ) : null}
                           </span>
-                          <span className="mr-3 ml-auto shrink-0 tabular-nums">
-                            {formatMoney(draft.amount, draft.currency)}
-                          </span>
-                        </AccordionTrigger>
-                      </div>
-                      <AccordionContent className="pl-7 text-xs text-muted-foreground">
+                          {extracted?.requires_review ? (
+                            <span className="mt-0.5 flex items-center gap-1 text-xs font-normal text-muted-foreground [&_svg]:size-3.5">
+                              <AlertTriangleIcon /> Check this item
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="shrink-0 font-medium tabular-nums">
+                          {formatMoney(edits[draft.id].amount, draft.currency)}
+                        </span>
+                      </AccordionTrigger>
+                    </div>
+                    <AccordionContent className="flex flex-col gap-3 pb-4">
+                      <FieldGroup className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_auto] sm:items-end">
+                        <Field>
+                          <FieldLabel htmlFor={`draft-name-${draft.id}`}>
+                            Item
+                          </FieldLabel>
+                          <Input
+                            id={`draft-name-${draft.id}`}
+                            onChange={(event) =>
+                              updateEdit(draft.id, { name: event.target.value })
+                            }
+                            value={edits[draft.id].name}
+                          />
+                        </Field>
+                        <Field>
+                          <FieldLabel htmlFor={`draft-amount-${draft.id}`}>
+                            Amount
+                          </FieldLabel>
+                          <Input
+                            id={`draft-amount-${draft.id}`}
+                            inputMode="decimal"
+                            min="0.01"
+                            onChange={(event) =>
+                              updateEdit(draft.id, {
+                                amount: event.target.value,
+                              })
+                            }
+                            step="0.01"
+                            type="number"
+                            value={edits[draft.id].amount}
+                          />
+                        </Field>
+                        <CategoryBadge
+                          category={edits[draft.id].category}
+                          onSelect={(category) =>
+                            updateEdit(draft.id, { category })
+                          }
+                        />
+                      </FieldGroup>
+                      <p className="text-xs text-muted-foreground">
                         {extracted && "raw_description" in extracted
                           ? `Receipt text: ${extracted.raw_description}`
                           : formatDate(draft.spent_at)}
-                      </AccordionContent>
-                    </AccordionItem>
-                  )
-                })}
-              </Accordion>
-            </div>
-          )}
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                )
+              })}
+            </Accordion>
+          </div>
+
+          {validationError ? <FieldError>{validationError}</FieldError> : null}
 
           {document.hash_matches_existing ? (
             <Alert>
@@ -272,39 +309,36 @@ function ReadyDocument({
             </Alert>
           ) : null}
 
-          {confirm.isError ? (
+          {confirm.isError || updateItem.isError ? (
             <Alert variant="destructive">
               <AlertCircleIcon />
               <AlertTitle>Couldn’t add these entries</AlertTitle>
               <AlertDescription>
-                {apiDetail(confirm.error) || "Please try again."}
+                {apiDetail(updateItem.error) ||
+                  apiDetail(confirm.error) ||
+                  "Please try again."}
               </AlertDescription>
             </Alert>
           ) : null}
         </div>
       </ScrollArea>
 
-      <DialogFooter className="m-0 rounded-none">
-        {mode === "line_items" ? (
-          <span className="self-center text-xs text-muted-foreground sm:mr-auto">
-            Selected {formatMoney(selectedTotal, extraction.currency)}
-          </span>
-        ) : null}
+      <DialogFooter className="m-0 shrink-0 rounded-none bg-popover sm:justify-between">
         <Button onClick={onBack} type="button" variant="outline">
           Back
         </Button>
         <Button
           disabled={
-            confirm.isPending || (mode === "line_items" && selected.size === 0)
+            confirm.isPending || updateItem.isPending || lineDrafts.length === 0
           }
-          onClick={save}
+          onClick={() => void save()}
         >
           {confirm.isPending ? (
             <Spinner data-icon="inline-start" />
           ) : (
             <CheckIcon data-icon="inline-start" />
           )}
-          Add to spending
+          Add all to spending
         </Button>
       </DialogFooter>
     </>

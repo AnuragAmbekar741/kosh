@@ -15,15 +15,13 @@ the global monochrome visual system.
    There is no camera or scan action. `POST /documents` starts extraction. The
    same Dialog polls `GET /documents/{id}` and shows processing, failure, and
    ready states.
-4. A ready receipt with a total draft can be saved as one total or itemized
-   rows. Statements are itemized. All extracted rows start selected; flagged
-   lines remain called out in the item Accordion. Review shows a tinted
-   category badge on the same row as each draft title, and names the category
-   in the one-total copy. The ledger shows the same badge beside the item
-   name when category is set. Duplicate hashes and mismatched totals produce
-   review warnings.
-5. `POST /documents/{id}/confirm` adds selected drafts to Spending and refreshes
-   the ledger.
+4. A ready document shows every extracted spend item. The user can edit each
+   item's name, amount, and category; flagged lines remain called out in the
+   item Accordion. The ledger shows the same tinted category badge beside the
+   item name. Duplicate hashes and mismatched totals produce review warnings.
+5. `POST /documents/{id}/confirm` adds all reviewed drafts to Spending and
+   refreshes the ledger. There is no total-versus-itemized choice or partial
+   selection.
 6. Add manually asks only for a bill name. `POST /documents/manual` creates a
    fileless ready document. The bill appears in the ledger immediately, even
    with zero lines, and opens so the add-row is visible.

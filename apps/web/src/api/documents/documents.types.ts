@@ -69,8 +69,6 @@ export type DocumentDetail = DocumentSummary & {
 
 export type ConfirmDocumentInput = {
   documentId: string
-  mode: "total" | "line_items"
-  itemIds?: string[]
 }
 
 export type ManualDocumentCreate = {

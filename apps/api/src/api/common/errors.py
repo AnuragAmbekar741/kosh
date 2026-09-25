@@ -65,19 +65,9 @@ class DocumentNotReadyError(DomainError):
     detail = "document is not ready for confirmation"
 
 
-class ConfirmModeConflictError(DomainError):
-    status_code = 409
-    detail = "document was already confirmed using the other mode"
-
-
-class ConfirmSelectionError(DomainError):
-    status_code = 400
-    detail = "selected items do not match the confirmation mode"
-
-
 class NoDraftsToConfirmError(DomainError):
     status_code = 400
-    detail = "no matching draft items to confirm"
+    detail = "no draft items to confirm"
 
 
 class DocumentProcessingError(DomainError):

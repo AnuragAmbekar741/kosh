@@ -205,6 +205,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Why: +~2% output tokens vs a second queue, claim protocol, poll loop and review-dialog polling. Model sees the whole receipt. Statements and receipts share one taxonomy.
 - Revisit when: Taxonomy changes need re-categorizing existing rows without a vision call, or users manage their own categories
 
+**Scanned documents always save itemized spend**
+
+- Chosen: Extraction creates one pending `SpendItem` per receipt line or statement debit; review edits those drafts and confirmation saves all of them
+- Rejected: A synthetic receipt-total draft, total-versus-itemized mode, and selecting only some extracted rows
+- Why: Scanning is for capturing spend items. A second storage choice adds review work, duplicate representations, and confirmation branches without serving the intended workflow
+- Revisit when: A supported document type has no meaningful line items and needs an explicit product flow rather than an automatic fallback
+
 **Category badge colors stay off the chrome**
 
 - Chosen: Soft `bg`/`fg` tokens per extraction category on spend-row badges only

@@ -52,7 +52,7 @@ apps/api/src/api/
       presenter.py
       services/              split when one service.py passes ~200 lines
         upload.py            sniff, hash, idempotency, blob write  (from api/documents.py)
-        confirm.py           mode resolution + eligibility          (from router:155-210)
+        confirm.py           confirm every reviewed draft item
   common/
     dependencies.py          SessionDep, CurrentUserDep
     pagination.py            Page mixin, Paginated[T] envelope
@@ -62,7 +62,7 @@ apps/api/src/api/
 
 `presenter.py` holds the model→schema mapping (`_public`, `_summary`, `_detail`). It is public, so a sibling module may import it; that is the legal version of what `documents.py:28` does today.
 
-Stamina keeps controllers to roughly a screen — parse, delegate, return. `routers/documents.py:155-210` is 55 lines of confirmation policy and is the clearest thing to move first.
+Stamina keeps controllers to roughly a screen — parse, delegate, return. Document confirmation policy stays in `services/confirm.py` so the router only parses, delegates, and presents.
 
 ## apps/worker
 

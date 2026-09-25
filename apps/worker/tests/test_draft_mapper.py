@@ -5,7 +5,7 @@ from ai.schemas import LineItem, ReceiptExtraction, StatementExtraction, Transac
 from worker.consumers.extraction.services.draft_mapper import drafts
 
 
-def test_receipt_total_and_line_categories() -> None:
+def test_receipt_creates_only_line_item_drafts() -> None:
     extraction = ReceiptExtraction(
         document_kind="receipt",
         merchant="Walmart",
@@ -31,12 +31,8 @@ def test_receipt_total_and_line_categories() -> None:
         ],
     )
     rows = drafts(uuid4(), extraction)
-    total = next(row for row in rows if row.line_index is None)
-    assert total.category == "Food"
-    assert [row.category for row in rows if row.line_index is not None] == [
-        "Food",
-        "Health",
-    ]
+    assert [row.line_index for row in rows] == [0, 1]
+    assert [row.category for row in rows] == ["Food", "Health"]
 
 
 def test_statement_skips_credits_and_copies_category() -> None:
