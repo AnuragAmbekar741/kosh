@@ -14,7 +14,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useCreateManualDocument } from "@/hooks/documents/use-documents"
@@ -129,11 +134,14 @@ export function AddSpendingDialog() {
         ) : null}
 
         {uploadStarted ? (
-          <div className={step === "upload" ? undefined : "hidden"}>
-            <AddDocumentFlow
-              onBack={goToChooser}
-              onConfirmed={finishUpload}
-            />
+          <div
+            className={
+              step === "upload"
+                ? "flex max-h-[calc(100svh-1rem)] min-h-0 flex-col"
+                : "hidden"
+            }
+          >
+            <AddDocumentFlow onBack={goToChooser} onConfirmed={finishUpload} />
           </div>
         ) : null}
 

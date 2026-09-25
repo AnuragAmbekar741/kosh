@@ -13,7 +13,12 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
@@ -170,7 +175,7 @@ function ReadyDocument({
 
   return (
     <>
-      <ScrollArea className="max-h-[min(65svh,42rem)]">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-5 px-5 py-5 sm:px-6">
           <div className="flex flex-col gap-3 border-b pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
@@ -205,9 +210,9 @@ function ReadyDocument({
 
                 return (
                   <AccordionItem key={draft.id} value={draft.id}>
-                    <div className="flex min-h-12 items-center">
-                      <AccordionTrigger className="min-w-0 py-3 hover:no-underline">
-                        <span className="min-w-0 pr-3">
+                    <div className="flex min-h-12 items-start">
+                      <AccordionTrigger className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-start gap-x-2 py-3 hover:no-underline">
+                        <span className="min-w-0 pr-2">
                           <span className="flex min-w-0 items-center gap-2">
                             <span className="min-w-0 truncate">
                               {edits[draft.id].name}
@@ -224,13 +229,13 @@ function ReadyDocument({
                             </span>
                           ) : null}
                         </span>
-                        <span className="mr-3 ml-auto shrink-0 tabular-nums">
+                        <span className="shrink-0 font-medium tabular-nums">
                           {formatMoney(edits[draft.id].amount, draft.currency)}
                         </span>
                       </AccordionTrigger>
                     </div>
-                    <AccordionContent className="space-y-3 pb-4">
-                      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_auto] sm:items-end">
+                    <AccordionContent className="flex flex-col gap-3 pb-4">
+                      <FieldGroup className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_auto] sm:items-end">
                         <Field>
                           <FieldLabel htmlFor={`draft-name-${draft.id}`}>
                             Item
@@ -267,7 +272,7 @@ function ReadyDocument({
                             updateEdit(draft.id, { category })
                           }
                         />
-                      </div>
+                      </FieldGroup>
                       <p className="text-xs text-muted-foreground">
                         {extracted && "raw_description" in extracted
                           ? `Receipt text: ${extracted.raw_description}`
@@ -318,7 +323,7 @@ function ReadyDocument({
         </div>
       </ScrollArea>
 
-      <DialogFooter className="m-0 rounded-none">
+      <DialogFooter className="m-0 shrink-0 rounded-none bg-popover sm:justify-between">
         <Button onClick={onBack} type="button" variant="outline">
           Back
         </Button>
