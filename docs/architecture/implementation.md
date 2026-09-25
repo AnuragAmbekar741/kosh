@@ -121,10 +121,10 @@ Split `routers/documents.py` (211 lines) and `api/documents.py`:
 | File | Job |
 |---|---|
 | `router.py` | HTTP only |
-| `schemas.py` | upload / summary / detail / confirm |
+| `schemas.py` | upload / summary / detail |
 | `presenter.py` | `_summary` / `_detail`; imports `modules.spend.presenter`, replacing the private `routers.spend._public` at `documents.py:28` |
 | `services/upload.py` | sniff, hash, idempotency, blob write (from `api/documents.py`) |
-| `services/confirm.py` | the 55-line policy at `routers/documents.py:155-210` |
+| `services/confirm.py` | confirm all pending document items |
 
 Router stops importing `storage.crud.*`. The six-branch `try/except` at `routers/documents.py:91` goes away — services raise, handlers map. Rewrite the two `api.documents.*` patch targets and the conftest import here.
 

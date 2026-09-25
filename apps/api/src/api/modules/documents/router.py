@@ -10,7 +10,6 @@ from api.modules.documents import service
 from api.modules.documents.presenter import to_detail, to_summary
 from api.modules.documents.schemas import (
     AddDocumentLineItemRequest,
-    ConfirmDocumentRequest,
     DocumentDetail,
     DocumentSummary,
     DocumentUploadResponse,
@@ -75,15 +74,12 @@ def get_doc(
 @router.post("/{document_id}/confirm")
 def confirm(
     document_id: UUID,
-    body: ConfirmDocumentRequest,
     user: CurrentUserDep,
     session: SessionDep,
 ) -> list[SpendItemPublic]:
     return [
         to_public(item)
-        for item in confirm_document(
-            session, user_id=user.id, document_id=document_id, body=body
-        )
+        for item in confirm_document(session, user_id=user.id, document_id=document_id)
     ]
 
 
@@ -95,9 +91,7 @@ def create_line_item(
     session: SessionDep,
 ) -> SpendItemPublic:
     return to_public(
-        add_line_item(
-            session, user_id=user.id, document_id=document_id, body=body
-        )
+        add_line_item(session, user_id=user.id, document_id=document_id, body=body)
     )
 
 

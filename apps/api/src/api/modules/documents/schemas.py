@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Literal
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -9,7 +9,6 @@ from api.modules.spend.schemas import SpendItemPublic
 
 __all__ = [
     "AddDocumentLineItemRequest",
-    "ConfirmDocumentRequest",
     "DocumentDetail",
     "DocumentSummary",
     "DocumentUploadResponse",
@@ -39,11 +38,6 @@ class DocumentDetail(DocumentSummary):
     hash_matches_existing: bool = False
     extraction: dict[str, Any] | None = None
     drafts: list[SpendItemPublic] = Field(default_factory=list)
-
-
-class ConfirmDocumentRequest(BaseModel):
-    mode: Literal["total", "line_items"] = "total"
-    item_ids: list[UUID] | None = None
 
 
 class AddDocumentLineItemRequest(BaseModel):

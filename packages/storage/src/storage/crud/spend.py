@@ -308,16 +308,16 @@ def confirm_document_items(
     *,
     user_id: UUID,
     document_id: UUID,
-    item_ids: list[UUID],
 ) -> list[SpendItem]:
     rows = list_document_spend_items(session, user_id=user_id, document_id=document_id)
-    wanted = set(item_ids)
     confirmed: list[SpendItem] = []
     now = datetime.now(UTC)
     for row in rows:
-        if row.id not in wanted:
-            continue
         if row.status != SpendStatus.PENDING_REVIEW:
+            continue
+        if row.line_index is None:
+            # Remove aggregate drafts created before receipts became item-only.
+            session.delete(row)
             continue
         row.status = SpendStatus.CONFIRMED
         row.updated_at = now

@@ -15,7 +15,7 @@ from storage.crud.document import (
     list_extraction_attempts,
 )
 from storage.models.document import Document, DocumentStatus
-from storage.models.spend import SpendItem
+from storage.models.spend import SpendItem, SpendSource, SpendStatus
 from worker.consumers.extraction.consumer import process_document
 
 _PASSWORD = "password1"
@@ -179,7 +179,8 @@ def test_unsupported_and_oversized(client, monkeypatch) -> None:
     bad = _upload(client, headers, b"not-a-file", "notes.txt")
     assert bad.status_code == 415
     monkeypatch.setattr(
-        "api.modules.documents.services.upload.get_settings", lambda: type("S", (), {"max_upload_mb": 0})()
+        "api.modules.documents.services.upload.get_settings",
+        lambda: type("S", (), {"max_upload_mb": 0})(),
     )
     huge = _upload(client, headers, _JPEG, "big.jpg")
     assert huge.status_code == 413
@@ -235,7 +236,9 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
             model="test", provider="test", prompt_tokens=1, completion_tokens=1
         )
 
-    monkeypatch.setattr("worker.consumers.extraction.services.extractor.extract", fake_extract)
+    monkeypatch.setattr(
+        "worker.consumers.extraction.services.extractor.extract", fake_extract
+    )
     process_document(document_id, _claim(document_id))
     detail = client.get(f"/documents/{document_id}", headers=headers)
     assert detail.status_code == 200
@@ -243,9 +246,8 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     assert body["status"] == "ready"
     assert body["extraction"]["merchant"] == "Walmart Neighborhood Market"
     drafts = body["drafts"]
-    total = next(item for item in drafts if item["line_index"] is None)
+    assert all(item["line_index"] is not None for item in drafts)
     line = next(item for item in drafts if item["line_index"] == 0)
-    assert total["category"] == "Food"
     assert line["category"] == "Food"
     with Session(database.engine) as session:
         attempts = list_extraction_attempts(session, UUID(document_id))
@@ -261,32 +263,65 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     after = client.get(f"/documents/{document_id}", headers=headers).json()
     edited = next(item for item in after["drafts"] if item["id"] == line["id"])
     assert edited["merchant"] == "Edited Merchant"
-    total = next(item for item in after["drafts"] if item["line_index"] is None)
-    mixed = client.post(
-        f"/documents/{document_id}/confirm",
-        json={"mode": "total", "item_ids": [total["id"], line["id"]]},
-        headers=headers,
-    )
-    assert mixed.status_code == 400
-    confirmed = client.post(
-        f"/documents/{document_id}/confirm",
-        json={"mode": "total"},
-        headers=headers,
-    )
+    confirmed = client.post(f"/documents/{document_id}/confirm", headers=headers)
     assert confirmed.status_code == 200
     assert confirmed.json()[0]["status"] == "confirmed"
     assert Decimal(confirmed.json()[0]["amount"]) == Decimal("56.71")
     ledger = client.get("/spend-items", headers=headers).json()["data"]
     assert len(ledger) == 1
     assert Decimal(ledger[0]["amount"]) == Decimal("56.71")
-    pending = [
-        item
-        for item in client.get(f"/documents/{document_id}", headers=headers).json()[
-            "drafts"
-        ]
-        if item["status"] == "pending_review"
-    ]
-    assert pending
+    assert (
+        client.get(f"/documents/{document_id}", headers=headers).json()["drafts"] == []
+    )
+
+
+def test_confirm_removes_legacy_total_draft(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    with Session(database.engine) as session:
+        line = session.exec(
+            select(SpendItem).where(
+                SpendItem.document_id == UUID(document_id),
+                SpendItem.line_index == 0,
+            )
+        ).one()
+        session.add(
+            SpendItem(
+                user_id=line.user_id,
+                merchant=line.merchant,
+                amount=Decimal("56.71"),
+                currency=line.currency,
+                spent_at=line.spent_at,
+                category=line.category,
+                source=SpendSource.DOCUMENT,
+                status=SpendStatus.PENDING_REVIEW,
+                document_id=UUID(document_id),
+                extraction_attempt_id=line.extraction_attempt_id,
+                line_index=None,
+            )
+        )
+        session.commit()
+
+    confirmed = client.post(f"/documents/{document_id}/confirm", headers=headers)
+    assert confirmed.status_code == 200
+    assert [item["line_index"] for item in confirmed.json()] == [0]
+    with Session(database.engine) as session:
+        rows = session.exec(
+            select(SpendItem).where(SpendItem.document_id == UUID(document_id))
+        ).all()
+        assert len(rows) == 1
+        assert rows[0].status == SpendStatus.CONFIRMED
+
+
+def test_confirm_saves_every_extracted_item(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt_two_lines())
+
+    confirmed = client.post(f"/documents/{document_id}/confirm", headers=headers)
+
+    assert confirmed.status_code == 200
+    assert {item["description"] for item in confirmed.json()} == {"Milk", "Bread"}
+    assert {item["status"] for item in confirmed.json()} == {"confirmed"}
 
 
 def test_extract_failure_marks_failed(client, monkeypatch) -> None:
@@ -330,11 +365,11 @@ def test_reextraction_never_changes_confirmed_ledger(client, monkeypatch) -> Non
             model="test", provider="test", prompt_tokens=1, completion_tokens=1
         )
 
-    monkeypatch.setattr("worker.consumers.extraction.services.extractor.extract", fake_extract)
-    process_document(document_id, _claim(document_id))
-    confirmed = client.post(
-        f"/documents/{document_id}/confirm", json={"mode": "total"}, headers=headers
+    monkeypatch.setattr(
+        "worker.consumers.extraction.services.extractor.extract", fake_extract
     )
+    process_document(document_id, _claim(document_id))
+    confirmed = client.post(f"/documents/{document_id}/confirm", headers=headers)
     confirmed_id = confirmed.json()[0]["id"]
 
     current["total"] = "99.00"
@@ -355,7 +390,9 @@ def test_sum_mismatch_ready_with_warning(client, monkeypatch) -> None:
             model="test", provider=None, prompt_tokens=1, completion_tokens=1
         )
 
-    monkeypatch.setattr("worker.consumers.extraction.services.extractor.extract", fake_extract)
+    monkeypatch.setattr(
+        "worker.consumers.extraction.services.extractor.extract", fake_extract
+    )
     document_id = uploaded.json()["id"]
     process_document(document_id, _claim(document_id))
     detail = client.get(f"/documents/{uploaded.json()['id']}", headers=headers).json()
@@ -386,11 +423,7 @@ def test_process_logs_one_outcome_line(client, monkeypatch, caplog) -> None:
 def test_add_line_item_to_confirmed_itemized_bill(client, monkeypatch) -> None:
     headers = _auth(client)
     document_id = _process(client, monkeypatch, headers, _receipt())
-    confirmed = client.post(
-        f"/documents/{document_id}/confirm",
-        json={"mode": "line_items"},
-        headers=headers,
-    )
+    confirmed = client.post(f"/documents/{document_id}/confirm", headers=headers)
     assert confirmed.status_code == 200
     added = client.post(
         f"/documents/{document_id}/line-items",
@@ -416,11 +449,7 @@ def test_add_line_item_to_confirmed_itemized_bill(client, monkeypatch) -> None:
 def test_add_line_item_increments_line_index(client, monkeypatch) -> None:
     headers = _auth(client)
     document_id = _process(client, monkeypatch, headers, _receipt_two_lines())
-    client.post(
-        f"/documents/{document_id}/confirm",
-        json={"mode": "line_items"},
-        headers=headers,
-    )
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
     first = client.post(
         f"/documents/{document_id}/line-items",
         json={"description": "Eggs", "amount": "3.00"},
@@ -433,23 +462,6 @@ def test_add_line_item_increments_line_index(client, monkeypatch) -> None:
     )
     assert first.json()["line_index"] == 2
     assert second.json()["line_index"] == 3
-
-
-def test_add_line_item_rejects_total_mode_bill(client, monkeypatch) -> None:
-    headers = _auth(client)
-    document_id = _process(client, monkeypatch, headers, _receipt())
-    client.post(
-        f"/documents/{document_id}/confirm",
-        json={"mode": "total"},
-        headers=headers,
-    )
-    response = client.post(
-        f"/documents/{document_id}/line-items",
-        json={"description": "Bananas", "amount": "2.50"},
-        headers=headers,
-    )
-    assert response.status_code == 409
-    assert response.json()["detail"] == "document bill is not itemized"
 
 
 def test_add_line_item_rejects_unconfirmed_document(client, monkeypatch) -> None:
@@ -469,11 +481,7 @@ def test_add_line_item_rejects_statement(client, monkeypatch) -> None:
     document_id = _process(client, monkeypatch, headers, _statement())
     detail = client.get(f"/documents/{document_id}", headers=headers).json()
     assert [item["category"] for item in detail["drafts"]] == ["Food"]
-    client.post(
-        f"/documents/{document_id}/confirm",
-        json={"mode": "line_items"},
-        headers=headers,
-    )
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
     response = client.post(
         f"/documents/{document_id}/line-items",
         json={"description": "Coffee", "amount": "4.50"},
@@ -499,11 +507,7 @@ def test_add_line_item_rejects_processing_document(client) -> None:
 def test_add_line_item_cross_user(client, monkeypatch) -> None:
     headers_a = _auth(client)
     document_id = _process(client, monkeypatch, headers_a, _receipt())
-    client.post(
-        f"/documents/{document_id}/confirm",
-        json={"mode": "line_items"},
-        headers=headers_a,
-    )
+    client.post(f"/documents/{document_id}/confirm", headers=headers_a)
     headers_b = _auth(client)
     response = client.post(
         f"/documents/{document_id}/line-items",
@@ -516,11 +520,7 @@ def test_add_line_item_cross_user(client, monkeypatch) -> None:
 def test_add_line_item_validation(client, monkeypatch) -> None:
     headers = _auth(client)
     document_id = _process(client, monkeypatch, headers, _receipt())
-    client.post(
-        f"/documents/{document_id}/confirm",
-        json={"mode": "line_items"},
-        headers=headers,
-    )
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
     zero = client.post(
         f"/documents/{document_id}/line-items",
         json={"description": "Bananas", "amount": "0"},
@@ -538,11 +538,7 @@ def test_add_line_item_validation(client, monkeypatch) -> None:
 def test_delete_confirmed_document_bill(client, monkeypatch) -> None:
     headers = _auth(client)
     document_id = _process(client, monkeypatch, headers, _receipt())
-    client.post(
-        f"/documents/{document_id}/confirm",
-        json={"mode": "line_items"},
-        headers=headers,
-    )
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
     deleted = client.delete(f"/documents/{document_id}", headers=headers)
     assert deleted.status_code == 204
     assert client.get(f"/documents/{document_id}", headers=headers).status_code == 404
@@ -567,9 +563,12 @@ def test_delete_document_with_pending_drafts(client, monkeypatch) -> None:
     deleted = client.delete(f"/documents/{document_id}", headers=headers)
     assert deleted.status_code == 204
     with Session(database.engine) as session:
-        assert session.exec(
-            select(SpendItem).where(SpendItem.document_id == UUID(document_id))
-        ).all() == []
+        assert (
+            session.exec(
+                select(SpendItem).where(SpendItem.document_id == UUID(document_id))
+            ).all()
+            == []
+        )
         assert list_extraction_attempts(session, UUID(document_id)) == []
         assert session.get(Document, UUID(document_id)) is None
 
@@ -591,14 +590,16 @@ def test_delete_document_rejects_processing(client, blob_store) -> None:
     response = client.delete(f"/documents/{document_id}", headers=headers)
     assert response.status_code == 409
     assert response.json()["detail"] == "document is being processed"
-    assert client.get(f"/documents/{document_id}", headers=headers).json()["status"] == (
-        "processing"
-    )
+    assert client.get(f"/documents/{document_id}", headers=headers).json()[
+        "status"
+    ] == ("processing")
     for key in keys:
         assert key in blob_store
 
 
-def test_delete_document_blob_failure_rolls_back(client, monkeypatch, blob_store) -> None:
+def test_delete_document_blob_failure_rolls_back(
+    client, monkeypatch, blob_store
+) -> None:
     headers = _auth(client)
     document_id = _process(client, monkeypatch, headers, _receipt())
 
@@ -615,19 +616,11 @@ def test_delete_document_blob_failure_rolls_back(client, monkeypatch, blob_store
 def test_delete_document_leaves_other_bills(client, monkeypatch) -> None:
     headers = _auth(client)
     keep_id = _process(client, monkeypatch, headers, _receipt())
-    client.post(
-        f"/documents/{keep_id}/confirm",
-        json={"mode": "line_items"},
-        headers=headers,
-    )
+    client.post(f"/documents/{keep_id}/confirm", headers=headers)
     drop_id = _upload(client, headers, _PDF, "other.pdf").json()["id"]
     _stub_extract(monkeypatch, _receipt(total="10.00", line_total="10.00"))
     process_document(drop_id, _claim(drop_id))
-    client.post(
-        f"/documents/{drop_id}/confirm",
-        json={"mode": "line_items"},
-        headers=headers,
-    )
+    client.post(f"/documents/{drop_id}/confirm", headers=headers)
     client.delete(f"/documents/{drop_id}", headers=headers)
     ledger = client.get("/spend-items", headers=headers).json()["data"]
     assert len(ledger) == 1
@@ -643,9 +636,12 @@ def test_delete_document_with_multiple_attempts(client, monkeypatch) -> None:
     with Session(database.engine) as session:
         assert list_extraction_attempts(session, UUID(document_id)) == []
         assert session.get(Document, UUID(document_id)) is None
-        assert session.exec(
-            select(SpendItem).where(SpendItem.document_id == UUID(document_id))
-        ).all() == []
+        assert (
+            session.exec(
+                select(SpendItem).where(SpendItem.document_id == UUID(document_id))
+            ).all()
+            == []
+        )
 
 
 def test_create_manual_document(client) -> None:

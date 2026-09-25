@@ -61,7 +61,7 @@ class ReceiptExtraction(_Strict):
     tax: MoneyText | None = None
     total: MoneyText
     category: Category
-    line_items: list[LineItem]
+    line_items: list[LineItem] = Field(min_length=1)
 
 
 class Transaction(_Strict):

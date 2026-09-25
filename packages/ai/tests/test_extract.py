@@ -4,7 +4,7 @@ from pathlib import Path
 import ai.client as extract_mod
 import pytest
 from ai import ExtractError, extract, inspect_and_normalize, strict_json_schema
-from ai.schemas import Extraction
+from ai.schemas import Extraction, ReceiptExtraction
 from PIL import Image
 from pydantic import TypeAdapter, ValidationError
 from pypdf import PdfWriter
@@ -97,6 +97,19 @@ def test_strict_schema_inlines_union() -> None:
 def test_invalid_extraction_rejected() -> None:
     with pytest.raises(ValidationError):
         TypeAdapter(Extraction).validate_python({"document_kind": "receipt"})
+
+
+def test_receipt_without_line_items_rejected() -> None:
+    with pytest.raises(ValidationError):
+        ReceiptExtraction(
+            document_kind="receipt",
+            merchant="Store",
+            purchased_at="2024-10-19",
+            currency="USD",
+            total="10.00",
+            category="Food",
+            line_items=[],
+        )
 
 
 def test_invalid_money_and_confidence_rejected() -> None:

@@ -9,20 +9,7 @@ def drafts(
     user_id: UUID, extraction: ReceiptExtraction | StatementExtraction
 ) -> list[SpendItem]:
     if isinstance(extraction, ReceiptExtraction):
-        rows = [
-            SpendItem(
-                user_id=user_id,
-                merchant=extraction.merchant,
-                description=None,
-                amount=Decimal(extraction.total),
-                currency=extraction.currency,
-                spent_at=extraction.purchased_at,
-                category=extraction.category,
-                source=SpendSource.DOCUMENT,
-                status=SpendStatus.PENDING_REVIEW,
-                line_index=None,
-            )
-        ]
+        rows = []
         for index, item in enumerate(extraction.line_items):
             rows.append(
                 SpendItem(
