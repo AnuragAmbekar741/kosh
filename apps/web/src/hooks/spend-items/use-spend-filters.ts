@@ -12,6 +12,8 @@ import { CATEGORIES } from "@/components/spending/CategoryBadge"
 import {
   anchorDate,
   currentMonthRange,
+  dateInRange,
+  fromIsoDate,
   parseIsoDate,
   periodLabel,
   rangeForPeriod,
@@ -175,6 +177,19 @@ export function useSpendFilters() {
     [write]
   )
 
+  const revealDate = useCallback(
+    (isoDate: string) => {
+      const day = parseIsoDate(
+        isoDate.includes("T") ? isoDate.slice(0, 10) : isoDate
+      )
+      if (!day || dateInRange(day, range.from, range.to)) return
+      // Jump to the spend's month so a just-confirmed receipt is visible.
+      const window = currentMonthRange(fromIsoDate(day))
+      write({ period: "month", from: window.from, to: window.to })
+    },
+    [range.from, range.to, write]
+  )
+
   return {
     period,
     from: range.from,
@@ -199,5 +214,6 @@ export function useSpendFilters() {
     setView,
     setPage,
     clearFilters,
+    revealDate,
   }
 }
