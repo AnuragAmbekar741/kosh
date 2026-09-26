@@ -3,11 +3,15 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ListFilterIcon,
+  RotateCcwIcon,
   SearchIcon,
 } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 
-import type { SpendPeriod, SpendSource } from "@/api/spend-items/spend-items.types"
+import type {
+  SpendPeriod,
+  SpendSource,
+} from "@/api/spend-items/spend-items.types"
 import {
   CATEGORIES,
   categorySwatchClass,
@@ -126,7 +130,10 @@ function CategoryMenu({
             >
               <span
                 aria-hidden="true"
-                className={cn("size-2.5 rounded-full", categorySwatchClass(option))}
+                className={cn(
+                  "size-2.5 rounded-full",
+                  categorySwatchClass(option)
+                )}
               />
               {option}
             </DropdownMenuCheckboxItem>
@@ -197,8 +204,9 @@ function CustomRangePopover({
 
   function apply() {
     const start = draft?.from
-    if (!start) return
-    onApply(toIsoDate(start), toIsoDate(draft.to ?? start))
+    const end = draft?.to
+    if (!start || !end) return
+    onApply(toIsoDate(start), toIsoDate(end))
     setOpen(false)
   }
 
@@ -223,16 +231,22 @@ function CustomRangePopover({
           </PopoverDescription>
         </PopoverHeader>
         <Calendar
+          defaultMonth={fromIsoDate(from)}
           mode="range"
           numberOfMonths={2}
           onSelect={setDraft}
+          resetOnSelect
           selected={draft}
         />
         <div className="flex justify-end gap-2">
           <Button onClick={() => setOpen(false)} size="sm" variant="outline">
             Cancel
           </Button>
-          <Button disabled={!draft?.from} onClick={apply} size="sm">
+          <Button
+            disabled={!draft?.from || !draft.to}
+            onClick={apply}
+            size="sm"
+          >
             Apply
           </Button>
         </div>
@@ -319,17 +333,19 @@ export function SpendingToolbar({ disabled = false }: SpendingToolbarProps) {
             <ChevronRightIcon />
           </Button>
         </div>
+        {filters.canReset ? (
+          <Button onClick={filters.resetFilters} size="sm" variant="ghost">
+            <RotateCcwIcon data-icon="inline-start" />
+            Reset
+          </Button>
+        ) : null}
         <div className="ml-auto hidden items-center gap-2 md:flex">
           <CategoryMenu
             onToggle={filters.toggleCategory}
             selected={filters.categories}
           />
           <SourceMenu onChange={filters.setSource} source={filters.source} />
-          <SearchField
-            id="spend-search"
-            onChange={setDraftQ}
-            value={draftQ}
-          />
+          <SearchField id="spend-search" onChange={setDraftQ} value={draftQ} />
         </div>
         <Sheet>
           <SheetTrigger
@@ -355,7 +371,10 @@ export function SpendingToolbar({ disabled = false }: SpendingToolbarProps) {
                 onToggle={filters.toggleCategory}
                 selected={filters.categories}
               />
-              <SourceMenu onChange={filters.setSource} source={filters.source} />
+              <SourceMenu
+                onChange={filters.setSource}
+                source={filters.source}
+              />
               <SearchField
                 id="spend-search-mobile"
                 onChange={setDraftQ}

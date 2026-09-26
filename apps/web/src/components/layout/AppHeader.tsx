@@ -14,7 +14,7 @@ export function AppHeader() {
       <SidebarTrigger className="size-11 md:size-8" />
       <Separator orientation="vertical" />
       <h1 className="text-sm font-medium">{current?.label ?? "Kosh"}</h1>
-      {pathname === "/spending" ? (
+      {pathname.startsWith("/spending/") ? (
         <div className="ml-auto">
           <AddSpendingDialog />
         </div>

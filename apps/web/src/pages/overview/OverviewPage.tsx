@@ -26,7 +26,7 @@ export function OverviewPage() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button nativeButton={false} render={<Link to="/spending" />}>
+            <Button nativeButton={false} render={<Link to="/spending/bills" />}>
               Go to Spending
             </Button>
           </EmptyContent>

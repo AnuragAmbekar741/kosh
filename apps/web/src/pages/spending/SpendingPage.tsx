@@ -4,10 +4,6 @@ import { SpendingAccordion } from "@/components/spending/SpendingAccordion"
 import { SpendingItemsPager } from "@/components/spending/SpendingItemsPager"
 import { SpendingItemsTable } from "@/components/spending/SpendingItemsTable"
 import { SpendingLedgerSkeleton } from "@/components/spending/SpendingLedgerSkeleton"
-import {
-  SpendingSummary,
-  SpendingSummarySkeleton,
-} from "@/components/spending/SpendingSummary"
 import { SpendingToolbar } from "@/components/spending/SpendingToolbar"
 import { dateInRange } from "@/components/spending/spend-period"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -20,7 +16,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useDocuments } from "@/hooks/documents/use-documents"
 import { useSpendFilters } from "@/hooks/spend-items/use-spend-filters"
 import {
@@ -63,9 +58,9 @@ export function SpendingPage() {
   const hasLedger = items.length > 0 || emptyManual.length > 0
   const filterEmpty = Boolean(
     summary.data?.has_spend &&
-      summary.data.total === "0.00" &&
-      !hasLedger &&
-      !spendItems.isPending
+    summary.data.total === "0.00" &&
+    !hasLedger &&
+    !spendItems.isPending
   )
   const count =
     filters.view === "items"
@@ -76,17 +71,12 @@ export function SpendingPage() {
     <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-6 2xl:mx-auto 2xl:max-w-7xl">
       <div className="flex min-h-0 flex-1 flex-col gap-6">
         <SpendingToolbar disabled={firstUse} />
-        {firstUse ? null : loading ? (
-          <SpendingSummarySkeleton />
-        ) : summary.data ? (
-          <SpendingSummary summary={summary.data} />
-        ) : null}
 
         <section
           aria-labelledby="transactions-heading"
           className="flex min-h-0 flex-1 flex-col gap-4"
         >
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
             <div className="flex items-center gap-3">
               <h2
                 className="text-xl font-semibold tracking-tight"
@@ -100,29 +90,6 @@ export function SpendingPage() {
                 </p>
               ) : null}
             </div>
-            {firstUse ? null : (
-              <div className="flex items-center gap-3">
-                <ToggleGroup
-                  multiple={false}
-                  onValueChange={(next: string[]) => {
-                    const value = next[0]
-                    if (value === "bills" || value === "items") {
-                      filters.setView(value)
-                    }
-                  }}
-                  size="sm"
-                  spacing={0}
-                  value={[filters.view]}
-                  variant="outline"
-                >
-                  <ToggleGroupItem value="bills">Bills</ToggleGroupItem>
-                  <ToggleGroupItem value="items">Items</ToggleGroupItem>
-                </ToggleGroup>
-                <p className="hidden text-xs text-muted-foreground md:block">
-                  Newest first
-                </p>
-              </div>
-            )}
           </div>
 
           {loading ? (
@@ -162,15 +129,15 @@ export function SpendingPage() {
                   </EmptyMedia>
                   <EmptyTitle>Nothing matches</EmptyTitle>
                   <EmptyDescription>
-                    {filters.hasActiveFilters
+                    {filters.canReset
                       ? "No bills in this period match the current filters."
                       : "No bills in this period."}
                   </EmptyDescription>
                 </EmptyHeader>
-                {filters.hasActiveFilters ? (
+                {filters.canReset ? (
                   <EmptyContent>
-                    <Button onClick={filters.clearFilters} variant="outline">
-                      Clear filters
+                    <Button onClick={filters.resetFilters} variant="outline">
+                      Reset
                     </Button>
                   </EmptyContent>
                 ) : null}

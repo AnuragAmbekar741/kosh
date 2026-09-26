@@ -1,5 +1,5 @@
 import { useCallback } from "react"
-import { useSearchParams } from "react-router"
+import { useLocation, useSearchParams } from "react-router"
 
 import type {
   PageParams,
@@ -34,7 +34,6 @@ type FilterPatch = {
   category?: string[] | null
   source?: SpendSource | null
   q?: string | null
-  view?: "bills" | "items"
   page?: number
 }
 
@@ -46,8 +45,8 @@ function parseSource(value: string | null): SpendSource | undefined {
   return SOURCES.find((source) => source === value)
 }
 
-function parseView(value: string | null): "bills" | "items" {
-  return value === "items" ? "items" : "bills"
+function parseView(pathname: string): "bills" | "items" {
+  return pathname === "/spending/items" ? "items" : "bills"
 }
 
 function parseCategories(values: string[]) {
@@ -55,6 +54,7 @@ function parseCategories(values: string[]) {
 }
 
 export function useSpendFilters() {
+  const { pathname } = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const defaults = currentMonthRange()
   const period = parsePeriod(searchParams.get("period"))
@@ -66,7 +66,7 @@ export function useSpendFilters() {
   const categories = parseCategories(searchParams.getAll("category"))
   const source = parseSource(searchParams.get("source"))
   const q = searchParams.get("q")?.trim() || undefined
-  const view = parseView(searchParams.get("view"))
+  const view = parseView(pathname)
   const parsedPage = Number.parseInt(searchParams.get("page") ?? "1", 10)
   const page = Number.isFinite(parsedPage) && parsedPage > 1 ? parsedPage : 1
   const pageParams: PageParams =
@@ -83,7 +83,15 @@ export function useSpendFilters() {
     ...(q ? { q } : {}),
   }
   const summaryQuery: SpendSummaryQuery = { ...query, period }
-  const hasActiveFilters = Boolean(categories.length || source || q)
+  const canReset = Boolean(
+    period !== "month" ||
+    range.from !== defaults.from ||
+    range.to !== defaults.to ||
+    categories.length ||
+    source ||
+    q ||
+    page > 1
+  )
 
   const write = useCallback(
     (patch: FilterPatch) => {
@@ -111,8 +119,7 @@ export function useSpendFilters() {
           if (patch.q) next.set("q", patch.q)
           else next.delete("q")
         }
-        if (patch.view === "items") next.set("view", "items")
-        if (patch.view === "bills") next.delete("view")
+        next.delete("view")
         if ("page" in patch && Object.keys(patch).length === 1) {
           if (patch.page && patch.page > 1) next.set("page", String(patch.page))
           else next.delete("page")
@@ -167,15 +174,19 @@ export function useSpendFilters() {
     [write]
   )
   const setQ = useCallback((next: string | null) => write({ q: next }), [write])
-  const setView = useCallback(
-    (next: "bills" | "items") => write({ view: next }),
-    [write]
-  )
   const setPage = useCallback((next: number) => write({ page: next }), [write])
-  const clearFilters = useCallback(
-    () => write({ category: null, source: null, q: null }),
-    [write]
-  )
+  const resetFilters = useCallback(() => {
+    const currentMonth = currentMonthRange()
+    write({
+      period: "month",
+      from: currentMonth.from,
+      to: currentMonth.to,
+      category: null,
+      source: null,
+      q: null,
+      page: 1,
+    })
+  }, [write])
 
   const revealDate = useCallback(
     (isoDate: string) => {
@@ -204,16 +215,15 @@ export function useSpendFilters() {
     summaryQuery,
     label: periodLabel(period, range.from, range.to),
     spentInLabel: spentInLabel(period, range.from, range.to),
-    hasActiveFilters,
+    canReset,
     setPeriod,
     shift,
     applyCustomRange,
     toggleCategory,
     setSource,
     setQ,
-    setView,
     setPage,
-    clearFilters,
+    resetFilters,
     revealDate,
   }
 }

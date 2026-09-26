@@ -33,30 +33,35 @@ Closing the Dialog during extraction does not discard its local progress;
 reopening the top-bar action returns to the current document while the shell
 remains mounted.
 
-## Filters and summary
+## Filters
 
-Filter state is the URL. `useSpendFilters()` reads and writes search params;
-there is no React context. Bare `/spending` is the current local calendar
-month and the Bills view. Defaults are not written on first paint.
+Filter state is the URL. `useSpendFilters()` reads the Bills / Items view from
+the route and reads the remaining filters from search params; there is no
+React context. Bare `/spending` preserves its query string and redirects to
+`/spending/bills`. Defaults are not written on first paint. Legacy
+`/spending?view=items` links redirect to `/spending/items`.
 
-| Param | Default when omitted |
-|---|---|
-| `period` | `month` (`day` / `week` / `month` / `custom`) |
-| `from`, `to` | current month, ISO dates |
-| `category` | none (repeatable) |
-| `source` | none (`manual` or `document`) |
-| `q` | none |
-| `view` | `bills` (`items` = table) |
-| `page` | `1` (1-based; written only when greater than 1) |
+| Param        | Default when omitted                            |
+| ------------ | ----------------------------------------------- |
+| `period`     | `month` (`day` / `week` / `month` / `custom`)   |
+| `from`, `to` | current month, ISO dates                        |
+| `category`   | none (repeatable)                               |
+| `source`     | none (`manual` or `document`)                   |
+| `q`          | none                                            |
+| `page`       | `1` (1-based; written only when greater than 1) |
 
 The toolbar is a connected Day / Week / Month toggle (`spacing={0}`). The
 selected segment uses `bg-primary text-primary-foreground` so it reads on
 both themes. Custom, prev/next, the period label, Category, All sources, and
 search sit beside it. Custom opens a
 dual-month range popover;
-draft dates stay local until Apply. Search is local and writes `q` after
+the first date starts a fresh range, the second date completes it, and draft
+dates stay local until Apply. Search is local and writes `q` after
 300ms. There is no chip row; filters live on the controls themselves.
 Below `md`, Category / source / search collapse into one Filters sheet.
+Whenever the state differs from the current calendar month, Reset clears all
+filters and pagination and restores that whole month without changing the
+Bills or Items route.
 `GET /spend-items` and `GET /spend-items/summary` share the same query;
 summary also receives `period`. The list is a `{data, total}` page.
 Items view sends `skip`/`limit` of 50 and shows a numbered pager footer
@@ -64,13 +69,12 @@ Items view sends `skip`/`limit` of 50 and shows a numbered pager footer
 `page`. Bills view requests `limit=200` and is not paged — grouping and
 bill totals are computed client-side from the returned rows.
 
-The summary strip is the live summary payload: total, “spent in {label}”,
-optional month-over-month comparison, bill/item counts, avg per bill, a CSS
-stacked mix bar, and legend chips that toggle the same `category` filter.
-Comparison is text plus `text-chart-2` / `text-destructive` — not color
-alone. First-use (`has_spend === false`) fades the toolbar and hides the
-strip. A filtered empty period (`has_spend` and `total === "0.00"`) keeps a
-muted $0 strip and a Clear filters empty state.
+Bills and Items render only the filter toolbar above Transactions; analytics
+are reserved for `/spending/analytics`. The summary payload remains an
+internal source for first-use detection, filtered-empty detection, and the
+bill count. First-use (`has_spend === false`) fades the toolbar. A filtered
+empty period (`has_spend` and `total === "0.00"`) shows a Reset empty
+state.
 
 ## Ledger
 
@@ -98,9 +102,8 @@ as the item name, and amounts. Line-index numbers are omitted. The name
 truncates; the badge stays `w-fit`
 and does not wrap underneath.
 
-The Transactions heading includes a connected Bills / Items toggle
-(`spacing={0}`, same primary invert when selected) and a static
-“Newest first” label (hidden below `md`). Items is a read-only table:
+Bills and Items navigation lives only in the Spending sidebar group; the
+Transactions heading does not repeat that route switch. Items is a read-only table:
 Date, Item, Merchant, Category, Source, Amount. Row edit is later.
 Clicking the badge opens a DropdownMenu of the nine extraction categories
 (Food, Transport, Housing, Entertainment, Shopping, Health, Utilities,
@@ -142,11 +145,11 @@ the ledger — soft fills with matching ink, label always present. Geist,
 compact type, and tabular numerals keep the dense financial content
 scannable; depth does not rely on shadows.
 
-Loading keeps the toolbar live and uses a summary skeleton plus an
-accordion-shaped Skeleton: a bordered `rounded-xl` stack of
+Loading keeps the toolbar live and uses an accordion-shaped Skeleton: a
+bordered `rounded-xl` stack of
 bill rows (icon tile, merchant bar, badge chips, trailing amount, kebab
-tile). Failure of the list uses Alert; a summary failure hides the strip
-and still shows the ledger. First-use uses a compact dashed Empty frame
+tile). Failure of the list uses Alert; a summary failure still shows the
+ledger. First-use uses a compact dashed Empty frame
 centered under the Transactions heading, hugging its copy, pointing at the
 top-bar action, and including an EmptyContent button that opens the same Add
 spending dialog. A filtered empty period uses the same Empty frame with
