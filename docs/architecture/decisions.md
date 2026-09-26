@@ -51,13 +51,13 @@ Revisit when: ...
 | 35 | Web HTTP client | **Axios + TanStack Query** in `apps/web`; types in `src/api/<resource>/<resource>.types.ts` |
 | 36 | Web design craft | **Impeccable** locally (gitignored root files); committed visual system is `docs/design/` + Linear dark + monochrome primary |
 | 37 | Dev Postgres host | **Neon** project `kosh` (direct `DATABASE_URL`); Docker Postgres is optional fallback |
-| 38 | Signed-in chrome | **Collapsible sidebar** (`variant="inset"`, `collapsible="icon"`) with Overview + Spending |
+| 38 | Signed-in chrome | **Collapsible sidebar** (`variant="inset"`, `collapsible="icon"`) with Overview + a nested Spending route group |
 | 39 | Logging | Stdlib `logging` to stdout, configured by `packages/observability`; text locally, JSON when shipped; log ids, never contents |
 | 40 | Document bill delete | Explicit ordered deletes (spend items → attempts → document) then blob; no FK CASCADE; rollback DB if blob cleanup fails |
 | 41 | Category badge colors | Chrome stays monochrome; spend category badges use muted categorical tints |
 | 42 | Dialog width | One `DialogContent` width (`sm:max-w-lg`) for every modal |
 | 43 | Spend ledger analytics | **`GET /spend-items/summary`** computed per request; `GET /overview` stays the later dashboard snapshot |
-| 44 | Spend page filters | **URL search params** on `/spending`; no React context |
+| 44 | Spend page filters | **Route path** for Bills / Items plus **URL search params** for filters; no React context |
 | 45 | List pagination | Shared `Page` mixin + `{data, total}` envelope; `skip`/`limit` |
 
 ### Locked detail rows
@@ -260,10 +260,10 @@ Previously linked accounts are unchanged; review them separately if used with re
 
 **Signed-in chrome is a sidebar shell**
 
-- Chosen: Collapsible shadcn sidebar (`inset`, icon rail) with Overview and Spending as the two top-level routes
-- Rejected: Centered document workspace with a header pill nav; no sidebar
-- Why: The ledger needs a persistent nav surface that scales past two destinations without rebuilding chrome
-- Revisit when: The product collapses back to a single-task surface
+- Chosen: Collapsible shadcn sidebar (`inset`, icon rail) with Overview and a nested Spending group. Bills and Items are deep-linked at `/spending/bills` and `/spending/items`; `/spending` preserves its query string and redirects to Bills. Analytics is shown as unavailable until its screen ships.
+- Rejected: Centered document workspace with a header pill nav; no sidebar; keeping Bills / Items only in a `view` query parameter; a fake Analytics page added only to satisfy navigation
+- Why: The ledger needs a persistent nav surface that scales past two destinations without rebuilding chrome. Route-level views make back/forward and direct entry predictable while the existing ledger remains unchanged.
+- Revisit when: Analytics ships (enable `/spending/analytics` and decide whether it becomes the `/spending` default), or the product collapses back to a single-task surface
 
 **Monochrome primary**
 
@@ -295,7 +295,7 @@ Previously linked accounts are unchanged; review them separately if used with re
 
 **Spend page filters live in the URL**
 
-- Chosen: Period, range, category, source, search, and Bills/Items view are `useSearchParams` on `/spending`. `useSpendFilters()` is a hook, not a provider.
+- Chosen: Period, range, category, source, search, and page are search params on the Spending routes. Bills / Items view is the route path. `useSpendFilters()` is a hook, not a provider.
 - Rejected: A `SpendingFiltersProvider` context; session-only state that dies on refresh
 - Why: Deep links, back/forward, and shareable filtered views. The page is a few siblings, not a deep tree; a provider would re-render the ledger on every search keystroke. React Router already broadcasts the URL.
 - Revisit when: a portal outside `/spending` needs the same state without a URL
