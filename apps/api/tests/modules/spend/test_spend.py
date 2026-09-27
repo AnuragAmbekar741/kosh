@@ -31,6 +31,7 @@ def _payload(**overrides: object) -> dict:
         "amount": "12.34",
         "currency": "usd",
         "spent_at": "2024-10-19",
+        "category": "Groceries",
     }
     body.update(overrides)
     return body
@@ -104,6 +105,56 @@ def test_filters(client) -> None:
     assert len(manual.json()["data"]) == 2
 
 
+def test_category_filter_and_validation(client) -> None:
+    headers = _auth(client)
+    client.post("/spend-items", json=_payload(), headers=headers)
+    client.post(
+        "/spend-items",
+        json=_payload(merchant="Starbucks", amount="4.50", category="Dining out"),
+        headers=headers,
+    )
+    client.post(
+        "/spend-items",
+        json=_payload(merchant="Shell", amount="40.00", category="Transport"),
+        headers=headers,
+    )
+    one = client.get("/spend-items", params={"category": "Dining out"}, headers=headers)
+    assert [row["merchant"] for row in one.json()["data"]] == ["Starbucks"]
+    assert one.json()["data"][0]["category"] == "Dining out"
+    both = client.get(
+        "/spend-items",
+        params=[("category", "Groceries"), ("category", "Transport")],
+        headers=headers,
+    )
+    assert {row["merchant"] for row in both.json()["data"]} == {"Walmart", "Shell"}
+    summary = client.get(
+        "/spend-items/summary", params={"category": "Transport"}, headers=headers
+    ).json()
+    assert summary["total"] == "40.00"
+    unknown = client.get("/spend-items", params={"category": "Food"}, headers=headers)
+    assert unknown.status_code == 422
+    missing = _payload()
+    missing.pop("category")
+    assert client.post("/spend-items", json=missing, headers=headers).status_code == 422
+
+
+def test_patch_category(client) -> None:
+    headers = _auth(client)
+    created = client.post("/spend-items", json=_payload(), headers=headers).json()
+    patched = client.patch(
+        f"/spend-items/{created['id']}",
+        json={"category": "Household"},
+        headers=headers,
+    )
+    assert patched.status_code == 200
+    assert patched.json()["category"] == "Household"
+    assert patched.json()["user_edited"] is True
+    invalid = client.patch(
+        f"/spend-items/{created['id']}", json={"category": "Food"}, headers=headers
+    )
+    assert invalid.status_code == 422
+
+
 def test_patch_and_delete(client) -> None:
     headers = _auth(client)
     created = client.post("/spend-items", json=_payload(), headers=headers).json()
@@ -163,9 +214,7 @@ def test_search_and_merchant_filters(client) -> None:
     by_merchant = client.get("/spend-items", params={"q": "STAR"}, headers=headers)
     assert [row["merchant"] for row in by_merchant.json()["data"]] == ["Starbucks"]
     by_description = client.get("/spend-items", params={"q": "latte"}, headers=headers)
-    assert [row["merchant"] for row in by_description.json()["data"]] == [
-        "Starbucks"
-    ]
+    assert [row["merchant"] for row in by_description.json()["data"]] == ["Starbucks"]
     exact = client.get("/spend-items", params={"merchant": "Walmart"}, headers=headers)
     assert len(exact.json()["data"]) == 1
     missed = client.get("/spend-items", params={"merchant": "wal"}, headers=headers)
@@ -180,12 +229,12 @@ def test_summary_totals_and_bill_count(client) -> None:
     document_id = created.json()["id"]
     client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Milk", "amount": "4.00"},
+        json={"description": "Milk", "amount": "4.00", "category": "Groceries"},
         headers=headers,
     )
     client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Eggs", "amount": "6.00"},
+        json={"description": "Eggs", "amount": "6.00", "category": "Groceries"},
         headers=headers,
     )
     client.post(

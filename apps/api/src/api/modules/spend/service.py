@@ -36,6 +36,7 @@ def create(session: Session, user_id: UUID, body: SpendItemCreate) -> SpendItem:
         amount=body.amount,
         currency=body.currency,
         spent_at=body.spent_at,
+        category=body.category,
         source=SpendSource.MANUAL,
         status=SpendStatus.CONFIRMED,
     )
@@ -49,6 +50,7 @@ def list_items(
     limit: int,
     spent_from: date | None,
     spent_to: date | None,
+    category: Sequence[str] | None,
     merchant: str | None,
     source: str | None,
     q: str | None,
@@ -60,6 +62,7 @@ def list_items(
         limit=limit,
         spent_from=spent_from,
         spent_to=spent_to,
+        category=category,
         merchant=merchant,
         source=source,
         q=q,
@@ -83,6 +86,7 @@ def update(
         item,
         merchant=fields.get("merchant"),
         description=fields.get("description"),
+        category=fields.get("category"),
         amount=fields.get("amount"),
         currency=fields.get("currency"),
         spent_at=fields.get("spent_at"),
@@ -101,6 +105,7 @@ def summarize(
     *,
     spent_from: date | None,
     spent_to: date | None,
+    category: Sequence[str] | None,
     source: str | None,
     q: str | None,
     period: SpendPeriod | None,
@@ -110,6 +115,7 @@ def summarize(
         user_id=user_id,
         spent_from=spent_from,
         spent_to=spent_to,
+        category=category,
         source=source,
         q=q,
     )
@@ -119,7 +125,9 @@ def summarize(
         bill_count=_bill_count(filtered),
         item_count=len(filtered),
         has_spend=user_has_confirmed_spend(session, user_id=user_id),
-        comparison=_comparison(session, user_id, spent_from, source, q, period, total),
+        comparison=_comparison(
+            session, user_id, spent_from, category, source, q, period, total
+        ),
     )
 
 
@@ -138,6 +146,7 @@ def _comparison(
     session: Session,
     user_id: UUID,
     spent_from: date | None,
+    category: Sequence[str] | None,
     source: str | None,
     q: str | None,
     period: SpendPeriod | None,
@@ -151,6 +160,7 @@ def _comparison(
         user_id=user_id,
         spent_from=prev_from,
         spent_to=prev_to,
+        category=category,
         source=source,
         q=q,
     )

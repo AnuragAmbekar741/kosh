@@ -245,6 +245,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     assert body["extraction"]["merchant"] == "Walmart Neighborhood Market"
     drafts = body["drafts"]
     assert all(item["line_index"] is not None for item in drafts)
+    assert [item["category"] for item in drafts] == ["Groceries"]
     line = next(item for item in drafts if item["line_index"] == 0)
     with Session(database.engine) as session:
         attempts = list_extraction_attempts(session, UUID(document_id))
@@ -427,7 +428,7 @@ def test_add_line_item_to_confirmed_itemized_bill(client, monkeypatch) -> None:
     assert confirmed.status_code == 200
     added = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Bananas", "amount": "2.50"},
+        json={"description": "Bananas", "amount": "2.50", "category": "Groceries"},
         headers=headers,
     )
     assert added.status_code == 201
@@ -437,6 +438,7 @@ def test_add_line_item_to_confirmed_itemized_bill(client, monkeypatch) -> None:
     assert body["merchant"] == "Walmart Neighborhood Market"
     assert body["spent_at"] == "2024-10-19"
     assert body["currency"] == "USD"
+    assert body["category"] == "Groceries"
     assert body["line_index"] == 1
     assert body["source"] == "document"
     assert body["status"] == "confirmed"
@@ -451,12 +453,12 @@ def test_add_line_item_increments_line_index(client, monkeypatch) -> None:
     client.post(f"/documents/{document_id}/confirm", headers=headers)
     first = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Eggs", "amount": "3.00"},
+        json={"description": "Eggs", "amount": "3.00", "category": "Groceries"},
         headers=headers,
     )
     second = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Butter", "amount": "4.00"},
+        json={"description": "Butter", "amount": "4.00", "category": "Groceries"},
         headers=headers,
     )
     assert first.json()["line_index"] == 2
@@ -468,7 +470,7 @@ def test_add_line_item_rejects_unconfirmed_document(client, monkeypatch) -> None
     document_id = _process(client, monkeypatch, headers, _receipt())
     response = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Bananas", "amount": "2.50"},
+        json={"description": "Bananas", "amount": "2.50", "category": "Groceries"},
         headers=headers,
     )
     assert response.status_code == 409
@@ -481,7 +483,7 @@ def test_add_line_item_rejects_statement(client, monkeypatch) -> None:
     client.post(f"/documents/{document_id}/confirm", headers=headers)
     response = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Coffee", "amount": "4.50"},
+        json={"description": "Coffee", "amount": "4.50", "category": "Dining out"},
         headers=headers,
     )
     assert response.status_code == 409
@@ -494,7 +496,7 @@ def test_add_line_item_rejects_processing_document(client) -> None:
     _claim(document_id)
     response = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Bananas", "amount": "2.50"},
+        json={"description": "Bananas", "amount": "2.50", "category": "Groceries"},
         headers=headers,
     )
     assert response.status_code == 409
@@ -508,7 +510,7 @@ def test_add_line_item_cross_user(client, monkeypatch) -> None:
     headers_b = _auth(client)
     response = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Bananas", "amount": "2.50"},
+        json={"description": "Bananas", "amount": "2.50", "category": "Groceries"},
         headers=headers_b,
     )
     assert response.status_code == 404
@@ -520,16 +522,24 @@ def test_add_line_item_validation(client, monkeypatch) -> None:
     client.post(f"/documents/{document_id}/confirm", headers=headers)
     zero = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Bananas", "amount": "0"},
+        json={"description": "Bananas", "amount": "0", "category": "Groceries"},
         headers=headers,
     )
     assert zero.status_code == 422
     empty = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "", "amount": "2.50"},
+        json={"description": "", "amount": "2.50", "category": "Groceries"},
         headers=headers,
     )
     assert empty.status_code == 422
+    for category in (None, "Food"):
+        body = {"description": "Bananas", "amount": "2.50"}
+        if category:
+            body["category"] = category
+        response = client.post(
+            f"/documents/{document_id}/line-items", json=body, headers=headers
+        )
+        assert response.status_code == 422
 
 
 def test_delete_confirmed_document_bill(client, monkeypatch) -> None:
@@ -683,7 +693,7 @@ def test_add_line_item_to_empty_manual_document(client) -> None:
     document_id = created.json()["id"]
     added = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Bananas", "amount": "2.50"},
+        json={"description": "Bananas", "amount": "2.50", "category": "Groceries"},
         headers=headers,
     )
     assert added.status_code == 201
@@ -699,7 +709,7 @@ def test_add_line_item_to_empty_manual_document(client) -> None:
     assert body["user_edited"] is True
     second = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Milk", "amount": "4.00"},
+        json={"description": "Milk", "amount": "4.00", "category": "Groceries"},
         headers=headers,
     )
     assert second.status_code == 201
@@ -720,7 +730,7 @@ def test_delete_manual_document_skips_blob(client, monkeypatch, blob_store) -> N
     document_id = created.json()["id"]
     client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Coffee", "amount": "4.50"},
+        json={"description": "Coffee", "amount": "4.50", "category": "Dining out"},
         headers=headers,
     )
 

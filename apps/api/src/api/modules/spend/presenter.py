@@ -19,6 +19,7 @@ def to_public(item: SpendItem) -> SpendItemPublic:
         amount=item.amount,
         currency=item.currency,
         spent_at=item.spent_at,
+        category=item.category,
         source=item.source,
         status=item.status,
         document_id=item.document_id,
