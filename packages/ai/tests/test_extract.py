@@ -51,19 +51,6 @@ def test_pdf_page_limit(monkeypatch) -> None:
         inspect_and_normalize(_pdf(pages=2), "application/pdf", max_upload_mb=15)
 
 
-_CATEGORIES = {
-    "Food",
-    "Transport",
-    "Housing",
-    "Entertainment",
-    "Shopping",
-    "Health",
-    "Utilities",
-    "Travel",
-    "Other",
-}
-
-
 def _variants() -> tuple[dict, dict]:
     schema = strict_json_schema()
     receipt = next(
@@ -89,9 +76,8 @@ def test_strict_schema_inlines_union() -> None:
     assert set(receipt["required"]) == set(receipt["properties"])
     line_item = receipt["properties"]["line_items"]["items"]
     transaction = statement["properties"]["transactions"]["items"]
-    for node in (receipt, line_item, transaction):
-        assert "category" in node["required"]
-        assert set(node["properties"]["category"]["enum"]) == _CATEGORIES
+    for node in (statement, line_item, transaction):
+        assert set(node["required"]) == set(node["properties"])
 
 
 def test_invalid_extraction_rejected() -> None:
@@ -107,7 +93,6 @@ def test_receipt_without_line_items_rejected() -> None:
             purchased_at="2024-10-19",
             currency="USD",
             total="10.00",
-            category="Food",
             line_items=[],
         )
 
@@ -121,7 +106,6 @@ def test_invalid_money_and_confidence_rejected() -> None:
         "subtotal": None,
         "tax": None,
         "total": "not money",
-        "category": "Food",
         "line_items": [],
     }
     with pytest.raises(ValidationError):
@@ -135,65 +119,8 @@ def test_invalid_money_and_confidence_rejected() -> None:
             "quantity": None,
             "unit_price": None,
             "line_total": "10.00",
-            "category": "Food",
             "confidence": 2,
             "requires_review": True,
-        }
-    ]
-    with pytest.raises(ValidationError):
-        TypeAdapter(Extraction).validate_python(payload)
-
-
-def test_invalid_category_rejected() -> None:
-    payload = {
-        "document_kind": "receipt",
-        "merchant": "Store",
-        "purchased_at": "2024-10-19",
-        "currency": "USD",
-        "subtotal": None,
-        "tax": None,
-        "total": "10.00",
-        "category": "coffee",
-        "line_items": [],
-    }
-    with pytest.raises(ValidationError):
-        TypeAdapter(Extraction).validate_python(payload)
-    payload["category"] = "Food"
-    payload["line_items"] = [
-        {
-            "raw_description": "A",
-            "normalized_name": None,
-            "upc": None,
-            "quantity": None,
-            "unit_price": None,
-            "line_total": "10.00",
-            "category": "coffee",
-            "confidence": 1,
-            "requires_review": False,
-        }
-    ]
-    with pytest.raises(ValidationError):
-        TypeAdapter(Extraction).validate_python(payload)
-    payload["document_kind"] = "statement"
-    payload.pop("merchant")
-    payload.pop("purchased_at")
-    payload.pop("subtotal")
-    payload.pop("tax")
-    payload.pop("total")
-    payload.pop("category")
-    payload.pop("line_items")
-    payload["institution"] = "Chase"
-    payload["period_start"] = None
-    payload["period_end"] = None
-    payload["transactions"] = [
-        {
-            "merchant": "Starbucks",
-            "amount": "4.50",
-            "spent_at": "2024-10-19",
-            "direction": "debit",
-            "category": "coffee",
-            "confidence": 0.9,
-            "requires_review": False,
         }
     ]
     with pytest.raises(ValidationError):
