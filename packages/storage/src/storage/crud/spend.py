@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -33,6 +34,7 @@ def create_spend_item(
     source: str,
     status: str,
     description: str | None = None,
+    category: str | None = None,
     document_id: UUID | None = None,
     extraction_attempt_id: UUID | None = None,
     line_index: int | None = None,
@@ -46,6 +48,7 @@ def create_spend_item(
         amount=amount,
         currency=currency,
         spent_at=spent_at,
+        category=category,
         source=source,
         status=status,
         document_id=document_id,
@@ -74,6 +77,7 @@ def _spend_items_statement(
     user_id: UUID,
     spent_from: date | None = None,
     spent_to: date | None = None,
+    category: Sequence[str] | None = None,
     merchant: str | None = None,
     source: str | None = None,
     q: str | None = None,
@@ -84,6 +88,8 @@ def _spend_items_statement(
         statement = statement.where(SpendItem.spent_at >= spent_from)
     if spent_to is not None:
         statement = statement.where(SpendItem.spent_at <= spent_to)
+    if category:
+        statement = statement.where(col(SpendItem.category).in_(category))
     if merchant is not None:
         statement = statement.where(SpendItem.merchant == merchant)
     if source is not None:
@@ -112,6 +118,7 @@ def list_spend_items(
     user_id: UUID,
     spent_from: date | None = None,
     spent_to: date | None = None,
+    category: Sequence[str] | None = None,
     merchant: str | None = None,
     source: str | None = None,
     q: str | None = None,
@@ -123,7 +130,8 @@ def list_spend_items(
                 user_id=user_id,
                 spent_from=spent_from,
                 spent_to=spent_to,
-                        merchant=merchant,
+                category=category,
+                merchant=merchant,
                 source=source,
                 q=q,
                 status=status,
@@ -140,6 +148,7 @@ def list_spend_items_page(
     limit: int,
     spent_from: date | None = None,
     spent_to: date | None = None,
+    category: Sequence[str] | None = None,
     merchant: str | None = None,
     source: str | None = None,
     q: str | None = None,
@@ -151,7 +160,8 @@ def list_spend_items_page(
             user_id=user_id,
             spent_from=spent_from,
             spent_to=spent_to,
-                merchant=merchant,
+            category=category,
+            merchant=merchant,
             source=source,
             q=q,
             status=status,
@@ -196,6 +206,7 @@ def update_spend_item(
     *,
     merchant: str | None = None,
     description: str | None = None,
+    category: str | None = None,
     amount: Decimal | None = None,
     currency: str | None = None,
     spent_at: date | None = None,
@@ -208,6 +219,8 @@ def update_spend_item(
         item.description = None
     elif description is not None:
         item.description = description
+    if category is not None:
+        item.category = category
     if amount is not None:
         item.amount = amount
     if currency is not None:
@@ -264,6 +277,7 @@ def upsert_drafts(
             continue
         current.merchant = draft.merchant
         current.description = draft.description
+        current.category = draft.category
         current.amount = draft.amount
         current.currency = draft.currency
         current.spent_at = draft.spent_at

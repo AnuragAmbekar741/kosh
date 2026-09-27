@@ -18,6 +18,23 @@ class SpendStatus(StrEnum):
     CONFIRMED = "confirmed"
 
 
+class Category(StrEnum):
+    GROCERIES = "Groceries"
+    DINING_OUT = "Dining out"
+    HOUSEHOLD = "Household"
+    PERSONAL_CARE = "Personal care"
+    HEALTH = "Health"
+    BABY_AND_KIDS = "Baby & kids"
+    PET = "Pet"
+    SHOPPING = "Shopping"
+    TRANSPORT = "Transport"
+    HOUSING = "Housing"
+    UTILITIES = "Utilities"
+    ENTERTAINMENT = "Entertainment"
+    TRAVEL = "Travel"
+    OTHER = "Other"
+
+
 class SpendItem(SQLModel, table=True):
     __tablename__ = "spend_items"
     __table_args__ = (
@@ -36,6 +53,7 @@ class SpendItem(SQLModel, table=True):
     amount: Decimal = Field(sa_column=Column(Numeric(12, 2), nullable=False))
     currency: str
     spent_at: date = Field(index=True)
+    category: str | None = None
     source: str
     status: str
     document_id: UUID | None = Field(
