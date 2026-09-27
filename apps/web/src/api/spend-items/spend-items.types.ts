@@ -5,7 +5,6 @@ export type SpendItem = {
   amount: string
   currency: string
   spent_at: string
-  category: string | null
   source: string
   status: string
   document_id: string | null
@@ -18,7 +17,7 @@ export type SpendItem = {
 export type SpendItemUpdate = Partial<
   Pick<
     SpendItem,
-    "merchant" | "description" | "amount" | "currency" | "spent_at" | "category"
+    "merchant" | "description" | "amount" | "currency" | "spent_at"
   >
 >
 

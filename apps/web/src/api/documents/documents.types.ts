@@ -23,7 +23,6 @@ export type ReceiptLineItem = {
   line_total: string | number
   confidence: number
   requires_review: boolean
-  category?: string
 }
 
 export type ReceiptExtraction = {
@@ -35,7 +34,6 @@ export type ReceiptExtraction = {
   subtotal: string | number | null
   tax: string | number | null
   total: string | number
-  category?: string
   line_items: ReceiptLineItem[]
 }
 
@@ -44,7 +42,6 @@ export type StatementTransaction = {
   amount: string | number
   spent_at: string
   direction: "debit" | "credit"
-  category: string | null
   confidence: number
   requires_review: boolean
 }
@@ -79,5 +76,4 @@ export type AddDocumentLineItemInput = {
   documentId: string
   description: string
   amount: string
-  category?: string | null
 }
