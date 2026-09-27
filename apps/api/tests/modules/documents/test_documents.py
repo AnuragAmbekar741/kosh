@@ -65,6 +65,7 @@ def _receipt(*, total: str = "56.71", line_total: str = "56.71") -> ReceiptExtra
                 quantity="1",
                 unit_price=line_total,
                 line_total=line_total,
+                category="Groceries",
                 confidence=0.9,
                 requires_review=False,
             )
@@ -90,6 +91,7 @@ def _receipt_two_lines() -> ReceiptExtraction:
                 quantity="1",
                 unit_price="10.00",
                 line_total="10.00",
+                category="Groceries",
                 confidence=0.9,
                 requires_review=False,
             ),
@@ -100,6 +102,7 @@ def _receipt_two_lines() -> ReceiptExtraction:
                 quantity="1",
                 unit_price="20.00",
                 line_total="20.00",
+                category="Groceries",
                 confidence=0.9,
                 requires_review=False,
             ),
@@ -119,6 +122,7 @@ def _statement() -> StatementExtraction:
                 merchant="Starbucks",
                 amount="4.50",
                 spent_at=date(2024, 10, 19),
+                category="Dining out",
                 confidence=0.9,
             )
         ],
@@ -244,7 +248,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     line = next(item for item in drafts if item["line_index"] == 0)
     with Session(database.engine) as session:
         attempts = list_extraction_attempts(session, UUID(document_id))
-        assert attempts[0].schema_version == 3
+        assert attempts[0].schema_version == 4
     assert client.get("/spend-items", headers=headers).json()["data"] == []
     patched = client.patch(
         f"/spend-items/{line['id']}",

@@ -20,6 +20,7 @@ def test_sum_check() -> None:
                 quantity="1",
                 unit_price="10.00",
                 line_total="10.00",
+                category="Groceries",
                 confidence=1,
                 requires_review=False,
             )

@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 __all__ = [
     "SCHEMA_VERSION",
+    "Category",
     "Extraction",
     "LineItem",
     "ReceiptExtraction",
@@ -12,7 +13,25 @@ __all__ = [
     "Transaction",
 ]
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
+
+Category = Literal[
+    "Groceries",
+    "Dining out",
+    "Household",
+    "Personal care",
+    "Health",
+    "Baby & kids",
+    "Pet",
+    "Shopping",
+    "Transport",
+    "Housing",
+    "Utilities",
+    "Entertainment",
+    "Travel",
+    "Other",
+]
+
 
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -32,6 +51,7 @@ class LineItem(_Strict):
     quantity: PositiveDecimalText | None = None
     unit_price: MoneyText | None = None
     line_total: MoneyText
+    category: Category
     confidence: float = Field(ge=0, le=1)
     requires_review: bool
 
@@ -53,6 +73,7 @@ class Transaction(_Strict):
     amount: MoneyText
     spent_at: date
     direction: Literal["debit", "credit"] = "debit"
+    category: Category
     confidence: float = Field(ge=0, le=1)
     requires_review: bool = False
 

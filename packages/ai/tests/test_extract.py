@@ -1,10 +1,11 @@
 from io import BytesIO
 from pathlib import Path
+from typing import get_args
 
 import ai.client as extract_mod
 import pytest
 from ai import ExtractError, extract, inspect_and_normalize, strict_json_schema
-from ai.schemas import Extraction, ReceiptExtraction
+from ai.schemas import Category, Extraction, ReceiptExtraction
 from PIL import Image
 from pydantic import TypeAdapter, ValidationError
 from pypdf import PdfWriter
@@ -78,6 +79,8 @@ def test_strict_schema_inlines_union() -> None:
     transaction = statement["properties"]["transactions"]["items"]
     for node in (statement, line_item, transaction):
         assert set(node["required"]) == set(node["properties"])
+    for node in (line_item, transaction):
+        assert node["properties"]["category"]["enum"] == list(get_args(Category))
 
 
 def test_invalid_extraction_rejected() -> None:
@@ -119,12 +122,44 @@ def test_invalid_money_and_confidence_rejected() -> None:
             "quantity": None,
             "unit_price": None,
             "line_total": "10.00",
+            "category": "Groceries",
             "confidence": 2,
             "requires_review": True,
         }
     ]
     with pytest.raises(ValidationError):
         TypeAdapter(Extraction).validate_python(payload)
+
+
+def test_unknown_category_rejected() -> None:
+    line = {
+        "raw_description": "MILK",
+        "normalized_name": None,
+        "upc": None,
+        "quantity": None,
+        "unit_price": None,
+        "line_total": "4.00",
+        "category": "Food",
+        "confidence": 1,
+        "requires_review": False,
+    }
+    receipt = {
+        "document_kind": "receipt",
+        "merchant": "Store",
+        "store_location": None,
+        "purchased_at": "2024-10-19",
+        "currency": "USD",
+        "subtotal": None,
+        "tax": None,
+        "total": "4.00",
+        "line_items": [line],
+    }
+    with pytest.raises(ValidationError):
+        TypeAdapter(Extraction).validate_python(receipt)
+    line["category"] = "Groceries"
+    assert TypeAdapter(Extraction).validate_python(receipt).line_items[0].category == (
+        "Groceries"
+    )
 
 
 def test_image_pixel_limit_is_strict(monkeypatch) -> None:
