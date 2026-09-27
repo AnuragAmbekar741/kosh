@@ -299,7 +299,6 @@ def test_summary_excludes_pending_review_and_other_users(client, db_engine) -> N
             spent_at=date(2024, 10, 19),
             source=SpendSource.DOCUMENT,
             status=SpendStatus.PENDING_REVIEW,
-            category="Food",
         )
     own = client.get("/spend-items/summary", headers=headers_a).json()
     assert own["total"] == "10.00"

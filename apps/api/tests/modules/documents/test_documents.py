@@ -289,7 +289,6 @@ def test_confirm_removes_legacy_total_draft(client, monkeypatch) -> None:
                 amount=Decimal("56.71"),
                 currency=line.currency,
                 spent_at=line.spent_at,
-                category=line.category,
                 source=SpendSource.DOCUMENT,
                 status=SpendStatus.PENDING_REVIEW,
                 document_id=UUID(document_id),
