@@ -15,7 +15,6 @@ __all__ = [
     "SpendPeriod",
     "SpendQuery",
     "SpendSummary",
-    "SpendSummaryCategory",
     "SpendSummaryComparison",
     "SpendSummaryQuery",
 ]
@@ -35,7 +34,6 @@ class SpendItemCreate(BaseModel):
     amount: Decimal
     currency: str = Field(default="USD", min_length=3, max_length=3)
     spent_at: date
-    category: str | None = None
 
     @field_validator("amount")
     @classmethod
@@ -54,7 +52,6 @@ class SpendItemUpdate(BaseModel):
     amount: Decimal | None = None
     currency: str | None = Field(default=None, min_length=3, max_length=3)
     spent_at: date | None = None
-    category: str | None = None
 
     @field_validator("amount")
     @classmethod
@@ -78,7 +75,6 @@ class SpendItemPublic(BaseModel):
     amount: Decimal
     currency: str
     spent_at: date
-    category: str | None
     source: str
     status: str
     document_id: UUID | None = None
@@ -91,7 +87,6 @@ class SpendItemPublic(BaseModel):
 class SpendQuery(BaseModel):
     spent_from: date | None = None
     spent_to: date | None = None
-    category: list[str] | None = None
     merchant: str | None = None
     source: str | None = None
     q: str | None = None
@@ -110,12 +105,6 @@ class SpendSummaryComparison(BaseModel):
     previous_label: str
 
 
-class SpendSummaryCategory(BaseModel):
-    name: str
-    amount: Decimal
-    percent: float
-
-
 class SpendSummary(BaseModel):
     currency: str
     total: Decimal
@@ -124,4 +113,3 @@ class SpendSummary(BaseModel):
     avg_per_bill: Decimal
     has_spend: bool
     comparison: SpendSummaryComparison | None
-    categories: list[SpendSummaryCategory]

@@ -31,7 +31,6 @@ def _payload(**overrides: object) -> dict:
         "amount": "12.34",
         "currency": "usd",
         "spent_at": "2024-10-19",
-        "category": "groceries",
     }
     body.update(overrides)
     return body
@@ -88,15 +87,9 @@ def test_filters(client) -> None:
             merchant="Starbucks",
             amount="4.50",
             spent_at="2024-11-01",
-            category="coffee",
         ),
         headers=headers,
     )
-    groceries = client.get(
-        "/spend-items", params={"category": "groceries"}, headers=headers
-    )
-    assert len(groceries.json()["data"]) == 1
-    assert groceries.json()["data"][0]["merchant"] == "Walmart"
     coffee = client.get(
         "/spend-items", params={"merchant": "Starbucks"}, headers=headers
     )
@@ -149,7 +142,7 @@ def test_user_cannot_access_another_users_item(client) -> None:
     assert listed.json()["total"] == 0
 
 
-def test_repeatable_category_and_q(client) -> None:
+def test_search_and_merchant_filters(client) -> None:
     headers = _auth(client)
     client.post("/spend-items", json=_payload(), headers=headers)
     client.post(
@@ -158,25 +151,15 @@ def test_repeatable_category_and_q(client) -> None:
             merchant="Starbucks",
             amount="4.50",
             spent_at="2024-11-01",
-            category="coffee",
             description="Iced latte",
         ),
         headers=headers,
     )
     client.post(
         "/spend-items",
-        json=_payload(merchant="Target", amount="9.00", category="shopping"),
+        json=_payload(merchant="Target", amount="9.00"),
         headers=headers,
     )
-    both = client.get(
-        "/spend-items",
-        params=[("category", "groceries"), ("category", "coffee")],
-        headers=headers,
-    )
-    assert {row["merchant"] for row in both.json()["data"]} == {
-        "Walmart",
-        "Starbucks",
-    }
     by_merchant = client.get("/spend-items", params={"q": "STAR"}, headers=headers)
     assert [row["merchant"] for row in by_merchant.json()["data"]] == ["Starbucks"]
     by_description = client.get("/spend-items", params={"q": "latte"}, headers=headers)
@@ -197,17 +180,17 @@ def test_summary_totals_and_bill_count(client) -> None:
     document_id = created.json()["id"]
     client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Milk", "amount": "4.00", "category": "Food"},
+        json={"description": "Milk", "amount": "4.00"},
         headers=headers,
     )
     client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Eggs", "amount": "6.00", "category": "Food"},
+        json={"description": "Eggs", "amount": "6.00"},
         headers=headers,
     )
     client.post(
         "/spend-items",
-        json=_payload(merchant="Cash", amount="5.00", category="Other"),
+        json=_payload(merchant="Cash", amount="5.00"),
         headers=headers,
     )
     body = client.get("/spend-items/summary", headers=headers).json()
@@ -218,67 +201,18 @@ def test_summary_totals_and_bill_count(client) -> None:
     assert body["avg_per_bill"] == "7.50"
     assert body["has_spend"] is True
     assert body["comparison"] is None
-    names = [row["name"] for row in body["categories"]]
-    assert names == ["Food", "Other"]
-    assert body["categories"][0]["amount"] == "10.00"
-    assert body["categories"][0]["percent"] == 200 / 3
-    assert body["categories"][1]["amount"] == "5.00"
-    assert body["categories"][1]["percent"] == 100 / 3
-
-
-def test_summary_category_filter_does_not_change_mix(client) -> None:
-    headers = _auth(client)
-    client.post(
-        "/spend-items",
-        json=_payload(amount="30.00", category="Food", spent_at="2024-09-10"),
-        headers=headers,
-    )
-    client.post(
-        "/spend-items",
-        json=_payload(
-            merchant="Pharmacy",
-            amount="10.00",
-            category="Health",
-            spent_at="2024-09-11",
-        ),
-        headers=headers,
-    )
-    client.post(
-        "/spend-items",
-        json=_payload(
-            merchant="Unknown",
-            amount="10.00",
-            category=None,
-            spent_at="2024-09-12",
-        ),
-        headers=headers,
-    )
-    params = {
-        "spent_from": "2024-09-01",
-        "spent_to": "2024-09-30",
-        "category": "Food",
-    }
-    body = client.get("/spend-items/summary", params=params, headers=headers).json()
-    assert body["total"] == "30.00"
-    assert body["item_count"] == 1
-    assert body["bill_count"] == 1
-    assert {row["name"] for row in body["categories"]} == {"Food", "Health"}
-    by_name = {row["name"]: row for row in body["categories"]}
-    assert by_name["Food"]["amount"] == "30.00"
-    assert by_name["Food"]["percent"] == 60.0
-    assert by_name["Health"]["percent"] == 20.0
 
 
 def test_summary_month_comparison(client) -> None:
     headers = _auth(client)
     client.post(
         "/spend-items",
-        json=_payload(amount="100.00", category="Food", spent_at="2024-08-15"),
+        json=_payload(amount="100.00", spent_at="2024-08-15"),
         headers=headers,
     )
     client.post(
         "/spend-items",
-        json=_payload(amount="112.00", category="Food", spent_at="2024-09-15"),
+        json=_payload(amount="112.00", spent_at="2024-09-15"),
         headers=headers,
     )
     month = client.get(
@@ -336,7 +270,6 @@ def test_summary_has_spend_and_empty_states(client) -> None:
     assert empty["bill_count"] == 0
     assert empty["item_count"] == 0
     assert empty["avg_per_bill"] == "0.00"
-    assert empty["categories"] == []
     client.post("/spend-items", json=_payload(), headers=headers)
     filtered = client.get(
         "/spend-items/summary",
@@ -353,7 +286,7 @@ def test_summary_excludes_pending_review_and_other_users(client, db_engine) -> N
     me = client.get("/users/me", headers=headers_a).json()
     client.post(
         "/spend-items",
-        json=_payload(amount="10.00", category="Food"),
+        json=_payload(amount="10.00"),
         headers=headers_a,
     )
     with Session(db_engine) as session:
@@ -403,28 +336,27 @@ def test_list_defaults_to_first_page(client) -> None:
 
 def test_list_skip_limit_and_filtered_total(client) -> None:
     headers = _auth(client)
-    for category, count in (("groceries", 3), ("coffee", 2)):
+    for merchant, count in (("Grocer", 3), ("Cafe", 2)):
         for index in range(count):
             client.post(
                 "/spend-items",
                 json=_payload(
-                    merchant=f"{category} {index}",
+                    merchant=f"{merchant} {index}",
                     amount="1.00",
-                    category=category,
                     spent_at="2024-10-01",
                 ),
                 headers=headers,
             )
     page = client.get(
         "/spend-items",
-        params={"skip": 0, "limit": 2, "category": "groceries"},
+        params={"skip": 0, "limit": 2, "q": "grocer"},
         headers=headers,
     ).json()
     assert page["total"] == 3
     assert len(page["data"]) == 2
     past = client.get(
         "/spend-items",
-        params={"skip": 3, "limit": 2, "category": "groceries"},
+        params={"skip": 3, "limit": 2, "q": "grocer"},
         headers=headers,
     ).json()
     assert past["data"] == []

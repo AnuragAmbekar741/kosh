@@ -424,14 +424,13 @@ def test_add_line_item_to_confirmed_itemized_bill(client, monkeypatch) -> None:
     assert confirmed.status_code == 200
     added = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Bananas", "amount": "2.50", "category": "produce"},
+        json={"description": "Bananas", "amount": "2.50"},
         headers=headers,
     )
     assert added.status_code == 201
     body = added.json()
     assert body["description"] == "Bananas"
     assert body["amount"] == "2.50"
-    assert body["category"] == "produce"
     assert body["merchant"] == "Walmart Neighborhood Market"
     assert body["spent_at"] == "2024-10-19"
     assert body["currency"] == "USD"
@@ -681,14 +680,13 @@ def test_add_line_item_to_empty_manual_document(client) -> None:
     document_id = created.json()["id"]
     added = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Bananas", "amount": "2.50", "category": "Food"},
+        json={"description": "Bananas", "amount": "2.50"},
         headers=headers,
     )
     assert added.status_code == 201
     body = added.json()
     assert body["description"] == "Bananas"
     assert body["amount"] == "2.50"
-    assert body["category"] == "Food"
     assert body["merchant"] == "Groceries"
     assert body["currency"] == "USD"
     assert body["line_index"] == 0
@@ -698,7 +696,7 @@ def test_add_line_item_to_empty_manual_document(client) -> None:
     assert body["user_edited"] is True
     second = client.post(
         f"/documents/{document_id}/line-items",
-        json={"description": "Milk", "amount": "4.00", "category": "Food"},
+        json={"description": "Milk", "amount": "4.00"},
         headers=headers,
     )
     assert second.status_code == 201

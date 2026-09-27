@@ -1,4 +1,3 @@
-from collections.abc import Sequence
 from decimal import Decimal
 
 from storage.models.spend import SpendItem
@@ -6,7 +5,6 @@ from storage.models.spend import SpendItem
 from api.modules.spend.schemas import (
     SpendItemPublic,
     SpendSummary,
-    SpendSummaryCategory,
     SpendSummaryComparison,
 )
 
@@ -21,7 +19,6 @@ def to_public(item: SpendItem) -> SpendItemPublic:
         amount=item.amount,
         currency=item.currency,
         spent_at=item.spent_at,
-        category=item.category,
         source=item.source,
         status=item.status,
         document_id=item.document_id,
@@ -39,7 +36,6 @@ def to_summary(
     item_count: int,
     has_spend: bool,
     comparison: SpendSummaryComparison | None,
-    categories: Sequence[SpendSummaryCategory],
 ) -> SpendSummary:
     return SpendSummary(
         currency="USD",
@@ -49,13 +45,8 @@ def to_summary(
         avg_per_bill=_money(total / bill_count) if bill_count else Decimal("0.00"),
         has_spend=has_spend,
         comparison=comparison,
-        categories=list(categories),
     )
 
 
-def money(value: Decimal) -> Decimal:
-    return value.quantize(_CENTS)
-
-
 def _money(value: Decimal) -> Decimal:
-    return money(value)
+    return value.quantize(_CENTS)

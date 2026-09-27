@@ -1,5 +1,4 @@
 from calendar import month_name, monthrange
-from collections import defaultdict
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
@@ -18,13 +17,12 @@ from storage.crud.spend import (
 from storage.models.spend import SpendItem, SpendSource, SpendStatus
 
 from api.common.errors import NotFoundError
-from api.modules.spend.presenter import money, to_summary
+from api.modules.spend.presenter import to_summary
 from api.modules.spend.schemas import (
     SpendItemCreate,
     SpendItemUpdate,
     SpendPeriod,
     SpendSummary,
-    SpendSummaryCategory,
     SpendSummaryComparison,
 )
 
@@ -38,7 +36,6 @@ def create(session: Session, user_id: UUID, body: SpendItemCreate) -> SpendItem:
         amount=body.amount,
         currency=body.currency,
         spent_at=body.spent_at,
-        category=body.category,
         source=SpendSource.MANUAL,
         status=SpendStatus.CONFIRMED,
     )
@@ -52,7 +49,6 @@ def list_items(
     limit: int,
     spent_from: date | None,
     spent_to: date | None,
-    category: Sequence[str] | None,
     merchant: str | None,
     source: str | None,
     q: str | None,
@@ -64,7 +60,6 @@ def list_items(
         limit=limit,
         spent_from=spent_from,
         spent_to=spent_to,
-        category=category,
         merchant=merchant,
         source=source,
         q=q,
@@ -91,9 +86,7 @@ def update(
         amount=fields.get("amount"),
         currency=fields.get("currency"),
         spent_at=fields.get("spent_at"),
-        category=fields.get("category"),
         clear_description="description" in fields and fields["description"] is None,
-        clear_category="category" in fields and fields["category"] is None,
         mark_edited=True,
     )
 
@@ -108,7 +101,6 @@ def summarize(
     *,
     spent_from: date | None,
     spent_to: date | None,
-    category: Sequence[str] | None,
     source: str | None,
     q: str | None,
     period: SpendPeriod | None,
@@ -118,21 +110,8 @@ def summarize(
         user_id=user_id,
         spent_from=spent_from,
         spent_to=spent_to,
-        category=category,
         source=source,
         q=q,
-    )
-    mix_items = (
-        filtered
-        if not category
-        else list_spend_items(
-            session,
-            user_id=user_id,
-            spent_from=spent_from,
-            spent_to=spent_to,
-            source=source,
-            q=q,
-        )
     )
     total = sum((item.amount for item in filtered), Decimal(0))
     return to_summary(
@@ -140,10 +119,7 @@ def summarize(
         bill_count=_bill_count(filtered),
         item_count=len(filtered),
         has_spend=user_has_confirmed_spend(session, user_id=user_id),
-        comparison=_comparison(
-            session, user_id, spent_from, category, source, q, period, total
-        ),
-        categories=_categories(mix_items),
+        comparison=_comparison(session, user_id, spent_from, source, q, period, total),
     )
 
 
@@ -158,30 +134,10 @@ def _bill_count(items: Sequence[SpendItem]) -> int:
     return len(seen) + nulls
 
 
-def _categories(items: Sequence[SpendItem]) -> list[SpendSummaryCategory]:
-    period_total = sum((item.amount for item in items), Decimal(0))
-    amounts: dict[str, Decimal] = defaultdict(lambda: Decimal(0))
-    for item in items:
-        if item.category:
-            amounts[item.category] += item.amount
-    rows = [
-        SpendSummaryCategory(
-            name=name,
-            amount=money(amount),
-            percent=float(amount / period_total * 100) if period_total else 0.0,
-        )
-        for name, amount in amounts.items()
-        if amount > 0
-    ]
-    rows.sort(key=lambda row: row.amount, reverse=True)
-    return rows
-
-
 def _comparison(
     session: Session,
     user_id: UUID,
     spent_from: date | None,
-    category: Sequence[str] | None,
     source: str | None,
     q: str | None,
     period: SpendPeriod | None,
@@ -195,7 +151,6 @@ def _comparison(
         user_id=user_id,
         spent_from=prev_from,
         spent_to=prev_to,
-        category=category,
         source=source,
         q=q,
     )

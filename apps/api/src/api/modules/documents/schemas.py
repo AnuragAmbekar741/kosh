@@ -43,7 +43,6 @@ class DocumentDetail(DocumentSummary):
 class AddDocumentLineItemRequest(BaseModel):
     description: str = Field(min_length=1)
     amount: Decimal = Field(gt=0)
-    category: str | None = None
 
 
 class ManualDocumentCreate(BaseModel):
