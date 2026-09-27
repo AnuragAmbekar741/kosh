@@ -41,7 +41,6 @@ import {
   useUpdateSpendItem,
 } from "@/hooks/spend-items/use-spend-items"
 
-import { CategoryBadge } from "./CategoryBadge"
 import { SpendingAddLineRow } from "./SpendingAddLineRow"
 import { formatDate, formatMoney } from "./spending-formatters"
 
@@ -198,25 +197,6 @@ function SpendingLineRow({
     }
   }
 
-  async function saveCategory(category: string) {
-    if (category === item.category) return
-    setValidationError("")
-    updateItem.reset()
-    try {
-      await updateItem.mutateAsync({ id: item.id, updates: { category } })
-    } catch {
-      // Mutation state renders the API error beside the badge.
-    }
-  }
-
-  const categoryBadge = (
-    <CategoryBadge
-      category={item.category}
-      disabled={updateItem.isPending}
-      onSelect={(category) => void saveCategory(category)}
-    />
-  )
-
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2 pr-4 pl-16 not-first:border-t sm:pr-5 sm:pl-17">
       <div className="min-w-0">
@@ -225,56 +205,49 @@ function SpendingLineRow({
             <FieldLabel className="sr-only" htmlFor={inputId}>
               Item name
             </FieldLabel>
-            <div className="inline-flex w-full max-w-full flex-nowrap items-center gap-2">
-              <Input
-                aria-invalid={Boolean(error)}
-                autoFocus
-                className="w-1/2 min-w-0 shrink-0"
-                disabled={updateItem.isPending}
-                id={inputId}
-                onBlur={() => void saveName()}
-                onChange={(event) => {
-                  setName(event.target.value)
-                  setValidationError("")
-                  updateItem.reset()
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault()
-                    event.currentTarget.blur()
-                  }
-                  if (event.key === "Escape") {
-                    event.preventDefault()
-                    cancelEditing()
-                  }
-                }}
-                value={name}
-              />
-              {categoryBadge}
-            </div>
+            <Input
+              aria-invalid={Boolean(error)}
+              autoFocus
+              disabled={updateItem.isPending}
+              id={inputId}
+              onBlur={() => void saveName()}
+              onChange={(event) => {
+                setName(event.target.value)
+                setValidationError("")
+                updateItem.reset()
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault()
+                  event.currentTarget.blur()
+                }
+                if (event.key === "Escape") {
+                  event.preventDefault()
+                  cancelEditing()
+                }
+              }}
+              value={name}
+            />
             {error ? (
               <FieldError className="text-xs">{error}</FieldError>
             ) : null}
           </Field>
         ) : (
-          <div className="inline-flex max-w-full flex-nowrap items-center gap-2">
-            <button
-              aria-label={`Edit ${label}. Double-click, or press Enter.`}
-              className="max-w-full shrink cursor-text truncate rounded-sm text-left text-sm font-normal outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={(event) => {
-                if (event.detail === 0) startEditing()
-              }}
-              onDoubleClick={startEditing}
-              onPointerUp={(event) => {
-                if (event.pointerType === "touch") startEditing()
-              }}
-              title="Double-click to edit"
-              type="button"
-            >
-              {label}
-            </button>
-            {categoryBadge}
-          </div>
+          <button
+            aria-label={`Edit ${label}. Double-click, or press Enter.`}
+            className="max-w-full shrink cursor-text truncate rounded-sm text-left text-sm font-normal outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={(event) => {
+              if (event.detail === 0) startEditing()
+            }}
+            onDoubleClick={startEditing}
+            onPointerUp={(event) => {
+              if (event.pointerType === "touch") startEditing()
+            }}
+            title="Double-click to edit"
+            type="button"
+          >
+            {label}
+          </button>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
@@ -299,16 +272,6 @@ function SpendingLineRow({
   )
 }
 
-function uniqueCategories(items: SpendItem[]) {
-  const names: string[] = []
-  for (const item of items) {
-    if (item.category && !names.includes(item.category)) {
-      names.push(item.category)
-    }
-  }
-  return names
-}
-
 function SpendingBillRow({
   editingItemId,
   group,
@@ -321,7 +284,6 @@ function SpendingBillRow({
   const total = group.items.reduce((sum, item) => sum + Number(item.amount), 0)
   const itemLabel = group.items.length === 1 ? "item" : "items"
   const showAddRow = canAddLine(group)
-  const categories = uniqueCategories(group.items)
 
   return (
     <AccordionItem className="group/bill border-b" value={group.id}>
@@ -377,9 +339,6 @@ function SpendingBillRow({
               <Badge variant="outline">
                 {group.items.length} {itemLabel}
               </Badge>
-              {categories.map((category) => (
-                <CategoryBadge category={category} key={category} />
-              ))}
             </span>
           </span>
         </span>

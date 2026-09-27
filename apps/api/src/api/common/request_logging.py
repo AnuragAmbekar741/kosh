@@ -23,7 +23,7 @@ def configure_logging() -> None:
         uvicorn_logger.handlers.clear()
         uvicorn_logger.propagate = True
     # Replaced by the middleware's request line, which leaves out the query string
-    # (merchant and category filters live there).
+    # (merchant and search filters live there).
     logging.getLogger("uvicorn.access").disabled = True
     logging.getLogger("uvicorn.error").addFilter(_drop_duplicate_crash)
 

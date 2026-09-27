@@ -5,7 +5,6 @@ export type SpendItem = {
   amount: string
   currency: string
   spent_at: string
-  category: string | null
   source: string
   status: string
   document_id: string | null
@@ -18,7 +17,7 @@ export type SpendItem = {
 export type SpendItemUpdate = Partial<
   Pick<
     SpendItem,
-    "merchant" | "description" | "amount" | "currency" | "spent_at" | "category"
+    "merchant" | "description" | "amount" | "currency" | "spent_at"
   >
 >
 
@@ -39,7 +38,6 @@ export type Paginated<T> = {
 export type SpendQuery = {
   spent_from: string
   spent_to: string
-  category?: string[]
   source?: SpendSource
   q?: string
 }
@@ -53,12 +51,6 @@ export type SpendSummaryComparison = {
   previous_label: string
 }
 
-export type SpendSummaryCategory = {
-  name: string
-  amount: string
-  percent: number
-}
-
 export type SpendSummary = {
   currency: string
   total: string
@@ -67,5 +59,4 @@ export type SpendSummary = {
   avg_per_bill: string
   has_spend: boolean
   comparison: SpendSummaryComparison | null
-  categories: SpendSummaryCategory[]
 }

@@ -21,7 +21,6 @@ import {
 } from "@/hooks/documents/use-documents"
 import { useUpdateSpendItem } from "@/hooks/spend-items/use-spend-items"
 
-import { CategoryBadge } from "./CategoryBadge"
 import { formatDate, formatMoney } from "./spending-formatters"
 
 type DocumentReviewProps = {
@@ -38,14 +37,12 @@ function draftName(item: SpendItem) {
 type DraftEdit = {
   name: string
   amount: string
-  category: string | null
 }
 
 type EditingField = "name" | "amount"
 
 type DocumentReviewLineRowProps = {
   amount: string
-  category: string | null
   currency: string
   index: number
   name: string
@@ -76,7 +73,6 @@ function ExtractionStatus({ filename }: { filename?: string }) {
 
 function DocumentReviewLineRow({
   amount,
-  category,
   currency,
   index,
   name,
@@ -131,13 +127,6 @@ function DocumentReviewLineRow({
     setEditingField(null)
   }
 
-  const categoryBadge = (
-    <CategoryBadge
-      category={category}
-      onSelect={(nextCategory) => onUpdate({ category: nextCategory })}
-    />
-  )
-
   return (
     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-2 not-first:border-t">
       <span className="w-5 text-xs text-muted-foreground tabular-nums">
@@ -149,31 +138,27 @@ function DocumentReviewLineRow({
             <FieldLabel className="sr-only" htmlFor={nameId}>
               Item name
             </FieldLabel>
-            <div className="inline-flex w-full max-w-full flex-nowrap items-center gap-2">
-              <Input
-                aria-invalid={Boolean(fieldError)}
-                autoFocus
-                className="w-1/2 min-w-0 shrink-0"
-                id={nameId}
-                onBlur={commitName}
-                onChange={(event) => {
-                  setDraftNameValue(event.target.value)
-                  setFieldError("")
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault()
-                    event.currentTarget.blur()
-                  }
-                  if (event.key === "Escape") {
-                    event.preventDefault()
-                    cancelEditing()
-                  }
-                }}
-                value={draftNameValue}
-              />
-              {categoryBadge}
-            </div>
+            <Input
+              aria-invalid={Boolean(fieldError)}
+              autoFocus
+              id={nameId}
+              onBlur={commitName}
+              onChange={(event) => {
+                setDraftNameValue(event.target.value)
+                setFieldError("")
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault()
+                  event.currentTarget.blur()
+                }
+                if (event.key === "Escape") {
+                  event.preventDefault()
+                  cancelEditing()
+                }
+              }}
+              value={draftNameValue}
+            />
             {fieldError ? (
               <FieldError className="text-xs">{fieldError}</FieldError>
             ) : null}
@@ -195,7 +180,6 @@ function DocumentReviewLineRow({
             >
               {name}
             </button>
-            {categoryBadge}
             {requiresReview ? (
               <Tooltip>
                 <TooltipTrigger
@@ -291,7 +275,6 @@ function ReadyDocument({
         {
           name: draftName(item),
           amount: item.amount,
-          category: item.category,
         },
       ])
     )
@@ -344,12 +327,10 @@ function ReadyDocument({
           const updates = {
             description: edit.name.trim(),
             amount: edit.amount,
-            category: edit.category,
           }
           const unchanged =
             updates.description === draftName(item) &&
-            updates.amount === item.amount &&
-            updates.category === item.category
+            updates.amount === item.amount
           return unchanged
             ? []
             : [updateItem.mutateAsync({ id: item.id, updates })]
@@ -423,7 +404,6 @@ function ReadyDocument({
             return (
               <DocumentReviewLineRow
                 amount={edits[draft.id].amount}
-                category={edits[draft.id].category}
                 currency={draft.currency}
                 index={index}
                 key={draft.id}

@@ -1,5 +1,4 @@
 import type { SpendItem } from "@/api/spend-items/spend-items.types"
-import { CategoryBadge } from "@/components/spending/CategoryBadge"
 import { formatDate, formatMoney } from "@/components/spending/spending-formatters"
 import {
   Table,
@@ -27,7 +26,6 @@ export function SpendingItemsTable({ items }: SpendingItemsTableProps) {
             <TableHead aria-sort="descending">Date</TableHead>
             <TableHead>Item</TableHead>
             <TableHead>Merchant</TableHead>
-            <TableHead>Category</TableHead>
             <TableHead>Source</TableHead>
             <TableHead className="text-right">Amount</TableHead>
           </TableRow>
@@ -43,13 +41,6 @@ export function SpendingItemsTable({ items }: SpendingItemsTableProps) {
               </TableCell>
               <TableCell className="max-w-40 truncate">
                 {item.merchant}
-              </TableCell>
-              <TableCell>
-                {item.category ? (
-                  <CategoryBadge category={item.category} />
-                ) : (
-                  <span className="text-muted-foreground">—</span>
-                )}
               </TableCell>
               <TableCell>
                 {item.source === "manual" ? "Manual entry" : "Document"}

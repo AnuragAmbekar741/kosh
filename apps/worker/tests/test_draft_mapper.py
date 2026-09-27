@@ -12,19 +12,16 @@ def test_receipt_creates_only_line_item_drafts() -> None:
         purchased_at=date(2024, 10, 19),
         currency="USD",
         total="30.00",
-        category="Food",
         line_items=[
             LineItem(
                 raw_description="MILK",
                 line_total="10.00",
-                category="Food",
                 confidence=1,
                 requires_review=False,
             ),
             LineItem(
                 raw_description="SOAP",
                 line_total="20.00",
-                category="Health",
                 confidence=1,
                 requires_review=False,
             ),
@@ -32,10 +29,9 @@ def test_receipt_creates_only_line_item_drafts() -> None:
     )
     rows = drafts(uuid4(), extraction)
     assert [row.line_index for row in rows] == [0, 1]
-    assert [row.category for row in rows] == ["Food", "Health"]
 
 
-def test_statement_skips_credits_and_copies_category() -> None:
+def test_statement_skips_credits() -> None:
     extraction = StatementExtraction(
         document_kind="statement",
         currency="USD",
@@ -44,7 +40,6 @@ def test_statement_skips_credits_and_copies_category() -> None:
                 merchant="Starbucks",
                 amount="4.50",
                 spent_at=date(2024, 10, 19),
-                category="Food",
                 confidence=0.9,
             ),
             Transaction(
@@ -52,7 +47,6 @@ def test_statement_skips_credits_and_copies_category() -> None:
                 amount="4.50",
                 spent_at=date(2024, 10, 20),
                 direction="credit",
-                category="Food",
                 confidence=0.9,
             ),
         ],
@@ -60,4 +54,3 @@ def test_statement_skips_credits_and_copies_category() -> None:
     rows = drafts(uuid4(), extraction)
     assert len(rows) == 1
     assert rows[0].merchant == "Starbucks"
-    assert rows[0].category == "Food"

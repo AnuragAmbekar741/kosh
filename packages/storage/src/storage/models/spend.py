@@ -36,7 +36,6 @@ class SpendItem(SQLModel, table=True):
     amount: Decimal = Field(sa_column=Column(Numeric(12, 2), nullable=False))
     currency: str
     spent_at: date = Field(index=True)
-    category: str | None = None
     source: str
     status: str
     document_id: UUID | None = Field(

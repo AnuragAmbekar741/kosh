@@ -16,10 +16,9 @@ the global monochrome visual system.
    same Dialog polls `GET /documents/{id}` and shows processing, failure, and
    ready states.
 4. A ready document shows every extracted spend item as a numbered flat
-   list. Double-click a name or amount to edit it inline; category uses the
-   same tinted badge dropdown as the ledger. Flagged lines show a warning
-   icon with a tooltip. Duplicate hashes appear as a tooltip on the merchant
-   title. Mismatched totals still produce a review warning. The list caps
+   list. Double-click a name or amount to edit it inline. Flagged lines show
+   a warning icon with a tooltip. Duplicate hashes appear as a tooltip on the
+   merchant title. Mismatched totals still produce a review warning. The list caps
    at `max-h-72` and scrolls so the header and confirm action stay reachable.
 5. `POST /documents/{id}/confirm` adds all reviewed drafts to Spending and
    refreshes the ledger. If the receipt date falls outside the current period
@@ -45,20 +44,19 @@ React context. Bare `/spending` preserves its query string and redirects to
 | ------------ | ----------------------------------------------- |
 | `period`     | `month` (`day` / `week` / `month` / `custom`)   |
 | `from`, `to` | current month, ISO dates                        |
-| `category`   | none (repeatable)                               |
 | `source`     | none (`manual` or `document`)                   |
 | `q`          | none                                            |
 | `page`       | `1` (1-based; written only when greater than 1) |
 
 The toolbar is a connected Day / Week / Month toggle (`spacing={0}`). The
 selected segment uses `bg-primary text-primary-foreground` so it reads on
-both themes. Custom, prev/next, the period label, Category, All sources, and
+both themes. Custom, prev/next, the period label, All sources, and
 search sit beside it. Custom opens a
 dual-month range popover;
 the first date starts a fresh range, the second date completes it, and draft
 dates stay local until Apply. Search is local and writes `q` after
 300ms. There is no chip row; filters live on the controls themselves.
-Below `md`, Category / source / search collapse into one Filters sheet.
+Below `md`, source and search collapse into one Filters sheet.
 Whenever the state differs from the current calendar month, Reset clears all
 filters and pagination and restores that whole month without changing the
 Bills or Items route.
@@ -82,14 +80,13 @@ Confirmed `GET /spend-items` rows are grouped by source document. Fileless
 manual bills use the same `document_id` grouping; leftover ungrouped
 `POST /spend-items` rows remain individual entries. Empty manual documents
 from `GET /documents` (`source=manual` with no spend items) render as bills
-with a zero total when no category, source, or search filter is set and
+with a zero total when no source or search filter is set and
 `created_at` falls in the visible range. They stay hidden in Items view.
 Each group is a shadcn Accordion item. The trigger is one
 row: merchant title, then outline pill Badges for date, source (`Document` or
 `Manual entry` from spend `source`, or the empty manual document), item
-count (`1 item` / `N items`), and a read-only category badge per unique
-item category. The merchant tile is a pencil for manual bills and a document
-icon otherwise. The group total stays on the right, followed by
+count (`1 item` / `N items`). The merchant tile is a pencil for manual bills
+and a document icon otherwise. The group total stays on the right, followed by
 an accent three-dot tile that matches the merchant icon. That control does not
 toggle the accordion. It opens a dropdown: Edit expands the bill; Delete opens
 a confirmation Dialog and, on confirm, removes the whole bill. Uploaded
@@ -97,21 +94,14 @@ document groups call `DELETE /documents/{id}` and remove the source file with
 every line. Manual document groups call the same delete and skip blob cleanup.
 Legacy ungrouped manual rows call `DELETE /spend-items/{id}`. Expanding a
 group reveals products nested under the bill: indented to the
-merchant text column, quieter type, a tinted category badge on the same row
-as the item name, and amounts. Line-index numbers are omitted. The name
-truncates; the badge stays `w-fit`
-and does not wrap underneath.
+merchant text column, quieter type, the item name, and amounts. Line-index
+numbers are omitted. The name truncates.
 
 Bills and Items navigation lives only in the Spending sidebar group; the
 Transactions heading does not repeat that route switch. Items is a read-only table:
-Date, Item, Merchant, Category, Source, Amount. Row edit is later.
-Clicking the badge opens a DropdownMenu of the nine extraction categories
-(Food, Transport, Housing, Entertainment, Shopping, Health, Utilities,
-Travel, Other). The current value is checked. A row with no category shows
-a muted Category trigger. Choosing a value saves through
-`PATCH /spend-items/{id}`. Double-clicking an item name replaces it with an
-auto-focused inline input at half the name column, with the category badge
-beside it; the bill menu's Edit action opens the bill and
+Date, Item, Merchant, Source, Amount. Row edit is later.
+Double-clicking an item name replaces it with an auto-focused inline input
+across the name column; the bill menu's Edit action opens the bill and
 starts its first item for keyboard and touch discoverability. Enter or blur
 saves the name through the same PATCH. Escape cancels. During item editing,
 a destructive icon appears beside the amount. It opens a confirmation Dialog
@@ -119,7 +109,7 @@ and `DELETE /spend-items/{id}` removes only that item; the rest of the bill
 and source file remain. Pending mutations disable their controls, and
 validation or API failures stay beside the affected control.
 Manual bills and itemized receipt bills end with an Add item row. Clicking
-it reveals name, amount, and category fields that save through
+it reveals name and amount fields that save through
 `POST /documents/{id}/line-items`. Statements, total-only receipts, and
 ungrouped manual rows omit the add-row.
 Line items sort by `line_index`, then spend date. Groups are ordered newest
@@ -140,8 +130,7 @@ with `rounded-xl` corners; inner rows stay square. Products use
 bill divider.
 
 The surface stays flat and monochrome: semantic neutral backgrounds and muted
-fills establish hierarchy. Category badges are the only chromatic marks in
-the ledger — soft fills with matching ink, label always present. Geist,
+fills establish hierarchy. The ledger has no chromatic marks. Geist,
 compact type, and tabular numerals keep the dense financial content
 scannable; depth does not rely on shadows.
 
@@ -164,7 +153,6 @@ src/hooks/spend-items/use-spend-filters.ts
 src/components/spending/
   AddSpendingDialog.tsx
   AddDocumentDialog.tsx
-  CategoryBadge.tsx
   DocumentReview.tsx
   SpendingAccordion.tsx
   SpendingAddLineRow.tsx
