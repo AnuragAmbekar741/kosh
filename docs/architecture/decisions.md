@@ -54,7 +54,7 @@ Revisit when: ...
 | 38 | Signed-in chrome | **Collapsible sidebar** (`variant="inset"`, `collapsible="icon"`) with Overview + a nested Spending route group |
 | 39 | Logging | Stdlib `logging` to stdout, configured by `packages/observability`; text locally, JSON when shipped; log ids, never contents |
 | 40 | Document bill delete | Explicit ordered deletes (spend items → attempts → document) then blob; no FK CASCADE; rollback DB if blob cleanup fails |
-| 41 | Category badge colors | Chrome stays monochrome; spend category badges use muted categorical tints |
+| 41 | Spend categories | **None**: extraction assigns no category; the old 9-value system was removed before its replacement |
 | 42 | Dialog width | One `DialogContent` width (`sm:max-w-lg`) for every modal |
 | 43 | Spend ledger analytics | **`GET /spend-items/summary`** computed per request; `GET /overview` stays the later dashboard snapshot |
 | 44 | Spend page filters | **Route path** for Bills / Items plus **URL search params** for filters; no React context |
@@ -198,12 +198,12 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Why: JSON numbers and binary floats round money
 - Revisit when: We need more than two decimal places
 
-**Where spend categories come from**
+**No spend categories until the replacement lands**
 
-- Chosen: Category enum (9 values) on the vision extraction schema; one call extracts and categorizes
-- Rejected: Second worker consumer with a text-only categorize call; category table; free-form vision categories
-- Why: +~2% output tokens vs a second queue, claim protocol, poll loop and review-dialog polling. Model sees the whole receipt. Statements and receipts share one taxonomy.
-- Revisit when: Taxonomy changes need re-categorizing existing rows without a vision call, or users manage their own categories
+- Chosen: Remove the 9-value extraction categories completely: schema field, prompt rules, `spend_items.category`, filters, summary mix, badges, and tints
+- Rejected: Keeping them running while a replacement is built
+- Why: The replacement changes the category list and who assigns it. Running both would leave dead code and two sources of truth.
+- Revisit when: The replacement taxonomy is built
 
 **Scanned documents always save itemized spend**
 
@@ -211,13 +211,6 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: A synthetic receipt-total draft, total-versus-itemized mode, and selecting only some extracted rows
 - Why: Scanning is for capturing spend items. A second storage choice adds review work, duplicate representations, and confirmation branches without serving the intended workflow
 - Revisit when: A supported document type has no meaningful line items and needs an explicit product flow rather than an automatic fallback
-
-**Category badge colors stay off the chrome**
-
-- Chosen: Soft `bg`/`fg` tokens per extraction category on spend-row badges only
-- Rejected: Recolor the product chrome to a trust-blue OLED system; solid filled rainbow pills; color-only dots
-- Why: Locked monochrome primary still owns actions and focus. Distinct hues help scan a dense ledger; the label remains the meaning. Health is emerald so it never collides with `--destructive`. Unknown strings reuse Other.
-- Revisit when: Users manage a custom taxonomy or Overview charts need the same scale
 
 **content_hash is a warning, not uniqueness**
 
@@ -295,7 +288,7 @@ Previously linked accounts are unchanged; review them separately if used with re
 
 **Spend page filters live in the URL**
 
-- Chosen: Period, range, category, source, search, and page are search params on the Spending routes. Bills / Items view is the route path. `useSpendFilters()` is a hook, not a provider.
+- Chosen: Period, range, source, search, and page are search params on the Spending routes. Bills / Items view is the route path. `useSpendFilters()` is a hook, not a provider.
 - Rejected: A `SpendingFiltersProvider` context; session-only state that dies on refresh
 - Why: Deep links, back/forward, and shareable filtered views. The page is a few siblings, not a deep tree; a provider would re-render the ledger on every search keystroke. React Router already broadcasts the URL.
 - Revisit when: a portal outside `/spending` needs the same state without a URL
