@@ -59,6 +59,7 @@ Revisit when: ...
 | 43 | Spend ledger analytics | **`GET /spend-items/summary`** computed per request; `GET /overview` stays the later dashboard snapshot |
 | 44 | Spend page filters | **Route path** for Bills / Items plus **URL search params** for filters; no React context |
 | 45 | List pagination | Shared `Page` mixin + `{data, total}` envelope; `skip`/`limit` |
+| 46 | Product catalog | **`catalog.csv` in `packages/storage` → `catalog_items`** via `python -m storage.catalog load`; runtime reads Postgres only |
 
 ### Locked detail rows
 
@@ -211,6 +212,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Showing the model's cleaned-up name; renaming a line to its catalog item
 - Why: The ledger should read like the receipt the user holds. Grouping and analytics use tags, not the text.
 - Revisit when: Users ask for an optional readable alias alongside the bill text
+
+**Product catalog: CSV in git, loaded into Postgres**
+
+- Chosen: `storage/catalog/catalog.csv` (slug, parent_slug, name, synonyms, category) is the source of truth for shared catalog rows. `python -m storage.catalog load` (`make catalog`) validates it, then upserts `catalog_items` by slug in one transaction and retires rows that left the file instead of deleting them. Families carry one of the 14 categories; items inherit it. Names and synonyms share one namespace, so each may point at only one row. Shared rows have no `user_id`; the column is reserved for a user's own items.
+- Rejected: Importing an outside dataset (GS1, USDA, Open Food Facts) into the database; reading the CSV at runtime; seeding through Alembic data migrations
+- Why: A reviewable diff for every catalog change, foreign keys and SQL joins from spend lines, per-user rows later, and no license or size baggage. Outside datasets are only reference material while writing the CSV. Migrations stay about schema.
+- Revisit when: The catalog outgrows one hand-reviewed file, or users need to edit shared rows
 
 **Scanned documents always save itemized spend**
 
