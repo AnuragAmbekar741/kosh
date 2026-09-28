@@ -64,13 +64,19 @@ const CATEGORY_STYLES: Record<Category, CategoryStyle> = {
 export const CATEGORIES = Object.keys(CATEGORY_STYLES) as Category[]
 
 export function isCategory(value: string): value is Category {
-  return value in CATEGORY_STYLES
+  return Object.hasOwn(CATEGORY_STYLES, value)
+}
+
+function styleFor(category: string) {
+  return isCategory(category)
+    ? CATEGORY_STYLES[category]
+    : CATEGORY_STYLES.Other
 }
 
 export function categoryTintClass(category: Category) {
-  return CATEGORY_STYLES[category].tint
+  return styleFor(category).tint
 }
 
 export function categorySwatchClass(category: Category) {
-  return CATEGORY_STYLES[category].swatch
+  return styleFor(category).swatch
 }
