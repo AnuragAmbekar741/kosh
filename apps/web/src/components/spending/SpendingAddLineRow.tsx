@@ -1,12 +1,15 @@
 import { useState } from "react"
 
 import { apiDetail } from "@/api/client"
+import type { Category } from "@/api/spend-items/spend-items.types"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useAddDocumentLineItem } from "@/hooks/documents/use-documents"
 import { cn } from "@/lib/utils"
+
+import { CategoryBadge } from "./CategoryBadge"
 
 type SpendingAddLineRowProps = {
   documentId: string
@@ -20,6 +23,7 @@ export function SpendingAddLineRow({
   const [isOpen, setIsOpen] = useState(startOpen)
   const [name, setName] = useState("")
   const [amount, setAmount] = useState("")
+  const [category, setCategory] = useState<Category | null>(null)
   const [validationError, setValidationError] = useState("")
   const addLine = useAddDocumentLineItem()
   const error = validationError || apiDetail(addLine.error)
@@ -29,6 +33,7 @@ export function SpendingAddLineRow({
   function resetForm() {
     setName("")
     setAmount("")
+    setCategory(null)
     setValidationError("")
     addLine.reset()
   }
@@ -49,12 +54,17 @@ export function SpendingAddLineRow({
       setValidationError("Enter a price greater than zero.")
       return
     }
+    if (!category) {
+      setValidationError("Choose a category.")
+      return
+    }
     setValidationError("")
     try {
       await addLine.mutateAsync({
         documentId,
         description: trimmedName,
         amount: parsedAmount.toFixed(2),
+        category,
       })
       resetForm()
       setIsOpen(false)
@@ -84,29 +94,41 @@ export function SpendingAddLineRow({
         <FieldLabel className="sr-only" htmlFor={nameId}>
           Item name
         </FieldLabel>
-        <Input
-          aria-invalid={Boolean(error)}
-          autoFocus
-          disabled={addLine.isPending}
-          id={nameId}
-          onChange={(event) => {
-            setName(event.target.value)
-            setValidationError("")
-            addLine.reset()
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault()
-              void save()
-            }
-            if (event.key === "Escape") {
-              event.preventDefault()
-              cancel()
-            }
-          }}
-          placeholder="Item"
-          value={name}
-        />
+        <div className="inline-flex w-full max-w-full flex-nowrap items-center gap-2">
+          <Input
+            aria-invalid={Boolean(error)}
+            autoFocus
+            className="w-1/2 min-w-0 shrink-0"
+            disabled={addLine.isPending}
+            id={nameId}
+            onChange={(event) => {
+              setName(event.target.value)
+              setValidationError("")
+              addLine.reset()
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault()
+                void save()
+              }
+              if (event.key === "Escape") {
+                event.preventDefault()
+                cancel()
+              }
+            }}
+            placeholder="Item"
+            value={name}
+          />
+          <CategoryBadge
+            category={category}
+            disabled={addLine.isPending}
+            onSelect={(next) => {
+              setCategory(next)
+              setValidationError("")
+              addLine.reset()
+            }}
+          />
+        </div>
         {error ? <FieldError className="text-xs">{error}</FieldError> : null}
       </Field>
       <div className="flex shrink-0 items-center gap-2 justify-self-end sm:col-start-2 sm:row-start-1">

@@ -36,7 +36,9 @@ export function SpendingPage() {
   const summary = useSpendSummary(filters.summaryQuery)
   const documents = useDocuments()
   const items = spendItems.data?.data ?? []
-  const hasContentFilters = Boolean(filters.query.source || filters.query.q)
+  const hasContentFilters = Boolean(
+    filters.query.category?.length || filters.query.source || filters.query.q
+  )
   const emptyManual =
     filters.view === "bills"
       ? (documents.data ?? []).filter(

@@ -4,6 +4,7 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
+from storage.models.spend import Category
 
 from api.common.pagination import Page
 
@@ -34,6 +35,7 @@ class SpendItemCreate(BaseModel):
     amount: Decimal
     currency: str = Field(default="USD", min_length=3, max_length=3)
     spent_at: date
+    category: Category
 
     @field_validator("amount")
     @classmethod
@@ -52,6 +54,7 @@ class SpendItemUpdate(BaseModel):
     amount: Decimal | None = None
     currency: str | None = Field(default=None, min_length=3, max_length=3)
     spent_at: date | None = None
+    category: Category | None = None
 
     @field_validator("amount")
     @classmethod
@@ -75,6 +78,7 @@ class SpendItemPublic(BaseModel):
     amount: Decimal
     currency: str
     spent_at: date
+    category: str | None
     source: str
     status: str
     document_id: UUID | None = None
@@ -87,6 +91,7 @@ class SpendItemPublic(BaseModel):
 class SpendQuery(BaseModel):
     spent_from: date | None = None
     spent_to: date | None = None
+    category: list[Category] | None = None
     merchant: str | None = None
     source: str | None = None
     q: str | None = None

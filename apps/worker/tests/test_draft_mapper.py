@@ -15,13 +15,16 @@ def test_receipt_creates_only_line_item_drafts() -> None:
         line_items=[
             LineItem(
                 raw_description="MILK",
+                normalized_name="Milk",
                 line_total="10.00",
+                category="Groceries",
                 confidence=1,
                 requires_review=False,
             ),
             LineItem(
                 raw_description="SOAP",
                 line_total="20.00",
+                category="Household",
                 confidence=1,
                 requires_review=False,
             ),
@@ -29,6 +32,9 @@ def test_receipt_creates_only_line_item_drafts() -> None:
     )
     rows = drafts(uuid4(), extraction)
     assert [row.line_index for row in rows] == [0, 1]
+    assert [row.category for row in rows] == ["Groceries", "Household"]
+    assert [row.description for row in rows] == ["MILK", "SOAP"]
+    assert [row.normalized_name for row in rows] == ["Milk", None]
 
 
 def test_statement_skips_credits() -> None:
@@ -40,12 +46,14 @@ def test_statement_skips_credits() -> None:
                 merchant="Starbucks",
                 amount="4.50",
                 spent_at=date(2024, 10, 19),
+                category="Dining out",
                 confidence=0.9,
             ),
             Transaction(
                 merchant="Refund",
                 amount="4.50",
                 spent_at=date(2024, 10, 20),
+                category="Dining out",
                 direction="credit",
                 confidence=0.9,
             ),
@@ -54,3 +62,4 @@ def test_statement_skips_credits() -> None:
     rows = drafts(uuid4(), extraction)
     assert len(rows) == 1
     assert rows[0].merchant == "Starbucks"
+    assert rows[0].category == "Dining out"

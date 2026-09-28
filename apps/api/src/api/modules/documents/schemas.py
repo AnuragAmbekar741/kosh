@@ -4,6 +4,7 @@ from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
+from storage.models.spend import Category
 
 from api.modules.spend.schemas import SpendItemPublic
 
@@ -43,6 +44,7 @@ class DocumentDetail(DocumentSummary):
 class AddDocumentLineItemRequest(BaseModel):
     description: str = Field(min_length=1)
     amount: Decimal = Field(gt=0)
+    category: Category
 
 
 class ManualDocumentCreate(BaseModel):

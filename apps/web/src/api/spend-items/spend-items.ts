@@ -16,6 +16,9 @@ function toParams(query: SpendQuery, period?: SpendPeriod, page?: PageParams) {
   params.set("spent_to", query.spent_to)
   if (query.source) params.set("source", query.source)
   if (query.q) params.set("q", query.q)
+  for (const category of query.category ?? []) {
+    params.append("category", category)
+  }
   if (period) params.set("period", period)
   if (page) {
     params.set("skip", String(page.skip))

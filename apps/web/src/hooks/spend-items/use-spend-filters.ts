@@ -2,12 +2,14 @@ import { useCallback } from "react"
 import { useLocation, useSearchParams } from "react-router"
 
 import type {
+  Category,
   PageParams,
   SpendPeriod,
   SpendQuery,
   SpendSource,
   SpendSummaryQuery,
 } from "@/api/spend-items/spend-items.types"
+import { isCategory } from "@/components/spending/categories"
 import {
   anchorDate,
   currentMonthRange,
@@ -29,6 +31,7 @@ type FilterPatch = {
   period?: SpendPeriod
   from?: string
   to?: string
+  category?: Category[] | null
   source?: SpendSource | null
   q?: string | null
   page?: number
@@ -56,6 +59,7 @@ export function useSpendFilters() {
   const from = parsedFrom ?? defaults.from
   const to = parsedTo ?? defaults.to
   const range = from <= to ? { from, to } : defaults
+  const categories = searchParams.getAll("category").filter(isCategory)
   const source = parseSource(searchParams.get("source"))
   const q = searchParams.get("q")?.trim() || undefined
   const view = parseView(pathname)
@@ -70,6 +74,7 @@ export function useSpendFilters() {
   const query: SpendQuery = {
     spent_from: range.from,
     spent_to: range.to,
+    ...(categories.length ? { category: categories } : {}),
     ...(source ? { source } : {}),
     ...(q ? { q } : {}),
   }
@@ -78,6 +83,7 @@ export function useSpendFilters() {
     period !== "month" ||
     range.from !== defaults.from ||
     range.to !== defaults.to ||
+    categories.length ||
     source ||
     q ||
     page > 1
@@ -95,6 +101,12 @@ export function useSpendFilters() {
         next.set("period", nextPeriod)
         next.set("from", nextFrom)
         next.set("to", nextTo)
+        if ("category" in patch) {
+          next.delete("category")
+          for (const category of patch.category ?? []) {
+            next.append("category", category)
+          }
+        }
         if ("source" in patch) {
           if (patch.source) next.set("source", patch.source)
           else next.delete("source")
@@ -143,6 +155,16 @@ export function useSpendFilters() {
     [write]
   )
 
+  const toggleCategory = useCallback(
+    (name: Category) => {
+      const next = categories.includes(name)
+        ? categories.filter((category) => category !== name)
+        : [...categories, name]
+      write({ category: next.length ? next : null })
+    },
+    [categories, write]
+  )
+
   const setSource = useCallback(
     (next: SpendSource | null) => write({ source: next }),
     [write]
@@ -155,6 +177,7 @@ export function useSpendFilters() {
       period: "month",
       from: currentMonth.from,
       to: currentMonth.to,
+      category: null,
       source: null,
       q: null,
       page: 1,
@@ -178,6 +201,7 @@ export function useSpendFilters() {
     period,
     from: range.from,
     to: range.to,
+    categories,
     source,
     q,
     view,
@@ -191,6 +215,7 @@ export function useSpendFilters() {
     setPeriod,
     shift,
     applyCustomRange,
+    toggleCategory,
     setSource,
     setQ,
     setPage,

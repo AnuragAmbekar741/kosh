@@ -54,7 +54,7 @@ Revisit when: ...
 | 38 | Signed-in chrome | **Collapsible sidebar** (`variant="inset"`, `collapsible="icon"`) with Overview + a nested Spending route group |
 | 39 | Logging | Stdlib `logging` to stdout, configured by `packages/observability`; text locally, JSON when shipped; log ids, never contents |
 | 40 | Document bill delete | Explicit ordered deletes (spend items → attempts → document) then blob; no FK CASCADE; rollback DB if blob cleanup fails |
-| 41 | Spend categories | **None**: extraction assigns no category; the old 9-value system was removed before its replacement |
+| 41 | Spend categories | **14 fixed categories** in code, set by extraction on every line; users can change them; badges use muted tints |
 | 42 | Dialog width | One `DialogContent` width (`sm:max-w-lg`) for every modal |
 | 43 | Spend ledger analytics | **`GET /spend-items/summary`** computed per request; `GET /overview` stays the later dashboard snapshot |
 | 44 | Spend page filters | **Route path** for Bills / Items plus **URL search params** for filters; no React context |
@@ -198,12 +198,19 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Why: JSON numbers and binary floats round money
 - Revisit when: We need more than two decimal places
 
-**No spend categories until the replacement lands**
+**Fourteen spend categories, set at extraction**
 
-- Chosen: Remove the 9-value extraction categories completely: schema field, prompt rules, `spend_items.category`, filters, summary mix, badges, and tints
-- Rejected: Keeping them running while a replacement is built
-- Why: The replacement changes the category list and who assigns it. Running both would leave dead code and two sources of truth.
-- Revisit when: The replacement taxonomy is built
+- Chosen: A fixed list of 14 in code (`Category` in `storage/models/spend.py`, mirrored by the extraction `Category` literal, with a parity test): Groceries, Dining out, Household, Personal care, Health, Baby & kids, Pet, Shopping, Transport, Housing, Utilities, Entertainment, Travel, Other. The vision call assigns one per receipt line and statement transaction, by what was bought, not by the store. Rows users create require one. Badges use muted `bg`/`fg` tints; the chrome stays monochrome.
+- Rejected: A category table or user-defined categories; a group layer above categories; the old 9 values (Food mixed groceries with restaurants, and Shopping mixed household goods with clothing)
+- Why: Whole bills and statement rows still need one visible bucket, and 14 stays scannable. A new category needs prompt rules and a color, so it is a code change anyway. Groups can be derived later without a migration.
+- Revisit when: Users need their own categories, or catalog items start correcting line categories
+
+**Line text is the bill text**
+
+- Chosen: A scanned line's `description` is the text as printed on the bill (`raw_description`, e.g. `KS ORG CHX BRST`). The model's cleaned-up name is kept in `spend_items.normalized_name`, hidden, for later matching. Categories and future catalog items are separate fields shown as badges; they never rewrite the line.
+- Rejected: Showing the model's cleaned-up name; renaming a line to its catalog item
+- Why: The ledger should read like the receipt the user holds. Grouping and analytics use tags, not the text.
+- Revisit when: Users ask for an optional readable alias alongside the bill text
 
 **Scanned documents always save itemized spend**
 

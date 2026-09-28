@@ -9,16 +9,23 @@ import {
 import type { DateRange } from "react-day-picker"
 
 import type {
+  Category,
   SpendPeriod,
   SpendSource,
 } from "@/api/spend-items/spend-items.types"
+import {
+  CATEGORIES,
+  categorySwatchClass,
+} from "@/components/spending/categories"
 import { fromIsoDate, toIsoDate } from "@/components/spending/spend-period"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -95,6 +102,46 @@ function SearchField({
         />
       </InputGroup>
     </Field>
+  )
+}
+
+function CategoryMenu({
+  selected,
+  onToggle,
+}: {
+  selected: Category[]
+  onToggle: (name: Category) => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button size="sm" variant="outline">
+            {selected.length ? `Category · ${selected.length}` : "Category"}
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="start" className="min-w-44">
+        <DropdownMenuGroup>
+          {CATEGORIES.map((option) => (
+            <DropdownMenuCheckboxItem
+              checked={selected.includes(option)}
+              key={option}
+              onCheckedChange={() => onToggle(option)}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "size-2.5 rounded-full",
+                  categorySwatchClass(option)
+                )}
+              />
+              {option}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -229,7 +276,8 @@ export function SpendingToolbar({ disabled = false }: SpendingToolbarProps) {
     return () => window.clearTimeout(timeout)
   }, [draftQ, setQ, urlQ])
 
-  const filterCount = (filters.source ? 1 : 0) + (filters.q ? 1 : 0)
+  const filterCount =
+    filters.categories.length + (filters.source ? 1 : 0) + (filters.q ? 1 : 0)
 
   return (
     <div
@@ -293,6 +341,10 @@ export function SpendingToolbar({ disabled = false }: SpendingToolbarProps) {
           </Button>
         ) : null}
         <div className="ml-auto hidden items-center gap-2 md:flex">
+          <CategoryMenu
+            onToggle={filters.toggleCategory}
+            selected={filters.categories}
+          />
           <SourceMenu onChange={filters.setSource} source={filters.source} />
           <SearchField id="spend-search" onChange={setDraftQ} value={draftQ} />
         </div>
@@ -312,10 +364,14 @@ export function SpendingToolbar({ disabled = false }: SpendingToolbarProps) {
             <SheetHeader>
               <SheetTitle>Filters</SheetTitle>
               <SheetDescription>
-                Narrow the ledger by source or search.
+                Narrow the ledger by category, source, or search.
               </SheetDescription>
             </SheetHeader>
             <div className="flex flex-col gap-3 px-4 pb-4">
+              <CategoryMenu
+                onToggle={filters.toggleCategory}
+                selected={filters.categories}
+              />
               <SourceMenu
                 onChange={filters.setSource}
                 source={filters.source}
