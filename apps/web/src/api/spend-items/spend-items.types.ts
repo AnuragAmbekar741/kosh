@@ -1,3 +1,19 @@
+export type Category =
+  | "Groceries"
+  | "Dining out"
+  | "Household"
+  | "Personal care"
+  | "Health"
+  | "Baby & kids"
+  | "Pet"
+  | "Shopping"
+  | "Transport"
+  | "Housing"
+  | "Utilities"
+  | "Entertainment"
+  | "Travel"
+  | "Other"
+
 export type SpendItem = {
   id: string
   merchant: string
@@ -5,6 +21,7 @@ export type SpendItem = {
   amount: string
   currency: string
   spent_at: string
+  category: Category | null
   source: string
   status: string
   document_id: string | null
@@ -17,7 +34,7 @@ export type SpendItem = {
 export type SpendItemUpdate = Partial<
   Pick<
     SpendItem,
-    "merchant" | "description" | "amount" | "currency" | "spent_at"
+    "merchant" | "description" | "amount" | "currency" | "spent_at" | "category"
   >
 >
 
