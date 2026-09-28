@@ -55,6 +55,7 @@ export type Paginated<T> = {
 export type SpendQuery = {
   spent_from: string
   spent_to: string
+  category?: Category[]
   source?: SpendSource
   q?: string
 }
