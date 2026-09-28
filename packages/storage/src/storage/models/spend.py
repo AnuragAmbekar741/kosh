@@ -51,6 +51,13 @@ class SpendItem(SQLModel, table=True):
     merchant: str
     description: str | None = None
     normalized_name: str | None = None
+    item_code: str | None = None
+    quantity: Decimal | None = Field(
+        default=None, sa_column=Column(Numeric(12, 3), nullable=True)
+    )
+    unit_price: Decimal | None = Field(
+        default=None, sa_column=Column(Numeric(12, 4), nullable=True)
+    )
     amount: Decimal = Field(sa_column=Column(Numeric(12, 2), nullable=False))
     currency: str
     spent_at: date = Field(index=True)

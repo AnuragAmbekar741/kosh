@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from uuid import uuid4
 
 from ai.schemas import LineItem, ReceiptExtraction, StatementExtraction, Transaction
@@ -16,6 +17,9 @@ def test_receipt_creates_only_line_item_drafts() -> None:
             LineItem(
                 raw_description="MILK",
                 normalized_name="Milk",
+                upc="851770003920",
+                quantity="2",
+                unit_price="5.00",
                 line_total="10.00",
                 category="Groceries",
                 confidence=1,
@@ -35,6 +39,9 @@ def test_receipt_creates_only_line_item_drafts() -> None:
     assert [row.category for row in rows] == ["Groceries", "Household"]
     assert [row.description for row in rows] == ["MILK", "SOAP"]
     assert [row.normalized_name for row in rows] == ["Milk", None]
+    assert [row.item_code for row in rows] == ["851770003920", None]
+    assert [row.quantity for row in rows] == [Decimal(2), None]
+    assert [row.unit_price for row in rows] == [Decimal("5.00"), None]
 
 
 def test_statement_skips_credits() -> None:
