@@ -16,7 +16,7 @@ the global monochrome visual system.
    same Dialog polls `GET /documents/{id}` and shows processing, failure, and
    ready states.
 4. A ready document shows every extracted spend item as a numbered flat
-   list. Double-click a name or amount to edit it inline; the extracted
+   list, each with its text exactly as printed on the bill. Double-click a name or amount to edit it inline; the extracted
    category uses the same tinted badge picker as the ledger. Flagged lines
    show a warning icon with a tooltip. Duplicate hashes appear as a tooltip on the
    merchant title. Mismatched totals still produce a review warning. The list caps

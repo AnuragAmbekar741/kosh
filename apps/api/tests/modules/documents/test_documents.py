@@ -246,6 +246,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     drafts = body["drafts"]
     assert all(item["line_index"] is not None for item in drafts)
     assert [item["category"] for item in drafts] == ["Groceries"]
+    assert [item["description"] for item in drafts] == ["ORGAIN VAN 1"]
     line = next(item for item in drafts if item["line_index"] == 0)
     with Session(database.engine) as session:
         attempts = list_extraction_attempts(session, UUID(document_id))
@@ -321,7 +322,7 @@ def test_confirm_saves_every_extracted_item(client, monkeypatch) -> None:
     confirmed = client.post(f"/documents/{document_id}/confirm", headers=headers)
 
     assert confirmed.status_code == 200
-    assert {item["description"] for item in confirmed.json()} == {"Milk", "Bread"}
+    assert {item["description"] for item in confirmed.json()} == {"MILK", "BREAD"}
     assert {item["status"] for item in confirmed.json()} == {"confirmed"}
 
 

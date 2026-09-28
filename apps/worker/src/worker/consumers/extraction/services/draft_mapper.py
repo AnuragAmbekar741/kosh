@@ -15,7 +15,8 @@ def drafts(
                 SpendItem(
                     user_id=user_id,
                     merchant=extraction.merchant,
-                    description=item.normalized_name or item.raw_description,
+                    description=item.raw_description,
+                    normalized_name=item.normalized_name,
                     amount=Decimal(item.line_total),
                     currency=extraction.currency,
                     spent_at=extraction.purchased_at,

@@ -15,6 +15,7 @@ def test_receipt_creates_only_line_item_drafts() -> None:
         line_items=[
             LineItem(
                 raw_description="MILK",
+                normalized_name="Milk",
                 line_total="10.00",
                 category="Groceries",
                 confidence=1,
@@ -32,6 +33,8 @@ def test_receipt_creates_only_line_item_drafts() -> None:
     rows = drafts(uuid4(), extraction)
     assert [row.line_index for row in rows] == [0, 1]
     assert [row.category for row in rows] == ["Groceries", "Household"]
+    assert [row.description for row in rows] == ["MILK", "SOAP"]
+    assert [row.normalized_name for row in rows] == ["Milk", None]
 
 
 def test_statement_skips_credits() -> None:

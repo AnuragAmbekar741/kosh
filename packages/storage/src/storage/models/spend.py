@@ -50,6 +50,7 @@ class SpendItem(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="users.id", index=True)
     merchant: str
     description: str | None = None
+    normalized_name: str | None = None
     amount: Decimal = Field(sa_column=Column(Numeric(12, 2), nullable=False))
     currency: str
     spent_at: date = Field(index=True)
