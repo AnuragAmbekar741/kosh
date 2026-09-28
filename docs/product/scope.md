@@ -20,7 +20,7 @@ Never: `Agent → execute_sql() → Database`.
 | Area | Scope |
 |---|---|
 | Auth | Email/password register & login; Google OAuth; JWT access + refresh rotation; logout; `GET /users/me` |
-| Spend | CRUD on **SpendItem**; filter by date, merchant, source |
+| Spend | CRUD on **SpendItem**; filter by date, category, merchant, source |
 | Documents | Upload PDF/image/DOCX → async worker → draft SpendItems → user confirm |
 | Overview | Totals, monthly spend, top merchants, recent spend (computed) |
 | Dashboard | Collapsible sidebar shell; Overview + Spending. See [../design/dashboard.md](../design/dashboard.md) |
@@ -65,7 +65,7 @@ Status key: **live** = implemented today.
 
 Prefer `GET /users/me` over `GET /users/{id}` for profile.
 
-`GET /spend-items` is the confirmed ledger. It returns `{data, total}` and accepts `skip` (default 0), `limit` (default 50, max 200), `spent_from`, `spent_to`, exact `merchant`, `source`, and `q` (case-insensitive contains on merchant or description). `GET /spend-items/summary` is the same confirmed slice plus `period` (`day` / `week` / `month` / `custom`): totals, bill/item counts, and optional month-over-month comparison. It is not paged. Pending document items are returned by `GET /documents/{id}` until the user reviews them; `POST /documents/{id}/confirm` confirms every pending item. `POST /documents/manual` creates a fileless bill from a title. `POST /documents/{id}/line-items` appends a confirmed line to an itemized receipt bill or a manual bill. `DELETE /documents/{id}` removes the document, extraction history, linked spend items, and stored file (manual bills have no file).
+`GET /spend-items` is the confirmed ledger. It returns `{data, total}` and accepts `skip` (default 0), `limit` (default 50, max 200), `spent_from`, `spent_to`, repeatable `category`, exact `merchant`, `source`, and `q` (case-insensitive contains on merchant or description). `GET /spend-items/summary` is the same confirmed slice plus `period` (`day` / `week` / `month` / `custom`): totals, bill/item counts, and optional month-over-month comparison. It is not paged. Pending document items are returned by `GET /documents/{id}` until the user reviews them; `POST /documents/{id}/confirm` confirms every pending item. `POST /documents/manual` creates a fileless bill from a title. `POST /documents/{id}/line-items` appends a confirmed line to an itemized receipt bill or a manual bill. `DELETE /documents/{id}` removes the document, extraction history, linked spend items, and stored file (manual bills have no file).
 
 ## Auth flow (target)
 
