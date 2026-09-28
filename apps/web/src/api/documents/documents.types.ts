@@ -1,4 +1,4 @@
-import type { SpendItem } from "@/api/spend-items/spend-items.types"
+import type { Category, SpendItem } from "@/api/spend-items/spend-items.types"
 
 export type DocumentStatus = "uploaded" | "processing" | "ready" | "failed"
 
@@ -21,6 +21,7 @@ export type ReceiptLineItem = {
   quantity: number | null
   unit_price: string | number | null
   line_total: string | number
+  category: Category
   confidence: number
   requires_review: boolean
 }
@@ -42,6 +43,7 @@ export type StatementTransaction = {
   amount: string | number
   spent_at: string
   direction: "debit" | "credit"
+  category: Category
   confidence: number
   requires_review: boolean
 }
@@ -76,4 +78,5 @@ export type AddDocumentLineItemInput = {
   documentId: string
   description: string
   amount: string
+  category: Category
 }
