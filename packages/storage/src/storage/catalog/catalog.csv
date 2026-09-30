@@ -1,149 +1,737 @@
 slug,parent_slug,name,synonyms,category
 fresh-fruit,,Fresh fruit,fruit,Groceries
+apples,fresh-fruit,Apples,apple|gala|honeycrisp|fuji|granny smith,
+bananas,fresh-fruit,Bananas,banana,
+oranges,fresh-fruit,Oranges,orange|navel orange,
+mandarins,fresh-fruit,Mandarins,mandarin|clementines|cuties,
+lemons,fresh-fruit,Lemons,lemon,
+limes,fresh-fruit,Limes,lime,
+grapes,fresh-fruit,Grapes,red grapes|green grapes,
+strawberries,fresh-fruit,Strawberries,strawberry,
+blueberries,fresh-fruit,Blueberries,blueberry,
+raspberries,fresh-fruit,Raspberries,raspberry,
+blackberries,fresh-fruit,Blackberries,blackberry,
+pears,fresh-fruit,Pears,pear,
+peaches,fresh-fruit,Peaches,peach|nectarines,
+plums,fresh-fruit,Plums,plum,
+cherries,fresh-fruit,Cherries,cherry,
+mangoes,fresh-fruit,Mangoes,mango,
+pineapple,fresh-fruit,Pineapple,,
+watermelon,fresh-fruit,Watermelon,,
+melon,fresh-fruit,Melon,cantaloupe|honeydew,
+kiwi,fresh-fruit,Kiwi,kiwifruit,
+avocados,fresh-fruit,Avocados,avocado|hass avocado,
+pomegranate,fresh-fruit,Pomegranate,,
 fresh-vegetables,,Fresh vegetables,veg|vegetables,Groceries
+tomatoes,fresh-vegetables,Tomatoes,tomato|roma tomatoes|cherry tomatoes,
+potatoes,fresh-vegetables,Potatoes,potato|russet|yukon gold,
+sweet-potatoes,fresh-vegetables,Sweet potatoes,sweet potato|yams,
+onions,fresh-vegetables,Onions,onion|yellow onion|red onion,
+garlic,fresh-vegetables,Garlic,,
+carrots,fresh-vegetables,Carrots,carrot|baby carrots,
+broccoli,fresh-vegetables,Broccoli,,
+cauliflower,fresh-vegetables,Cauliflower,,
+cabbage,fresh-vegetables,Cabbage,,
+lettuce,fresh-vegetables,Lettuce,romaine|iceberg,
+spinach,fresh-vegetables,Spinach,baby spinach,
+salad-mix,fresh-vegetables,Salad mix,spring mix|salad greens|mixed greens,
+kale,fresh-vegetables,Kale,,
+cucumbers,fresh-vegetables,Cucumbers,cucumber,
+bell-peppers,fresh-vegetables,Bell peppers,bell pepper|red pepper|green pepper|capsicum,
+zucchini,fresh-vegetables,Zucchini,courgette,
+mushrooms,fresh-vegetables,Mushrooms,mushroom|cremini|button mushrooms,
+celery,fresh-vegetables,Celery,,
+green-beans,fresh-vegetables,Green beans,,
+corn-on-the-cob,fresh-vegetables,Corn on the cob,sweet corn|corn cob,
+asparagus,fresh-vegetables,Asparagus,,
+green-onions,fresh-vegetables,Green onions,scallions|spring onions,
+brussels-sprouts,fresh-vegetables,Brussels sprouts,,
+ginger,fresh-vegetables,Ginger,ginger root,
+chili-peppers,fresh-vegetables,Chili peppers,jalapeno|jalapenos|serrano,
+squash,fresh-vegetables,Squash,butternut squash|acorn squash,
+eggplant,fresh-vegetables,Eggplant,aubergine,
+beets,fresh-vegetables,Beets,beetroot,
 fresh-herbs,,Fresh herbs,herbs,Groceries
+cilantro,fresh-herbs,Cilantro,coriander,
+basil,fresh-herbs,Basil,,
+parsley,fresh-herbs,Parsley,,
+mint,fresh-herbs,Mint,,
+dill,fresh-herbs,Dill,,
+rosemary,fresh-herbs,Rosemary,,
+thyme,fresh-herbs,Thyme,,
 milk,,Milk,dairy milk,Groceries
+whole-milk,milk,Whole milk,vitamin d milk,
+2-pct-milk,milk,2% milk,reduced fat milk,
+1-pct-milk,milk,1% milk,low fat milk,
+skim-milk,milk,Skim milk,nonfat milk|fat free milk,
+lactose-free-milk,milk,Lactose-free milk,lactaid,
+chocolate-milk,milk,Chocolate milk,,
+buttermilk,milk,Buttermilk,,
 plant-milk,,Plant milk,non dairy milk|nut milk,Groceries
+almond-milk,plant-milk,Almond milk,,
+oat-milk,plant-milk,Oat milk,,
+soy-milk,plant-milk,Soy milk,,
+coconut-milk-drink,plant-milk,Coconut milk drink,coconut beverage,
+cashew-milk,plant-milk,Cashew milk,,
+rice-milk,plant-milk,Rice milk,,
 yogurt,,Yogurt,yoghurt,Groceries
+greek-yogurt,yogurt,Greek yogurt,greek yoghurt,
+plain-yogurt,yogurt,Plain yogurt,,
+flavored-yogurt,yogurt,Flavored yogurt,fruit yogurt,
+skyr,yogurt,Skyr,,
+kefir,yogurt,Kefir,,
 cheese,,Cheese,,Groceries
-butter-and-margarine,,Butter and margarine,butter|margarine,Groceries
-cream,,Cream,creamer|half and half,Groceries
+cheddar,cheese,Cheddar,cheddar cheese|sharp cheddar,
+mozzarella,cheese,Mozzarella,fresh mozzarella,
+parmesan,cheese,Parmesan,parmigiano|grated parmesan,
+swiss-cheese,cheese,Swiss cheese,,
+shredded-cheese,cheese,Shredded cheese,mexican blend|shredded mozzarella,
+sliced-cheese,cheese,Sliced cheese,american cheese|cheese slices,
+cream-cheese,cheese,Cream cheese,philadelphia,
+cottage-cheese,cheese,Cottage cheese,,
+feta,cheese,Feta,,
+goat-cheese,cheese,Goat cheese,chevre,
+brie,cheese,Brie,,
+string-cheese,cheese,String cheese,cheese sticks,
+butter-and-margarine,,Butter and margarine,,Groceries
+butter,butter-and-margarine,Butter,salted butter|unsalted butter,
+margarine,butter-and-margarine,Margarine,vegetable spread,
+ghee,butter-and-margarine,Ghee,,
+cream,,Cream,,Groceries
+heavy-cream,cream,Heavy cream,whipping cream|heavy whipping cream,
+half-and-half,cream,Half and half,,
+coffee-creamer,cream,Coffee creamer,creamer|non dairy creamer,
+sour-cream,cream,Sour cream,,
+whipped-cream,cream,Whipped cream,whipped topping|cool whip,
 eggs,,Eggs,egg,Groceries
+egg-whites,eggs,Egg whites,liquid egg whites,
 chicken,,Chicken,poultry|chx,Groceries
-beef,,Beef,steak|ground beef,Groceries
+chicken-breast,chicken,Chicken breast,chx brst|bnls breast|chicken breast fillet,
+chicken-thighs,chicken,Chicken thighs,chx thigh|thigh meat,
+chicken-drumsticks,chicken,Chicken drumsticks,drumsticks|chx drum,
+chicken-wings,chicken,Chicken wings,wings|chx wings,
+whole-chicken,chicken,Whole chicken,roaster chicken|fryer chicken,
+ground-chicken,chicken,Ground chicken,,
+chicken-tenders,chicken,Chicken tenders,chicken tenderloins|tenderloins,
+chicken-legs,chicken,Chicken legs,leg quarters,
+beef,,Beef,,Groceries
+ground-beef,beef,Ground beef,hamburger meat|minced beef|lean ground beef,
+steak,beef,Steak,ribeye|sirloin|strip steak|t bone|filet mignon,
+beef-roast,beef,Beef roast,chuck roast|pot roast|brisket,
+stew-beef,beef,Stew beef,beef stew meat|stew meat,
+short-ribs,beef,Short ribs,beef ribs,
 pork,,Pork,,Groceries
+pork-chops,pork,Pork chops,,
+pork-tenderloin,pork,Pork tenderloin,,
+pork-shoulder,pork,Pork shoulder,pork butt|boston butt,
+ground-pork,pork,Ground pork,,
+pork-ribs,pork,Pork ribs,spare ribs|baby back ribs,
+ham,pork,Ham,ham steak|spiral ham,
 turkey,,Turkey,,Groceries
+ground-turkey,turkey,Ground turkey,,
+turkey-breast,turkey,Turkey breast,,
+whole-turkey,turkey,Whole turkey,,
 lamb,,Lamb,,Groceries
-bacon-and-sausages,,Bacon and sausages,bacon|sausage|hot dogs,Groceries
+lamb-chops,lamb,Lamb chops,,
+ground-lamb,lamb,Ground lamb,,
+leg-of-lamb,lamb,Leg of lamb,,
+bacon-and-sausages,,Bacon and sausages,,Groceries
+bacon,bacon-and-sausages,Bacon,streaky bacon,
+turkey-bacon,bacon-and-sausages,Turkey bacon,,
+sausages,bacon-and-sausages,Sausages,sausage|bratwurst|italian sausage,
+breakfast-sausage,bacon-and-sausages,Breakfast sausage,sausage links|sausage patties,
+hot-dogs,bacon-and-sausages,Hot dogs,franks|frankfurters|wieners,
+chorizo,bacon-and-sausages,Chorizo,,
 deli-meat,,Deli meat,cold cuts|lunch meat,Groceries
+sliced-turkey,deli-meat,Sliced turkey,deli turkey|turkey slices,
+sliced-ham,deli-meat,Sliced ham,deli ham,
+salami,deli-meat,Salami,,
+pepperoni,deli-meat,Pepperoni,,
+deli-roast-beef,deli-meat,Deli roast beef,,
+prosciutto,deli-meat,Prosciutto,,
 fish,,Fish,seafood,Groceries
-shellfish,,Shellfish,shrimp|prawns,Groceries
-tofu-and-plant-protein,,Tofu and plant protein,tofu|tempeh|plant based meat,Groceries
+salmon,fish,Salmon,atlantic salmon|salmon fillet,
+tilapia,fish,Tilapia,,
+cod,fish,Cod,,
+tuna-steak,fish,Tuna steak,ahi tuna,
+halibut,fish,Halibut,,
+trout,fish,Trout,,
+smoked-salmon,fish,Smoked salmon,lox,
+catfish,fish,Catfish,,
+mahi-mahi,fish,Mahi mahi,,
+shellfish,,Shellfish,,Groceries
+shrimp,shellfish,Shrimp,prawns|jumbo shrimp,
+scallops,shellfish,Scallops,,
+crab,shellfish,Crab,crab legs|crab meat,
+lobster,shellfish,Lobster,,
+mussels,shellfish,Mussels,,
+clams,shellfish,Clams,,
+oysters,shellfish,Oysters,,
+tofu-and-plant-protein,,Tofu and plant protein,plant based meat,Groceries
+tofu,tofu-and-plant-protein,Tofu,firm tofu|extra firm tofu|silken tofu,
+tempeh,tofu-and-plant-protein,Tempeh,,
+plant-based-burgers,tofu-and-plant-protein,Plant-based burgers,veggie burger|beyond burger|impossible burger,
+seitan,tofu-and-plant-protein,Seitan,,
 bread,,Bread,loaf,Groceries
-bagels-and-buns,,Bagels and buns,buns|dinner rolls,Groceries
+sandwich-bread,bread,Sandwich bread,white bread|sliced bread,
+whole-wheat-bread,bread,Whole wheat bread,wheat bread|whole grain bread,
+sourdough,bread,Sourdough,sourdough bread,
+baguette,bread,Baguette,french bread,
+rye-bread,bread,Rye bread,,
+brioche,bread,Brioche,,
+bagels-and-buns,,Bagels and buns,buns,Groceries
+bagels,bagels-and-buns,Bagels,bagel,
+hamburger-buns,bagels-and-buns,Hamburger buns,burger buns,
+hot-dog-buns,bagels-and-buns,Hot dog buns,,
+dinner-rolls,bagels-and-buns,Dinner rolls,,
+english-muffins,bagels-and-buns,English muffins,,
 tortillas-and-wraps,,Tortillas and wraps,tortilla|wraps,Groceries
-pastries-and-cakes,,Pastries and cakes,pastry|cake|muffins,Groceries
-rice-and-grains,,Rice and grains,rice|quinoa,Groceries
+flour-tortillas,tortillas-and-wraps,Flour tortillas,,
+corn-tortillas,tortillas-and-wraps,Corn tortillas,,
+pita-bread,tortillas-and-wraps,Pita bread,pita,
+naan,tortillas-and-wraps,Naan,,
+taco-shells,tortillas-and-wraps,Taco shells,hard taco shells,
+pastries-and-cakes,,Pastries and cakes,pastry,Groceries
+muffins,pastries-and-cakes,Muffins,muffin,
+croissants,pastries-and-cakes,Croissants,croissant,
+donuts,pastries-and-cakes,Donuts,doughnuts|donut,
+cake,pastries-and-cakes,Cake,birthday cake|sheet cake|cupcakes,
+pies,pastries-and-cakes,Pies,pie|apple pie,
+cinnamon-rolls,pastries-and-cakes,Cinnamon rolls,,
+rice-and-grains,,Rice and grains,grains,Groceries
+white-rice,rice-and-grains,White rice,rice|long grain rice|jasmine rice|basmati rice,
+brown-rice,rice-and-grains,Brown rice,,
+quinoa,rice-and-grains,Quinoa,,
+couscous,rice-and-grains,Couscous,,
+barley,rice-and-grains,Barley,,
 pasta-and-noodles,,Pasta and noodles,pasta|noodles,Groceries
-baking-supplies,,Baking supplies,flour|sugar|baking,Groceries
-cooking-oil-and-vinegar,,Cooking oil and vinegar,olive oil|vegetable oil|vinegar,Groceries
-spices-and-seasonings,,Spices and seasonings,spice|seasoning|salt,Groceries
-sauces-and-condiments,,Sauces and condiments,sauce|ketchup|mayo|dressing,Groceries
+spaghetti,pasta-and-noodles,Spaghetti,linguine|fettuccine,
+penne,pasta-and-noodles,Penne,rigatoni|ziti,
+macaroni,pasta-and-noodles,Macaroni,elbow macaroni,
+mac-and-cheese,pasta-and-noodles,Mac and cheese,boxed mac and cheese|kraft dinner,
+egg-noodles,pasta-and-noodles,Egg noodles,,
+instant-noodles,pasta-and-noodles,Instant noodles,ramen|cup noodles,
+rice-noodles,pasta-and-noodles,Rice noodles,,
+lasagna-noodles,pasta-and-noodles,Lasagna noodles,,
+ravioli,pasta-and-noodles,Ravioli,tortellini,
+baking-supplies,,Baking supplies,baking,Groceries
+flour,baking-supplies,Flour,all purpose flour|ap flour|bread flour,
+sugar,baking-supplies,Sugar,granulated sugar|white sugar,
+brown-sugar,baking-supplies,Brown sugar,,
+powdered-sugar,baking-supplies,Powdered sugar,icing sugar|confectioners sugar,
+baking-powder,baking-supplies,Baking powder,,
+baking-soda,baking-supplies,Baking soda,bicarbonate of soda,
+yeast,baking-supplies,Yeast,,
+vanilla-extract,baking-supplies,Vanilla extract,vanilla,
+chocolate-chips,baking-supplies,Chocolate chips,,
+cornstarch,baking-supplies,Cornstarch,corn starch,
+baking-mixes,baking-supplies,Baking mixes,cake mix|brownie mix,
+pancake-mix,baking-supplies,Pancake mix,waffle mix,
+cooking-oil-and-vinegar,,Cooking oil and vinegar,,Groceries
+olive-oil,cooking-oil-and-vinegar,Olive oil,extra virgin olive oil|evoo,
+vegetable-oil,cooking-oil-and-vinegar,Vegetable oil,canola oil,
+coconut-oil,cooking-oil-and-vinegar,Coconut oil,,
+avocado-oil,cooking-oil-and-vinegar,Avocado oil,,
+sesame-oil,cooking-oil-and-vinegar,Sesame oil,,
+cooking-spray,cooking-oil-and-vinegar,Cooking spray,pam,
+vinegar,cooking-oil-and-vinegar,Vinegar,white vinegar|apple cider vinegar,
+balsamic-vinegar,cooking-oil-and-vinegar,Balsamic vinegar,,
+spices-and-seasonings,,Spices and seasonings,spice|seasoning,Groceries
+salt,spices-and-seasonings,Salt,sea salt|kosher salt,
+black-pepper,spices-and-seasonings,Black pepper,peppercorns|ground pepper,
+garlic-powder,spices-and-seasonings,Garlic powder,,
+onion-powder,spices-and-seasonings,Onion powder,,
+paprika,spices-and-seasonings,Paprika,smoked paprika,
+cumin,spices-and-seasonings,Cumin,,
+cinnamon,spices-and-seasonings,Cinnamon,,
+chili-powder,spices-and-seasonings,Chili powder,,
+italian-seasoning,spices-and-seasonings,Italian seasoning,oregano,
+sauces-and-condiments,,Sauces and condiments,sauce|condiments,Groceries
+ketchup,sauces-and-condiments,Ketchup,catsup,
+mayonnaise,sauces-and-condiments,Mayonnaise,mayo,
+mustard,sauces-and-condiments,Mustard,dijon,
+salad-dressing,sauces-and-condiments,Salad dressing,dressing|ranch|vinaigrette,
+hot-sauce,sauces-and-condiments,Hot sauce,sriracha|tabasco,
+soy-sauce,sauces-and-condiments,Soy sauce,tamari,
+barbecue-sauce,sauces-and-condiments,Barbecue sauce,bbq sauce,
+pasta-sauce,sauces-and-condiments,Pasta sauce,marinara|tomato sauce,
+pesto,sauces-and-condiments,Pesto,,
+teriyaki-sauce,sauces-and-condiments,Teriyaki sauce,,
+relish,sauces-and-condiments,Relish,,
 canned-vegetables-and-beans,,Canned vegetables and beans,canned beans|canned veg,Groceries
-canned-fish-and-meat,,Canned fish and meat,tuna|canned chicken,Groceries
-soup-and-broth,,Soup and broth,soup|broth|stock,Groceries
+black-beans,canned-vegetables-and-beans,Black beans,,
+kidney-beans,canned-vegetables-and-beans,Kidney beans,,
+chickpeas,canned-vegetables-and-beans,Chickpeas,garbanzo beans,
+baked-beans,canned-vegetables-and-beans,Baked beans,,
+refried-beans,canned-vegetables-and-beans,Refried beans,,
+canned-tomatoes,canned-vegetables-and-beans,Canned tomatoes,diced tomatoes|crushed tomatoes,
+tomato-paste,canned-vegetables-and-beans,Tomato paste,,
+canned-corn,canned-vegetables-and-beans,Canned corn,,
+canned-coconut-milk,canned-vegetables-and-beans,Canned coconut milk,coconut milk,
+canned-fish-and-meat,,Canned fish and meat,,Groceries
+canned-tuna,canned-fish-and-meat,Canned tuna,tuna|chunk light tuna,
+canned-chicken,canned-fish-and-meat,Canned chicken,,
+canned-salmon,canned-fish-and-meat,Canned salmon,,
+sardines,canned-fish-and-meat,Sardines,,
+luncheon-meat,canned-fish-and-meat,Luncheon meat,spam,
+soup-and-broth,,Soup and broth,soup,Groceries
+chicken-broth,soup-and-broth,Chicken broth,chicken stock,
+beef-broth,soup-and-broth,Beef broth,beef stock,
+vegetable-broth,soup-and-broth,Vegetable broth,vegetable stock,
+canned-soup,soup-and-broth,Canned soup,condensed soup,
+bouillon,soup-and-broth,Bouillon,bouillon cubes|stock cubes,
 breakfast-cereal,,Breakfast cereal,cereal,Groceries
-oats-and-granola,,Oats and granola,oatmeal|granola,Groceries
-nut-butters-and-jams,,Nut butters and jams,peanut butter|jam|jelly|honey,Groceries
-nuts-and-seeds,,Nuts and seeds,nuts|almonds|seeds,Groceries
-dried-fruit,,Dried fruit,raisins,Groceries
-dips-and-hummus,,Dips and hummus,dip|hummus|salsa,Groceries
-pickles-and-olives,,Pickles and olives,pickles|olives,Groceries
-coffee,,Coffee,coffee beans|ground coffee|k cups,Groceries
+corn-flakes,breakfast-cereal,Corn flakes,,
+bran-cereal,breakfast-cereal,Bran cereal,bran flakes,
+puffed-rice-cereal,breakfast-cereal,Puffed rice cereal,rice krispies,
+oats-and-granola,,Oats and granola,,Groceries
+rolled-oats,oats-and-granola,Rolled oats,oats|old fashioned oats|oatmeal,
+instant-oatmeal,oats-and-granola,Instant oatmeal,oatmeal packets,
+steel-cut-oats,oats-and-granola,Steel cut oats,,
+granola,oats-and-granola,Granola,,
+muesli,oats-and-granola,Muesli,,
+nut-butters-and-jams,,Nut butters and jams,spreads,Groceries
+peanut-butter,nut-butters-and-jams,Peanut butter,,
+almond-butter,nut-butters-and-jams,Almond butter,,
+jam,nut-butters-and-jams,Jam,jelly|preserves,
+honey,nut-butters-and-jams,Honey,,
+chocolate-spread,nut-butters-and-jams,Chocolate spread,nutella|hazelnut spread,
+maple-syrup,nut-butters-and-jams,Maple syrup,pancake syrup,
+nuts-and-seeds,,Nuts and seeds,nuts|seeds,Groceries
+almonds,nuts-and-seeds,Almonds,almond,
+cashews,nuts-and-seeds,Cashews,,
+walnuts,nuts-and-seeds,Walnuts,,
+peanuts,nuts-and-seeds,Peanuts,,
+pistachios,nuts-and-seeds,Pistachios,,
+pecans,nuts-and-seeds,Pecans,,
+mixed-nuts,nuts-and-seeds,Mixed nuts,trail mix,
+chia-seeds,nuts-and-seeds,Chia seeds,,
+sunflower-seeds,nuts-and-seeds,Sunflower seeds,,
+flax-seeds,nuts-and-seeds,Flax seeds,flaxseed,
+dried-fruit,,Dried fruit,,Groceries
+raisins,dried-fruit,Raisins,,
+dried-cranberries,dried-fruit,Dried cranberries,craisins,
+dates,dried-fruit,Dates,medjool dates,
+dried-apricots,dried-fruit,Dried apricots,,
+prunes,dried-fruit,Prunes,,
+dips-and-hummus,,Dips and hummus,dip,Groceries
+hummus,dips-and-hummus,Hummus,,
+salsa,dips-and-hummus,Salsa,,
+guacamole,dips-and-hummus,Guacamole,,
+queso,dips-and-hummus,Queso,cheese dip,
+tzatziki,dips-and-hummus,Tzatziki,,
+pickles-and-olives,,Pickles and olives,,Groceries
+pickles,pickles-and-olives,Pickles,dill pickles,
+olives,pickles-and-olives,Olives,kalamata|green olives,
+sauerkraut,pickles-and-olives,Sauerkraut,,
+kimchi,pickles-and-olives,Kimchi,,
+coffee,,Coffee,,Groceries
+ground-coffee,coffee,Ground coffee,,
+coffee-beans,coffee,Coffee beans,whole bean coffee,
+coffee-pods,coffee,Coffee pods,k cups|nespresso pods,
+instant-coffee,coffee,Instant coffee,,
+cold-brew,coffee,Cold brew,bottled cold brew,
 tea,,Tea,tea bags,Groceries
-water,,Water,bottled water|sparkling water,Groceries
-soft-drinks,,Soft drinks,soda|pop|cola,Groceries
+black-tea,tea,Black tea,english breakfast,
+green-tea,tea,Green tea,matcha,
+herbal-tea,tea,Herbal tea,chamomile|peppermint tea,
+iced-tea,tea,Iced tea,bottled tea,
+chai,tea,Chai,,
+water,,Water,,Groceries
+bottled-water,water,Bottled water,spring water|purified water,
+sparkling-water,water,Sparkling water,seltzer|soda water|la croix,
+coconut-water,water,Coconut water,,
+soft-drinks,,Soft drinks,soda|pop,Groceries
+cola,soft-drinks,Cola,coke|pepsi|coca cola,
+diet-soda,soft-drinks,Diet soda,diet coke|coke zero,
+lemon-lime-soda,soft-drinks,Lemon-lime soda,sprite|7up,
+ginger-ale,soft-drinks,Ginger ale,,
+root-beer,soft-drinks,Root beer,,
+tonic-water,soft-drinks,Tonic water,,
+kombucha,soft-drinks,Kombucha,,
 juice,,Juice,,Groceries
+orange-juice,juice,Orange juice,oj,
+apple-juice,juice,Apple juice,,
+cranberry-juice,juice,Cranberry juice,,
+grape-juice,juice,Grape juice,,
+lemonade,juice,Lemonade,,
 sports-and-energy-drinks,,Sports and energy drinks,energy drink|sports drink,Groceries
+electrolyte-drinks,sports-and-energy-drinks,Electrolyte drinks,gatorade|powerade,
 beer,,Beer,,Groceries
+lager,beer,Lager,pilsner,
+ipa,beer,IPA,pale ale,
+stout,beer,Stout,porter,
+hard-seltzer,beer,Hard seltzer,white claw|truly,
+cider,beer,Cider,hard cider,
+non-alcoholic-beer,beer,Non-alcoholic beer,,
 wine,,Wine,,Groceries
+red-wine,wine,Red wine,cabernet|merlot|pinot noir,
+white-wine,wine,White wine,chardonnay|sauvignon blanc|pinot grigio,
+rose-wine,wine,Rose wine,rose,
+sparkling-wine,wine,Sparkling wine,champagne|prosecco,
 spirits,,Spirits,liquor,Groceries
+vodka,spirits,Vodka,,
+whiskey,spirits,Whiskey,whisky|bourbon|scotch,
+rum,spirits,Rum,,
+gin,spirits,Gin,,
+tequila,spirits,Tequila,,
 chips-and-crisps,,Chips and crisps,chips|crisps,Groceries
+potato-chips,chips-and-crisps,Potato chips,,
+tortilla-chips,chips-and-crisps,Tortilla chips,nacho chips,
+pita-chips,chips-and-crisps,Pita chips,,
+cheese-puffs,chips-and-crisps,Cheese puffs,cheetos,
 crackers,,Crackers,,Groceries
+saltines,crackers,Saltines,saltine crackers,
+graham-crackers,crackers,Graham crackers,,
+rice-cakes,crackers,Rice cakes,,
+cheese-crackers,crackers,Cheese crackers,goldfish|cheez it,
 cookies-and-biscuits,,Cookies and biscuits,cookies|biscuits,Groceries
+chocolate-chip-cookies,cookies-and-biscuits,Chocolate chip cookies,,
+sandwich-cookies,cookies-and-biscuits,Sandwich cookies,oreo,
+shortbread,cookies-and-biscuits,Shortbread,,
+oatmeal-cookies,cookies-and-biscuits,Oatmeal cookies,,
 chocolate-and-candy,,Chocolate and candy,chocolate|candy|sweets,Groceries
-snack-bars,,Snack bars,granola bar|protein bar,Groceries
-popcorn-and-pretzels,,Popcorn and pretzels,popcorn|pretzels,Groceries
+chocolate-bar,chocolate-and-candy,Chocolate bar,candy bar,
+gummies,chocolate-and-candy,Gummies,gummy bears,
+breath-mints,chocolate-and-candy,Breath mints,,
+chewing-gum,chocolate-and-candy,Chewing gum,gum,
+lollipops,chocolate-and-candy,Lollipops,,
+snack-bars,,Snack bars,,Groceries
+granola-bars,snack-bars,Granola bars,granola bar,
+protein-bars,snack-bars,Protein bars,protein bar,
+fruit-snacks,snack-bars,Fruit snacks,,
+popcorn-and-pretzels,,Popcorn and pretzels,,Groceries
+popcorn,popcorn-and-pretzels,Popcorn,microwave popcorn,
+pretzels,popcorn-and-pretzels,Pretzels,,
 frozen-vegetables-and-fruit,,Frozen vegetables and fruit,frozen veg|frozen fruit,Groceries
+frozen-peas,frozen-vegetables-and-fruit,Frozen peas,,
+frozen-mixed-vegetables,frozen-vegetables-and-fruit,Frozen mixed vegetables,,
+frozen-berries,frozen-vegetables-and-fruit,Frozen berries,,
+frozen-corn,frozen-vegetables-and-fruit,Frozen corn,,
+frozen-broccoli,frozen-vegetables-and-fruit,Frozen broccoli,,
+french-fries,frozen-vegetables-and-fruit,French fries,frozen fries|tater tots,
 frozen-meals,,Frozen meals,frozen dinner|frozen entree,Groceries
+frozen-burritos,frozen-meals,Frozen burritos,,
+frozen-dumplings,frozen-meals,Frozen dumplings,potstickers|gyoza,
+chicken-nuggets,frozen-meals,Chicken nuggets,nuggets,
+fish-sticks,frozen-meals,Fish sticks,,
+frozen-waffles,frozen-meals,Frozen waffles,eggo,
 frozen-pizza,,Frozen pizza,,Groceries
-ice-cream-and-frozen-desserts,,Ice cream and frozen desserts,ice cream|gelato|popsicles,Groceries
-prepared-meals,,Prepared meals,deli meals|hot food|rotisserie,Groceries
-salads-and-sandwiches,,Salads and sandwiches,sandwich|salad kit,Groceries
+ice-cream-and-frozen-desserts,,Ice cream and frozen desserts,,Groceries
+ice-cream,ice-cream-and-frozen-desserts,Ice cream,,
+gelato,ice-cream-and-frozen-desserts,Gelato,,
+popsicles,ice-cream-and-frozen-desserts,Popsicles,ice pops|ice lollies,
+frozen-yogurt,ice-cream-and-frozen-desserts,Frozen yogurt,,
+ice-cream-bars,ice-cream-and-frozen-desserts,Ice cream bars,ice cream sandwiches,
+prepared-meals,,Prepared meals,deli meals|hot food,Groceries
+rotisserie-chicken,prepared-meals,Rotisserie chicken,rotisserie,
+deli-fried-chicken,prepared-meals,Deli fried chicken,,
+salads-and-sandwiches,,Salads and sandwiches,,Groceries
+sandwiches,salads-and-sandwiches,Sandwiches,sandwich|sub,
+salad-kits,salads-and-sandwiches,Salad kits,salad kit,
+prepared-salads,salads-and-sandwiches,Prepared salads,deli salad|caesar salad,
 sushi,,Sushi,,Groceries
 restaurant-meals,,Restaurant meals,dine in|entree,Dining out
 fast-food,,Fast food,takeout,Dining out
-coffee-shop-drinks,,Coffee shop drinks,latte|espresso|cappuccino,Dining out
-bar-drinks,,Bar drinks,cocktail|draft beer,Dining out
+coffee-shop-drinks,,Coffee shop drinks,,Dining out
+latte,coffee-shop-drinks,Latte,,
+espresso,coffee-shop-drinks,Espresso,,
+cappuccino,coffee-shop-drinks,Cappuccino,,
+americano,coffee-shop-drinks,Americano,,
+blended-coffee,coffee-shop-drinks,Blended coffee,frappuccino,
+chai-latte,coffee-shop-drinks,Chai latte,chai tea latte,
+bar-drinks,,Bar drinks,draft beer,Dining out
+cocktails,bar-drinks,Cocktails,cocktail|margarita|mojito,
 cafe-snacks-and-desserts,,Cafe snacks and desserts,cafe dessert,Dining out
-laundry-detergent,,Laundry detergent,detergent|laundry pods,Household
-fabric-care,,Fabric care,fabric softener|dryer sheets|stain remover,Household
+laundry-detergent,,Laundry detergent,detergent,Household
+liquid-detergent,laundry-detergent,Liquid detergent,liquid laundry detergent,
+laundry-pods,laundry-detergent,Laundry pods,detergent pods|tide pods,
+powder-detergent,laundry-detergent,Powder detergent,washing powder,
+fabric-care,,Fabric care,,Household
+fabric-softener,fabric-care,Fabric softener,,
+dryer-sheets,fabric-care,Dryer sheets,,
+stain-remover,fabric-care,Stain remover,oxiclean|spot remover,
 dish-soap,,Dish soap,dishwashing liquid,Household
-dishwasher-detergent,,Dishwasher detergent,dishwasher tabs|dishwasher pods,Household
-surface-and-floor-cleaners,,Surface and floor cleaners,all purpose cleaner|disinfectant|bleach,Household
+dishwasher-detergent,,Dishwasher detergent,,Household
+dishwasher-pods,dishwasher-detergent,Dishwasher pods,dishwasher tabs|dishwasher tablets,
+rinse-aid,dishwasher-detergent,Rinse aid,,
+surface-and-floor-cleaners,,Surface and floor cleaners,all purpose cleaner,Household
+disinfectant-spray,surface-and-floor-cleaners,Disinfectant spray,disinfectant|lysol spray,
+disinfecting-wipes,surface-and-floor-cleaners,Disinfecting wipes,clorox wipes|cleaning wipes,
+bleach,surface-and-floor-cleaners,Bleach,,
+glass-cleaner,surface-and-floor-cleaners,Glass cleaner,windex,
+floor-cleaner,surface-and-floor-cleaners,Floor cleaner,,
+toilet-cleaner,surface-and-floor-cleaners,Toilet cleaner,toilet bowl cleaner,
 paper-towels,,Paper towels,kitchen roll,Household
 toilet-paper,,Toilet paper,bath tissue|tp,Household
 facial-tissues,,Facial tissues,tissues|kleenex,Household
 trash-bags,,Trash bags,garbage bags|bin liners,Household
-food-storage-and-wraps,,Food storage and wraps,foil|plastic wrap|zip bags,Household
-disposable-tableware,,Disposable tableware,paper plates|paper cups|napkins,Household
-batteries,,Batteries,aa|aaa,Household
-light-bulbs,,Light bulbs,bulb|led bulb,Household
-cleaning-tools,,Cleaning tools,sponges|mop|cleaning gloves,Household
+food-storage-and-wraps,,Food storage and wraps,,Household
+aluminum-foil,food-storage-and-wraps,Aluminum foil,foil|tin foil,
+plastic-wrap,food-storage-and-wraps,Plastic wrap,cling film|saran wrap,
+storage-bags,food-storage-and-wraps,Storage bags,zip bags|ziploc|sandwich bags|freezer bags,
+parchment-paper,food-storage-and-wraps,Parchment paper,baking paper,
+food-containers,food-storage-and-wraps,Food containers,tupperware|meal prep containers,
+disposable-tableware,,Disposable tableware,,Household
+paper-plates,disposable-tableware,Paper plates,,
+paper-cups,disposable-tableware,Paper cups,,
+napkins,disposable-tableware,Napkins,paper napkins,
+plastic-cutlery,disposable-tableware,Plastic cutlery,plastic forks|disposable cutlery,
+straws,disposable-tableware,Straws,,
+batteries,,Batteries,,Household
+aa-batteries,batteries,AA batteries,aa,
+aaa-batteries,batteries,AAA batteries,aaa,
+9v-batteries,batteries,9V batteries,9 volt,
+coin-batteries,batteries,Coin batteries,cr2032|button batteries,
+light-bulbs,,Light bulbs,bulb,Household
+led-bulbs,light-bulbs,LED bulbs,led bulb,
+cleaning-tools,,Cleaning tools,,Household
+sponges,cleaning-tools,Sponges,scrub sponge,
+mop,cleaning-tools,Mop,mop refills|swiffer,
+cleaning-gloves,cleaning-tools,Cleaning gloves,rubber gloves,
+microfiber-cloths,cleaning-tools,Microfiber cloths,cleaning cloths,
+broom,cleaning-tools,Broom,dustpan,
 air-fresheners,,Air fresheners,,Household
-pest-control,,Pest control,insect spray|mouse traps,Household
-hair-care,,Hair care,shampoo|conditioner,Personal care
-body-wash-and-soap,,Body wash and soap,soap|body wash,Personal care
-oral-care,,Oral care,toothpaste|toothbrush|floss|mouthwash,Personal care
+pest-control,,Pest control,,Household
+insect-spray,pest-control,Insect spray,bug spray|raid,
+mouse-traps,pest-control,Mouse traps,,
+ant-bait,pest-control,Ant bait,roach bait,
+hair-care,,Hair care,,Personal care
+shampoo,hair-care,Shampoo,,
+conditioner,hair-care,Conditioner,,
+hair-styling,hair-care,Hair styling,hair gel|hair spray|mousse|pomade,
+hair-color,hair-care,Hair color,hair dye,
+dry-shampoo,hair-care,Dry shampoo,,
+body-wash-and-soap,,Body wash and soap,,Personal care
+body-wash,body-wash-and-soap,Body wash,shower gel,
+bar-soap,body-wash-and-soap,Bar soap,soap|soap bar,
+hand-soap,body-wash-and-soap,Hand soap,liquid hand soap,
+oral-care,,Oral care,,Personal care
+toothpaste,oral-care,Toothpaste,,
+toothbrush,oral-care,Toothbrush,,
+dental-floss,oral-care,Dental floss,floss,
+mouthwash,oral-care,Mouthwash,listerine,
 deodorant,,Deodorant,antiperspirant,Personal care
-shaving,,Shaving,razor|shaving cream,Personal care
-skincare,,Skincare,moisturizer|lotion|sunscreen,Personal care
+shaving,,Shaving,,Personal care
+razors,shaving,Razors,razor|razor blades|razor cartridges,
+shaving-cream,shaving,Shaving cream,shaving gel|shave foam,
+aftershave,shaving,Aftershave,,
+skincare,,Skincare,,Personal care
+moisturizer,skincare,Moisturizer,face cream|face moisturizer,
+body-lotion,skincare,Body lotion,lotion|hand cream,
+sunscreen,skincare,Sunscreen,spf|sunblock,
+face-wash,skincare,Face wash,cleanser|facial cleanser,
+lip-balm,skincare,Lip balm,chapstick,
 cosmetics,,Cosmetics,makeup,Personal care
-feminine-care,,Feminine care,tampons|sanitary pads,Personal care
-cotton-and-swabs,,Cotton and swabs,cotton balls|q tips,Personal care
+foundation,cosmetics,Foundation,,
+mascara,cosmetics,Mascara,,
+lipstick,cosmetics,Lipstick,lip gloss,
+makeup-remover,cosmetics,Makeup remover,micellar water,
+nail-polish,cosmetics,Nail polish,,
+feminine-care,,Feminine care,,Personal care
+tampons,feminine-care,Tampons,,
+sanitary-pads,feminine-care,Sanitary pads,,
+panty-liners,feminine-care,Panty liners,,
+menstrual-cup,feminine-care,Menstrual cup,,
+cotton-and-swabs,,Cotton and swabs,,Personal care
+cotton-balls,cotton-and-swabs,Cotton balls,,
+cotton-swabs,cotton-and-swabs,Cotton swabs,q tips|cotton buds,
+cotton-pads,cotton-and-swabs,Cotton pads,,
 hand-sanitizer,,Hand sanitizer,,Personal care
-hair-and-beauty-services,,Hair and beauty services,haircut|salon,Personal care
-pain-relief,,Pain relief,ibuprofen|acetaminophen|aspirin,Health
-cold-flu-and-allergy,,Cold flu and allergy,allergy|cough|decongestant,Health
-digestive-health,,Digestive health,antacid|laxative,Health
-vitamins-and-supplements,,Vitamins and supplements,vitamins|supplement,Health
-first-aid,,First aid,bandages|band aid,Health
+hair-and-beauty-services,,Hair and beauty services,salon,Personal care
+haircut,hair-and-beauty-services,Haircut,barber,
+manicure,hair-and-beauty-services,Manicure,pedicure|nail salon,
+spa-treatments,hair-and-beauty-services,Spa treatments,massage|facial,
+pain-relief,,Pain relief,pain reliever,Health
+ibuprofen,pain-relief,Ibuprofen,advil|motrin,
+acetaminophen,pain-relief,Acetaminophen,tylenol|paracetamol,
+aspirin,pain-relief,Aspirin,,
+naproxen,pain-relief,Naproxen,aleve,
+pain-relief-cream,pain-relief,Pain relief cream,muscle rub,
+cold-flu-and-allergy,,Cold flu and allergy,cold medicine,Health
+allergy-medicine,cold-flu-and-allergy,Allergy medicine,allergy|antihistamine|claritin|zyrtec,
+cough-syrup,cold-flu-and-allergy,Cough syrup,cough|cough medicine,
+decongestant,cold-flu-and-allergy,Decongestant,sudafed|nasal spray,
+throat-lozenges,cold-flu-and-allergy,Throat lozenges,cough drops,
+cold-and-flu-relief,cold-flu-and-allergy,Cold and flu relief,dayquil|nyquil,
+digestive-health,,Digestive health,,Health
+antacids,digestive-health,Antacids,antacid|tums,
+laxatives,digestive-health,Laxatives,laxative,
+anti-diarrheal,digestive-health,Anti-diarrheal,imodium,
+probiotics,digestive-health,Probiotics,,
+vitamins-and-supplements,,Vitamins and supplements,supplement,Health
+multivitamin,vitamins-and-supplements,Multivitamin,vitamins|multivitamins,
+vitamin-d,vitamins-and-supplements,Vitamin D,,
+vitamin-c,vitamins-and-supplements,Vitamin C,,
+fish-oil,vitamins-and-supplements,Fish oil,omega 3,
+melatonin,vitamins-and-supplements,Melatonin,,
+magnesium,vitamins-and-supplements,Magnesium,,
+first-aid,,First aid,,Health
+bandages,first-aid,Bandages,band aid|plasters,
+antiseptic,first-aid,Antiseptic,hydrogen peroxide|rubbing alcohol|neosporin,
+gauze,first-aid,Gauze,medical tape,
 prescriptions,,Prescriptions,rx|pharmacy,Health
-eye-care,,Eye care,contact lens solution|eye drops,Health
-sports-nutrition,,Sports nutrition,protein powder,Health
-medical-supplies,,Medical supplies,thermometer|test kit,Health
+eye-care,,Eye care,,Health
+contact-lenses,eye-care,Contact lenses,,
+contact-lens-solution,eye-care,Contact lens solution,,
+eye-drops,eye-care,Eye drops,,
+reading-glasses,eye-care,Reading glasses,,
+sports-nutrition,,Sports nutrition,,Health
+protein-powder,sports-nutrition,Protein powder,whey protein,
+pre-workout,sports-nutrition,Pre-workout,,
+creatine,sports-nutrition,Creatine,,
+protein-shakes,sports-nutrition,Protein shakes,protein drink,
+medical-supplies,,Medical supplies,,Health
+thermometer,medical-supplies,Thermometer,,
+test-kits,medical-supplies,Test kits,test kit|covid test|pregnancy test,
+blood-pressure-monitor,medical-supplies,Blood pressure monitor,,
 fitness-and-gym,,Fitness and gym,gym|gym membership,Health
 medical-visits,,Medical visits,doctor|clinic|copay,Health
 diapers,,Diapers,nappies,Baby & kids
+training-pants,diapers,Training pants,pull ups,
 baby-wipes,,Baby wipes,,Baby & kids
 baby-formula,,Baby formula,formula,Baby & kids
 baby-food,,Baby food,,Baby & kids
-baby-care,,Baby care,diaper cream|baby lotion,Baby & kids
-toys-and-games,,Toys and games,toy|board game,Baby & kids
+baby-food-pouches,baby-food,Baby food pouches,pouches,
+baby-cereal,baby-food,Baby cereal,,
+toddler-snacks,baby-food,Toddler snacks,baby puffs,
+baby-care,,Baby care,,Baby & kids
+diaper-cream,baby-care,Diaper cream,diaper rash cream,
+baby-lotion,baby-care,Baby lotion,,
+baby-shampoo,baby-care,Baby shampoo,baby wash,
+baby-bottles,baby-care,Baby bottles,bottle nipples,
+pacifiers,baby-care,Pacifiers,dummy,
+toys-and-games,,Toys and games,toy,Baby & kids
+board-games,toys-and-games,Board games,board game,
+puzzles,toys-and-games,Puzzles,jigsaw puzzle,
+building-blocks,toys-and-games,Building blocks,lego,
+stuffed-animals,toys-and-games,Stuffed animals,plush toy,
 kids-clothing,,Kids clothing,,Baby & kids
-school-supplies,,School supplies,notebook|pencils|crayons,Baby & kids
+school-supplies,,School supplies,,Baby & kids
+notebooks,school-supplies,Notebooks,notebook,
+pencils,school-supplies,Pencils,pencil,
+crayons,school-supplies,Crayons,,
+markers,school-supplies,Markers,felt tips,
+glue-sticks,school-supplies,Glue sticks,,
 dog-food,,Dog food,,Pet
+dry-dog-food,dog-food,Dry dog food,kibble,
+wet-dog-food,dog-food,Wet dog food,canned dog food,
 cat-food,,Cat food,,Pet
+dry-cat-food,cat-food,Dry cat food,,
+wet-cat-food,cat-food,Wet cat food,canned cat food,
 pet-treats,,Pet treats,,Pet
+dog-treats,pet-treats,Dog treats,,
+cat-treats,pet-treats,Cat treats,,
 cat-litter,,Cat litter,litter,Pet
-pet-supplies,,Pet supplies,leash|pet toy,Pet
+pet-supplies,,Pet supplies,,Pet
+leashes-and-collars,pet-supplies,Leashes and collars,leash|collar|harness,
+pet-toys,pet-supplies,Pet toys,pet toy|chew toy,
+pet-beds,pet-supplies,Pet beds,,
+poop-bags,pet-supplies,Poop bags,dog waste bags,
 vet-care,,Vet care,vet|veterinary,Pet
 clothing,,Clothing,apparel,Shopping
+t-shirts,clothing,T-shirts,tee|tshirt,
+jeans,clothing,Jeans,,
+socks,clothing,Socks,,
+underwear,clothing,Underwear,,
+jackets,clothing,Jackets,coat,
+sweaters,clothing,Sweaters,hoodie|sweatshirt,
 shoes,,Shoes,footwear,Shopping
+sneakers,shoes,Sneakers,trainers|running shoes,
+sandals,shoes,Sandals,flip flops,
+boots,shoes,Boots,,
 accessories-and-jewelry,,Accessories and jewelry,jewelry|watch,Shopping
+sunglasses,accessories-and-jewelry,Sunglasses,,
+belts,accessories-and-jewelry,Belts,,
+hats,accessories-and-jewelry,Hats,cap|beanie,
 electronics,,Electronics,,Shopping
-phone-and-computer-accessories,,Phone and computer accessories,charger|cable|phone case,Shopping
+headphones,electronics,Headphones,earbuds|airpods,
+smartphones,electronics,Smartphones,iphone,
+laptops,electronics,Laptops,laptop,
+tablets,electronics,Tablets,ipad,
+tvs,electronics,TVs,television,
+phone-and-computer-accessories,,Phone and computer accessories,,Shopping
+chargers,phone-and-computer-accessories,Chargers,charger|charging cable,
+cables,phone-and-computer-accessories,Cables,cable|usb cable|hdmi cable,
+phone-cases,phone-and-computer-accessories,Phone cases,phone case|screen protector,
+keyboards-and-mice,phone-and-computer-accessories,Keyboards and mice,keyboard|computer mouse,
+memory-cards,phone-and-computer-accessories,Memory cards,sd card|usb drive|flash drive,
 home-decor,,Home decor,decor,Shopping
+candles,home-decor,Candles,scented candles,
+picture-frames,home-decor,Picture frames,,
+rugs,home-decor,Rugs,,
+throw-pillows,home-decor,Throw pillows,,
+flowers,home-decor,Flowers,bouquet|fresh flowers,
 kitchen-appliances,,Kitchen appliances,appliance,Shopping
-cookware-and-utensils,,Cookware and utensils,frying pan|cooking pot|utensils,Shopping
-bedding-and-bath,,Bedding and bath,towels|bed sheets|pillow,Shopping
+coffee-maker,kitchen-appliances,Coffee maker,coffee machine,
+blender,kitchen-appliances,Blender,,
+toaster,kitchen-appliances,Toaster,,
+microwave,kitchen-appliances,Microwave,,
+air-fryer,kitchen-appliances,Air fryer,,
+kettle,kitchen-appliances,Kettle,electric kettle,
+cookware-and-utensils,,Cookware and utensils,utensils,Shopping
+pans,cookware-and-utensils,Pans,frying pan|skillet,
+pots,cookware-and-utensils,Pots,cooking pot|saucepan,
+kitchen-knives,cookware-and-utensils,Kitchen knives,chef knife,
+bakeware,cookware-and-utensils,Bakeware,baking sheet|baking pan,
+dinnerware,cookware-and-utensils,Dinnerware,plates|bowls|mugs,
+bedding-and-bath,,Bedding and bath,,Shopping
+towels,bedding-and-bath,Towels,bath towels,
+bed-sheets,bedding-and-bath,Bed sheets,sheet set,
+pillows,bedding-and-bath,Pillows,pillow,
+blankets,bedding-and-bath,Blankets,duvet|comforter|throw blanket,
+shower-curtain,bedding-and-bath,Shower curtain,bath mat,
 books-and-magazines,,Books and magazines,book|magazine,Shopping
-office-supplies,,Office supplies,stationery|printer paper,Shopping
-gifts-and-greeting-cards,,Gifts and greeting cards,greeting card,Shopping
+office-supplies,,Office supplies,stationery,Shopping
+printer-paper,office-supplies,Printer paper,copy paper,
+pens,office-supplies,Pens,pen|ballpoint,
+printer-ink,office-supplies,Printer ink,ink cartridges|toner,
+tape,office-supplies,Tape,scotch tape|packing tape,
+envelopes,office-supplies,Envelopes,,
+gifts-and-greeting-cards,,Gifts and greeting cards,,Shopping
+greeting-cards,gifts-and-greeting-cards,Greeting cards,greeting card,
+gift-wrap,gifts-and-greeting-cards,Gift wrap,wrapping paper|gift bags,
 sporting-goods,,Sporting goods,sports equipment,Shopping
-luggage-and-bags,,Luggage and bags,luggage|backpack,Shopping
-fuel,,Fuel,gas|petrol|diesel,Transport
+yoga-mat,sporting-goods,Yoga mat,,
+weights,sporting-goods,Weights,dumbbells,
+sports-balls,sporting-goods,Sports balls,basketball|soccer ball|tennis balls,
+bicycles,sporting-goods,Bicycles,bicycle|bike,
+luggage-and-bags,,Luggage and bags,,Shopping
+suitcases,luggage-and-bags,Suitcases,luggage|carry on,
+backpacks,luggage-and-bags,Backpacks,backpack,
+handbags,luggage-and-bags,Handbags,purse|tote bag,
+fuel,,Fuel,,Transport
+gasoline,fuel,Gasoline,gas|petrol|unleaded|regular unleaded,
+diesel,fuel,Diesel,,
 ev-charging,,EV charging,charging,Transport
-car-care,,Car care,car wash|motor oil|washer fluid,Transport
-car-parts-and-repairs,,Car parts and repairs,auto repair|tires,Transport
+car-care,,Car care,,Transport
+car-wash,car-care,Car wash,,
+motor-oil,car-care,Motor oil,oil change,
+washer-fluid,car-care,Washer fluid,windshield washer fluid,
+car-parts-and-repairs,,Car parts and repairs,auto repair,Transport
+tires,car-parts-and-repairs,Tires,tyres,
+car-battery,car-parts-and-repairs,Car battery,,
+wiper-blades,car-parts-and-repairs,Wiper blades,,
 parking,,Parking,,Transport
 transit-fares,,Transit fares,bus|train|metro,Transport
 rideshare-and-taxi,,Rideshare and taxi,uber|lyft|taxi,Transport
 tolls,,Tolls,toll,Transport
 rent-and-mortgage,,Rent and mortgage,rent|mortgage,Housing
 hardware-and-tools,,Hardware and tools,tools|hardware,Housing
-home-repair-supplies,,Home repair supplies,paint|plumbing|electrical,Housing
-garden-supplies,,Garden supplies,garden|soil|plants,Housing
+screws-and-nails,hardware-and-tools,Screws and nails,screws|nails,
+hand-tools,hardware-and-tools,Hand tools,screwdriver|hammer|wrench,
+power-tools,hardware-and-tools,Power tools,drill,
+home-repair-supplies,,Home repair supplies,,Housing
+paint,home-repair-supplies,Paint,interior paint|primer,
+paint-supplies,home-repair-supplies,Paint supplies,paint brushes|paint rollers,
+plumbing-supplies,home-repair-supplies,Plumbing supplies,plumbing,
+electrical-supplies,home-repair-supplies,Electrical supplies,electrical|extension cord,
+caulk,home-repair-supplies,Caulk,,
+garden-supplies,,Garden supplies,garden,Housing
+potting-soil,garden-supplies,Potting soil,soil|compost|mulch,
+plants,garden-supplies,Plants,houseplants,
+garden-seeds,garden-supplies,Garden seeds,seed packets,
+fertilizer,garden-supplies,Fertilizer,,
 furniture,,Furniture,,Housing
 home-services,,Home services,cleaning service|repairs,Housing
 electricity,,Electricity,power|electric,Utilities
@@ -152,14 +740,24 @@ water-and-sewer,,Water and sewer,water bill,Utilities
 internet,,Internet,broadband|wifi,Utilities
 mobile-phone,,Mobile phone,cell phone|phone plan,Utilities
 streaming-subscriptions,,Streaming subscriptions,streaming,Entertainment
+video-streaming,streaming-subscriptions,Video streaming,netflix|hulu|disney plus|hbo max|prime video,
+music-streaming,streaming-subscriptions,Music streaming,spotify|apple music,
 event-tickets,,Event tickets,concert tickets|movie tickets,Entertainment
 video-games,,Video games,video game|console game,Entertainment
 music-and-apps,,Music and apps,app purchase|music,Entertainment
 hobbies-and-crafts,,Hobbies and crafts,craft|hobby,Entertainment
+yarn,hobbies-and-crafts,Yarn,knitting,
+art-supplies,hobbies-and-crafts,Art supplies,paint set|canvas|sketchbook,
 flights,,Flights,airfare|airline,Travel
 hotels-and-lodging,,Hotels and lodging,hotel|lodging,Travel
+vacation-rental,hotels-and-lodging,Vacation rental,airbnb|vrbo,
 car-rental,,Car rental,rental car,Travel
-tobacco-and-vaping,,Tobacco and vaping,cigarettes|vape,Other
-postage-and-shipping,,Postage and shipping,postage|shipping,Other
+tobacco-and-vaping,,Tobacco and vaping,,Other
+cigarettes,tobacco-and-vaping,Cigarettes,,
+vapes,tobacco-and-vaping,Vapes,vape|e cigarette,
+cigars,tobacco-and-vaping,Cigars,,
+postage-and-shipping,,Postage and shipping,postage,Other
+stamps,postage-and-shipping,Stamps,postage stamps,
+shipping,postage-and-shipping,Shipping,shipping label|courier,
 lottery,,Lottery,,Other
 donations,,Donations,donation|charity,Other
