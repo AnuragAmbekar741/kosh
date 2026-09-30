@@ -1,3 +1,8 @@
-from worker.jobs.extraction.job import process_document
+from storage.crud.document import reclaim_stuck
 
-__all__ = ["process_document"]
+from worker.jobs.extraction.job import claim, run
+from worker.runtime import Job
+
+JOB = Job(name="extraction", reclaim=reclaim_stuck, claim=claim, run=run)
+
+__all__ = ["JOB"]

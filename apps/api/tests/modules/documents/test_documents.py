@@ -1,4 +1,4 @@
-# API + worker integration: upload, then process_document end-to-end.
+# API + worker integration: upload, then run the extraction job end-to-end.
 from datetime import date
 from decimal import Decimal
 from uuid import UUID, uuid4
@@ -16,7 +16,8 @@ from storage.crud.document import (
 )
 from storage.models.document import Document, DocumentStatus
 from storage.models.spend import SpendItem, SpendSource, SpendStatus
-from worker.jobs.extraction import process_document
+from worker.jobs.extraction import JOB
+from worker.runtime import Claim
 
 _PASSWORD = "password1"
 _JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64
@@ -144,11 +145,11 @@ def _stub_extract(monkeypatch, extraction) -> None:
 def _process(client, monkeypatch, headers, extraction) -> str:
     document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
     _stub_extract(monkeypatch, extraction)
-    process_document(document_id, _claim(document_id))
+    JOB.run(_claim(document_id))
     return document_id
 
 
-def _claim(document_id: str, *, requeue: bool = False) -> UUID:
+def _claim(document_id: str, *, requeue: bool = False) -> Claim:
     with Session(database.engine) as session:
         if requeue:
             document = get_document_by_id(session, UUID(document_id))
@@ -160,7 +161,7 @@ def _claim(document_id: str, *, requeue: bool = False) -> UUID:
         assert claimed is not None
         assert str(claimed.id) == document_id
         assert claimed.claim_token is not None
-        return claimed.claim_token
+        return Claim(claimed.id, claimed.claim_token)
 
 
 def test_upload_jpeg_and_pdf(client) -> None:
@@ -235,7 +236,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
         )
 
     monkeypatch.setattr("ai.extract", fake_extract)
-    process_document(document_id, _claim(document_id))
+    JOB.run(_claim(document_id))
     detail = client.get(f"/documents/{document_id}", headers=headers)
     assert detail.status_code == 200
     body = detail.json()
@@ -256,7 +257,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
         headers=headers,
     )
     assert patched.json()["user_edited"] is True
-    process_document(document_id, _claim(document_id, requeue=True))
+    JOB.run(_claim(document_id, requeue=True))
     after = client.get(f"/documents/{document_id}", headers=headers).json()
     edited = next(item for item in after["drafts"] if item["id"] == line["id"])
     assert edited["merchant"] == "Edited Merchant"
@@ -334,7 +335,7 @@ def test_extract_failure_marks_failed(client, monkeypatch) -> None:
         ),
     )
     document_id = uploaded.json()["id"]
-    process_document(document_id, _claim(document_id))
+    JOB.run(_claim(document_id))
     detail = client.get(f"/documents/{uploaded.json()['id']}", headers=headers).json()
     assert detail["status"] == DocumentStatus.FAILED
     assert "invalid model output" in detail["error"]
@@ -349,7 +350,7 @@ def test_transient_extract_failure_is_retried(client, monkeypatch) -> None:
             RetryableExtractError("openrouter rate limited")
         ),
     )
-    process_document(document_id, _claim(document_id))
+    JOB.run(_claim(document_id))
     detail = client.get(f"/documents/{document_id}", headers=headers).json()
     assert detail["status"] == DocumentStatus.UPLOADED
     assert "rate limited" in detail["error"]
@@ -368,12 +369,12 @@ def test_reextraction_never_changes_confirmed_ledger(client, monkeypatch) -> Non
         )
 
     monkeypatch.setattr("ai.extract", fake_extract)
-    process_document(document_id, _claim(document_id))
+    JOB.run(_claim(document_id))
     confirmed = client.post(f"/documents/{document_id}/confirm", headers=headers)
     confirmed_id = confirmed.json()[0]["id"]
 
     current["total"] = "99.00"
-    process_document(document_id, _claim(document_id, requeue=True))
+    JOB.run(_claim(document_id, requeue=True))
 
     ledger = client.get("/spend-items", headers=headers).json()["data"]
     assert len(ledger) == 1
@@ -392,7 +393,7 @@ def test_sum_mismatch_ready_with_warning(client, monkeypatch) -> None:
 
     monkeypatch.setattr("ai.extract", fake_extract)
     document_id = uploaded.json()["id"]
-    process_document(document_id, _claim(document_id))
+    JOB.run(_claim(document_id))
     detail = client.get(f"/documents/{uploaded.json()['id']}", headers=headers).json()
     assert detail["status"] == "ready"
     assert "differ from total" in detail["error"]
@@ -407,7 +408,7 @@ def test_process_logs_one_outcome_line(client, monkeypatch, caplog) -> None:
             RetryableExtractError("openrouter rate limited")
         ),
     )
-    process_document(document_id, _claim(document_id))
+    JOB.run(_claim(document_id))
     (finished,) = [
         record
         for record in caplog.records
@@ -623,7 +624,7 @@ def test_delete_document_leaves_other_bills(client, monkeypatch) -> None:
     client.post(f"/documents/{keep_id}/confirm", headers=headers)
     drop_id = _upload(client, headers, _PDF, "other.pdf").json()["id"]
     _stub_extract(monkeypatch, _receipt(total="10.00", line_total="10.00"))
-    process_document(drop_id, _claim(drop_id))
+    JOB.run(_claim(drop_id))
     client.post(f"/documents/{drop_id}/confirm", headers=headers)
     client.delete(f"/documents/{drop_id}", headers=headers)
     ledger = client.get("/spend-items", headers=headers).json()["data"]
@@ -635,7 +636,7 @@ def test_delete_document_leaves_other_bills(client, monkeypatch) -> None:
 def test_delete_document_with_multiple_attempts(client, monkeypatch) -> None:
     headers = _auth(client)
     document_id = _process(client, monkeypatch, headers, _receipt())
-    process_document(document_id, _claim(document_id, requeue=True))
+    JOB.run(_claim(document_id, requeue=True))
     client.delete(f"/documents/{document_id}", headers=headers)
     with Session(database.engine) as session:
         assert list_extraction_attempts(session, UUID(document_id)) == []

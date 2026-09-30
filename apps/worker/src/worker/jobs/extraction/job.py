@@ -1,11 +1,11 @@
 import logging
 import time
-from uuid import UUID
 
 from observability import bound
 from sqlmodel import Session
 from storage import database
 from storage.crud.document import (
+    claim_next,
     get_claimed_document,
     get_document_by_id,
     mark_failed,
@@ -15,15 +15,22 @@ from storage.crud.document import (
 from storage.models.document import DocumentStatus
 
 from worker.jobs.extraction.handler import handle
+from worker.runtime import Claim
 
 logger = logging.getLogger(__name__)
 
 _LEVEL = {"ready": logging.INFO, "retry": logging.WARNING, "failed": logging.WARNING}
 
 
-def process_document(document_id: UUID | str, claim_token: UUID | str) -> None:
-    document_id = UUID(str(document_id))
-    claim_token = UUID(str(claim_token))
+def claim(session: Session) -> Claim | None:
+    document = claim_next(session)
+    if document is None or document.claim_token is None:
+        return None
+    return Claim(document.id, document.claim_token)
+
+
+def run(claimed: Claim) -> None:
+    document_id, claim_token = claimed
     with bound(document_id=str(document_id)), Session(database.engine) as session:
         document = get_document_by_id(session, document_id)
         if (
