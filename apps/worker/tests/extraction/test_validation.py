@@ -1,7 +1,7 @@
 from datetime import date
 
 from ai.schemas import LineItem, ReceiptExtraction
-from worker.consumers.extraction.services.validator import receipt_totals_mismatch
+from worker.jobs.extraction.validation import receipt_totals_mismatch
 
 
 def test_sum_check() -> None:

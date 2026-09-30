@@ -16,7 +16,7 @@ from storage.crud.document import (
 )
 from storage.models.document import Document, DocumentStatus
 from storage.models.spend import SpendItem, SpendSource, SpendStatus
-from worker.consumers.extraction.consumer import process_document
+from worker.jobs.extraction import process_document
 
 _PASSWORD = "password1"
 _JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64
@@ -131,8 +131,8 @@ def _statement() -> StatementExtraction:
 
 def _stub_extract(monkeypatch, extraction) -> None:
     monkeypatch.setattr(
-        "worker.consumers.extraction.services.extractor.extract",
-        lambda data, mime: (
+        "ai.extract",
+        lambda data, mime, **_: (
             extraction,
             ExtractMeta(
                 model="test", provider="test", prompt_tokens=1, completion_tokens=1
@@ -229,14 +229,12 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     uploaded = _upload(client, headers, _JPEG, "receipt.jpg")
     document_id = uploaded.json()["id"]
 
-    def fake_extract(data: bytes, mime: str):
+    def fake_extract(data: bytes, mime: str, **_: object):
         return _receipt(), ExtractMeta(
             model="test", provider="test", prompt_tokens=1, completion_tokens=1
         )
 
-    monkeypatch.setattr(
-        "worker.consumers.extraction.services.extractor.extract", fake_extract
-    )
+    monkeypatch.setattr("ai.extract", fake_extract)
     process_document(document_id, _claim(document_id))
     detail = client.get(f"/documents/{document_id}", headers=headers)
     assert detail.status_code == 200
@@ -330,8 +328,10 @@ def test_extract_failure_marks_failed(client, monkeypatch) -> None:
     headers = _auth(client)
     uploaded = _upload(client, headers, _JPEG, "receipt.jpg")
     monkeypatch.setattr(
-        "worker.consumers.extraction.services.extractor.extract",
-        lambda data, mime: (_ for _ in ()).throw(ExtractError("invalid model output")),
+        "ai.extract",
+        lambda data, mime, **_: (_ for _ in ()).throw(
+            ExtractError("invalid model output")
+        ),
     )
     document_id = uploaded.json()["id"]
     process_document(document_id, _claim(document_id))
@@ -344,8 +344,8 @@ def test_transient_extract_failure_is_retried(client, monkeypatch) -> None:
     headers = _auth(client)
     document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
     monkeypatch.setattr(
-        "worker.consumers.extraction.services.extractor.extract",
-        lambda data, mime: (_ for _ in ()).throw(
+        "ai.extract",
+        lambda data, mime, **_: (_ for _ in ()).throw(
             RetryableExtractError("openrouter rate limited")
         ),
     )
@@ -360,16 +360,14 @@ def test_reextraction_never_changes_confirmed_ledger(client, monkeypatch) -> Non
     document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
     current = {"total": "56.71"}
 
-    def fake_extract(data: bytes, mime: str):
+    def fake_extract(data: bytes, mime: str, **_: object):
         return _receipt(
             total=current["total"], line_total=current["total"]
         ), ExtractMeta(
             model="test", provider="test", prompt_tokens=1, completion_tokens=1
         )
 
-    monkeypatch.setattr(
-        "worker.consumers.extraction.services.extractor.extract", fake_extract
-    )
+    monkeypatch.setattr("ai.extract", fake_extract)
     process_document(document_id, _claim(document_id))
     confirmed = client.post(f"/documents/{document_id}/confirm", headers=headers)
     confirmed_id = confirmed.json()[0]["id"]
@@ -387,14 +385,12 @@ def test_sum_mismatch_ready_with_warning(client, monkeypatch) -> None:
     headers = _auth(client)
     uploaded = _upload(client, headers, _JPEG, "receipt.jpg")
 
-    def fake_extract(data: bytes, mime: str):
+    def fake_extract(data: bytes, mime: str, **_: object):
         return _receipt(total="56.71", line_total="10.00"), ExtractMeta(
             model="test", provider=None, prompt_tokens=1, completion_tokens=1
         )
 
-    monkeypatch.setattr(
-        "worker.consumers.extraction.services.extractor.extract", fake_extract
-    )
+    monkeypatch.setattr("ai.extract", fake_extract)
     document_id = uploaded.json()["id"]
     process_document(document_id, _claim(document_id))
     detail = client.get(f"/documents/{uploaded.json()['id']}", headers=headers).json()
@@ -406,8 +402,8 @@ def test_process_logs_one_outcome_line(client, monkeypatch, caplog) -> None:
     headers = _auth(client)
     document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
     monkeypatch.setattr(
-        "worker.consumers.extraction.services.extractor.extract",
-        lambda data, mime: (_ for _ in ()).throw(
+        "ai.extract",
+        lambda data, mime, **_: (_ for _ in ()).throw(
             RetryableExtractError("openrouter rate limited")
         ),
     )

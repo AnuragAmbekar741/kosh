@@ -6,7 +6,7 @@ from storage import database
 from storage.crud.document import claim_next, reclaim_stuck
 
 from worker.bootstrap import bootstrap
-from worker.consumers.extraction.consumer import process_document
+from worker.jobs.extraction import process_document
 from worker.settings import get_settings
 
 logger = logging.getLogger(__name__)

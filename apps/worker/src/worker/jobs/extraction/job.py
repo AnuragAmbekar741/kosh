@@ -14,7 +14,7 @@ from storage.crud.document import (
 )
 from storage.models.document import DocumentStatus
 
-from worker.consumers.extraction.handler import handle
+from worker.jobs.extraction.handler import handle
 
 logger = logging.getLogger(__name__)
 
