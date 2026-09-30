@@ -1,0 +1,165 @@
+slug,parent_slug,name,synonyms,category
+fresh-fruit,,Fresh fruit,fruit,Groceries
+fresh-vegetables,,Fresh vegetables,veg|vegetables,Groceries
+fresh-herbs,,Fresh herbs,herbs,Groceries
+milk,,Milk,dairy milk,Groceries
+plant-milk,,Plant milk,non dairy milk|nut milk,Groceries
+yogurt,,Yogurt,yoghurt,Groceries
+cheese,,Cheese,,Groceries
+butter-and-margarine,,Butter and margarine,butter|margarine,Groceries
+cream,,Cream,creamer|half and half,Groceries
+eggs,,Eggs,egg,Groceries
+chicken,,Chicken,poultry|chx,Groceries
+beef,,Beef,steak|ground beef,Groceries
+pork,,Pork,,Groceries
+turkey,,Turkey,,Groceries
+lamb,,Lamb,,Groceries
+bacon-and-sausages,,Bacon and sausages,bacon|sausage|hot dogs,Groceries
+deli-meat,,Deli meat,cold cuts|lunch meat,Groceries
+fish,,Fish,seafood,Groceries
+shellfish,,Shellfish,shrimp|prawns,Groceries
+tofu-and-plant-protein,,Tofu and plant protein,tofu|tempeh|plant based meat,Groceries
+bread,,Bread,loaf,Groceries
+bagels-and-buns,,Bagels and buns,buns|dinner rolls,Groceries
+tortillas-and-wraps,,Tortillas and wraps,tortilla|wraps,Groceries
+pastries-and-cakes,,Pastries and cakes,pastry|cake|muffins,Groceries
+rice-and-grains,,Rice and grains,rice|quinoa,Groceries
+pasta-and-noodles,,Pasta and noodles,pasta|noodles,Groceries
+baking-supplies,,Baking supplies,flour|sugar|baking,Groceries
+cooking-oil-and-vinegar,,Cooking oil and vinegar,olive oil|vegetable oil|vinegar,Groceries
+spices-and-seasonings,,Spices and seasonings,spice|seasoning|salt,Groceries
+sauces-and-condiments,,Sauces and condiments,sauce|ketchup|mayo|dressing,Groceries
+canned-vegetables-and-beans,,Canned vegetables and beans,canned beans|canned veg,Groceries
+canned-fish-and-meat,,Canned fish and meat,tuna|canned chicken,Groceries
+soup-and-broth,,Soup and broth,soup|broth|stock,Groceries
+breakfast-cereal,,Breakfast cereal,cereal,Groceries
+oats-and-granola,,Oats and granola,oatmeal|granola,Groceries
+nut-butters-and-jams,,Nut butters and jams,peanut butter|jam|jelly|honey,Groceries
+nuts-and-seeds,,Nuts and seeds,nuts|almonds|seeds,Groceries
+dried-fruit,,Dried fruit,raisins,Groceries
+dips-and-hummus,,Dips and hummus,dip|hummus|salsa,Groceries
+pickles-and-olives,,Pickles and olives,pickles|olives,Groceries
+coffee,,Coffee,coffee beans|ground coffee|k cups,Groceries
+tea,,Tea,tea bags,Groceries
+water,,Water,bottled water|sparkling water,Groceries
+soft-drinks,,Soft drinks,soda|pop|cola,Groceries
+juice,,Juice,,Groceries
+sports-and-energy-drinks,,Sports and energy drinks,energy drink|sports drink,Groceries
+beer,,Beer,,Groceries
+wine,,Wine,,Groceries
+spirits,,Spirits,liquor,Groceries
+chips-and-crisps,,Chips and crisps,chips|crisps,Groceries
+crackers,,Crackers,,Groceries
+cookies-and-biscuits,,Cookies and biscuits,cookies|biscuits,Groceries
+chocolate-and-candy,,Chocolate and candy,chocolate|candy|sweets,Groceries
+snack-bars,,Snack bars,granola bar|protein bar,Groceries
+popcorn-and-pretzels,,Popcorn and pretzels,popcorn|pretzels,Groceries
+frozen-vegetables-and-fruit,,Frozen vegetables and fruit,frozen veg|frozen fruit,Groceries
+frozen-meals,,Frozen meals,frozen dinner|frozen entree,Groceries
+frozen-pizza,,Frozen pizza,,Groceries
+ice-cream-and-frozen-desserts,,Ice cream and frozen desserts,ice cream|gelato|popsicles,Groceries
+prepared-meals,,Prepared meals,deli meals|hot food|rotisserie,Groceries
+salads-and-sandwiches,,Salads and sandwiches,sandwich|salad kit,Groceries
+sushi,,Sushi,,Groceries
+restaurant-meals,,Restaurant meals,dine in|entree,Dining out
+fast-food,,Fast food,takeout,Dining out
+coffee-shop-drinks,,Coffee shop drinks,latte|espresso|cappuccino,Dining out
+bar-drinks,,Bar drinks,cocktail|draft beer,Dining out
+cafe-snacks-and-desserts,,Cafe snacks and desserts,cafe dessert,Dining out
+laundry-detergent,,Laundry detergent,detergent|laundry pods,Household
+fabric-care,,Fabric care,fabric softener|dryer sheets|stain remover,Household
+dish-soap,,Dish soap,dishwashing liquid,Household
+dishwasher-detergent,,Dishwasher detergent,dishwasher tabs|dishwasher pods,Household
+surface-and-floor-cleaners,,Surface and floor cleaners,all purpose cleaner|disinfectant|bleach,Household
+paper-towels,,Paper towels,kitchen roll,Household
+toilet-paper,,Toilet paper,bath tissue|tp,Household
+facial-tissues,,Facial tissues,tissues|kleenex,Household
+trash-bags,,Trash bags,garbage bags|bin liners,Household
+food-storage-and-wraps,,Food storage and wraps,foil|plastic wrap|zip bags,Household
+disposable-tableware,,Disposable tableware,paper plates|paper cups|napkins,Household
+batteries,,Batteries,aa|aaa,Household
+light-bulbs,,Light bulbs,bulb|led bulb,Household
+cleaning-tools,,Cleaning tools,sponges|mop|cleaning gloves,Household
+air-fresheners,,Air fresheners,,Household
+pest-control,,Pest control,insect spray|mouse traps,Household
+hair-care,,Hair care,shampoo|conditioner,Personal care
+body-wash-and-soap,,Body wash and soap,soap|body wash,Personal care
+oral-care,,Oral care,toothpaste|toothbrush|floss|mouthwash,Personal care
+deodorant,,Deodorant,antiperspirant,Personal care
+shaving,,Shaving,razor|shaving cream,Personal care
+skincare,,Skincare,moisturizer|lotion|sunscreen,Personal care
+cosmetics,,Cosmetics,makeup,Personal care
+feminine-care,,Feminine care,tampons|sanitary pads,Personal care
+cotton-and-swabs,,Cotton and swabs,cotton balls|q tips,Personal care
+hand-sanitizer,,Hand sanitizer,,Personal care
+hair-and-beauty-services,,Hair and beauty services,haircut|salon,Personal care
+pain-relief,,Pain relief,ibuprofen|acetaminophen|aspirin,Health
+cold-flu-and-allergy,,Cold flu and allergy,allergy|cough|decongestant,Health
+digestive-health,,Digestive health,antacid|laxative,Health
+vitamins-and-supplements,,Vitamins and supplements,vitamins|supplement,Health
+first-aid,,First aid,bandages|band aid,Health
+prescriptions,,Prescriptions,rx|pharmacy,Health
+eye-care,,Eye care,contact lens solution|eye drops,Health
+sports-nutrition,,Sports nutrition,protein powder,Health
+medical-supplies,,Medical supplies,thermometer|test kit,Health
+fitness-and-gym,,Fitness and gym,gym|gym membership,Health
+medical-visits,,Medical visits,doctor|clinic|copay,Health
+diapers,,Diapers,nappies,Baby & kids
+baby-wipes,,Baby wipes,,Baby & kids
+baby-formula,,Baby formula,formula,Baby & kids
+baby-food,,Baby food,,Baby & kids
+baby-care,,Baby care,diaper cream|baby lotion,Baby & kids
+toys-and-games,,Toys and games,toy|board game,Baby & kids
+kids-clothing,,Kids clothing,,Baby & kids
+school-supplies,,School supplies,notebook|pencils|crayons,Baby & kids
+dog-food,,Dog food,,Pet
+cat-food,,Cat food,,Pet
+pet-treats,,Pet treats,,Pet
+cat-litter,,Cat litter,litter,Pet
+pet-supplies,,Pet supplies,leash|pet toy,Pet
+vet-care,,Vet care,vet|veterinary,Pet
+clothing,,Clothing,apparel,Shopping
+shoes,,Shoes,footwear,Shopping
+accessories-and-jewelry,,Accessories and jewelry,jewelry|watch,Shopping
+electronics,,Electronics,,Shopping
+phone-and-computer-accessories,,Phone and computer accessories,charger|cable|phone case,Shopping
+home-decor,,Home decor,decor,Shopping
+kitchen-appliances,,Kitchen appliances,appliance,Shopping
+cookware-and-utensils,,Cookware and utensils,frying pan|cooking pot|utensils,Shopping
+bedding-and-bath,,Bedding and bath,towels|bed sheets|pillow,Shopping
+books-and-magazines,,Books and magazines,book|magazine,Shopping
+office-supplies,,Office supplies,stationery|printer paper,Shopping
+gifts-and-greeting-cards,,Gifts and greeting cards,greeting card,Shopping
+sporting-goods,,Sporting goods,sports equipment,Shopping
+luggage-and-bags,,Luggage and bags,luggage|backpack,Shopping
+fuel,,Fuel,gas|petrol|diesel,Transport
+ev-charging,,EV charging,charging,Transport
+car-care,,Car care,car wash|motor oil|washer fluid,Transport
+car-parts-and-repairs,,Car parts and repairs,auto repair|tires,Transport
+parking,,Parking,,Transport
+transit-fares,,Transit fares,bus|train|metro,Transport
+rideshare-and-taxi,,Rideshare and taxi,uber|lyft|taxi,Transport
+tolls,,Tolls,toll,Transport
+rent-and-mortgage,,Rent and mortgage,rent|mortgage,Housing
+hardware-and-tools,,Hardware and tools,tools|hardware,Housing
+home-repair-supplies,,Home repair supplies,paint|plumbing|electrical,Housing
+garden-supplies,,Garden supplies,garden|soil|plants,Housing
+furniture,,Furniture,,Housing
+home-services,,Home services,cleaning service|repairs,Housing
+electricity,,Electricity,power|electric,Utilities
+gas-utility,,Gas utility,natural gas|heating,Utilities
+water-and-sewer,,Water and sewer,water bill,Utilities
+internet,,Internet,broadband|wifi,Utilities
+mobile-phone,,Mobile phone,cell phone|phone plan,Utilities
+streaming-subscriptions,,Streaming subscriptions,streaming,Entertainment
+event-tickets,,Event tickets,concert tickets|movie tickets,Entertainment
+video-games,,Video games,video game|console game,Entertainment
+music-and-apps,,Music and apps,app purchase|music,Entertainment
+hobbies-and-crafts,,Hobbies and crafts,craft|hobby,Entertainment
+flights,,Flights,airfare|airline,Travel
+hotels-and-lodging,,Hotels and lodging,hotel|lodging,Travel
+car-rental,,Car rental,rental car,Travel
+tobacco-and-vaping,,Tobacco and vaping,cigarettes|vape,Other
+postage-and-shipping,,Postage and shipping,postage|shipping,Other
+lottery,,Lottery,,Other
+donations,,Donations,donation|charity,Other

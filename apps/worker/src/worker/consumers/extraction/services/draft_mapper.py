@@ -5,6 +5,10 @@ from ai.schemas import ReceiptExtraction, StatementExtraction
 from storage.models.spend import SpendItem, SpendSource, SpendStatus
 
 
+def _decimal(value: str | None) -> Decimal | None:
+    return Decimal(value) if value is not None else None
+
+
 def drafts(
     user_id: UUID, extraction: ReceiptExtraction | StatementExtraction
 ) -> list[SpendItem]:
@@ -17,6 +21,9 @@ def drafts(
                     merchant=extraction.merchant,
                     description=item.raw_description,
                     normalized_name=item.normalized_name,
+                    item_code=item.upc,
+                    quantity=_decimal(item.quantity),
+                    unit_price=_decimal(item.unit_price),
                     amount=Decimal(item.line_total),
                     currency=extraction.currency,
                     spent_at=extraction.purchased_at,

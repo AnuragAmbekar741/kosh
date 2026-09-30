@@ -1,4 +1,4 @@
-.PHONY: help db-up db-down migrate migrate-new test api web worker dev setup git-config
+.PHONY: help db-up db-down migrate migrate-new catalog test api web worker dev setup git-config
 
 help:
 	@grep -E '^[a-zA-Z_-]+:' Makefile | cut -d: -f1 | sort
@@ -12,12 +12,15 @@ db-down:
 migrate:
 	uv run --directory apps/api alembic upgrade head
 
+catalog:
+	uv run python -m storage.catalog load
+
 migrate-new:
 	@test -n "$(MSG)" || (echo 'Usage: make migrate-new MSG="describe change"' && exit 1)
 	uv run --directory apps/api alembic revision --autogenerate -m "$(MSG)"
 
 test:
-	uv run --group dev pytest apps/api/tests apps/worker/tests -q
+	uv run --group dev pytest apps/api/tests apps/worker/tests packages/storage/tests -q
 
 worker:
 	uv run --package worker python -m worker.main

@@ -30,10 +30,13 @@ apps/api/src/api/          FastAPI app factory + feature modules
 
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession
-  models/spend.py          SpendItem
+  models/spend.py          SpendItem, Category (the 14 visible categories)
+  models/catalog.py        CatalogItem: catalog families and items (shared or per user)
   models/document.py       Document, ExtractionAttempt
   crud/user.py             identity queries
   crud/spend.py            ledger + draft upsert
+  crud/catalog.py          load_shared_catalog, name_key
+  catalog/                 catalog.csv + loader: python -m storage.catalog load
   crud/document.py         upload metadata, claim_next, reclaim_stuck
   pagination.py            skip/limit + count helper for list statements
   blobs.py                 S3 put/get (Neon Object Storage, path-style)
@@ -115,6 +118,7 @@ Dev Postgres is **Neon** (`kosh`). Set `DATABASE_URL` in `.env` to the **direct*
 ```bash
 uv sync --all-packages
 uv run --directory apps/api alembic upgrade head
+make catalog
 uv run --directory apps/api fastapi dev --port 8000
 uv run --package worker python -m worker.main
 cd apps/web && pnpm dev

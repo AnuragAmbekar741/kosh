@@ -278,6 +278,9 @@ def upsert_drafts(
         current.merchant = draft.merchant
         current.description = draft.description
         current.normalized_name = draft.normalized_name
+        current.item_code = draft.item_code
+        current.quantity = draft.quantity
+        current.unit_price = draft.unit_price
         current.category = draft.category
         current.amount = draft.amount
         current.currency = draft.currency
