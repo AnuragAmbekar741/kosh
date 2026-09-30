@@ -433,8 +433,15 @@ prepared-salads,salads-and-sandwiches,Prepared salads,deli salad|caesar salad,
 sushi,,Sushi,,Groceries
 restaurant-meals,,Restaurant meals,dine in|entree,Dining out
 fast-food,,Fast food,takeout,Dining out
-coffee-shop-drinks,,Coffee shop drinks,latte|espresso|cappuccino,Dining out
-bar-drinks,,Bar drinks,cocktail|draft beer,Dining out
+coffee-shop-drinks,,Coffee shop drinks,,Dining out
+latte,coffee-shop-drinks,Latte,,
+espresso,coffee-shop-drinks,Espresso,,
+cappuccino,coffee-shop-drinks,Cappuccino,,
+americano,coffee-shop-drinks,Americano,,
+blended-coffee,coffee-shop-drinks,Blended coffee,frappuccino,
+chai-latte,coffee-shop-drinks,Chai latte,chai tea latte,
+bar-drinks,,Bar drinks,draft beer,Dining out
+cocktails,bar-drinks,Cocktails,cocktail|margarita|mojito,
 cafe-snacks-and-desserts,,Cafe snacks and desserts,cafe dessert,Dining out
 laundry-detergent,,Laundry detergent,detergent,Household
 liquid-detergent,laundry-detergent,Liquid detergent,liquid laundry detergent,
@@ -581,45 +588,150 @@ blood-pressure-monitor,medical-supplies,Blood pressure monitor,,
 fitness-and-gym,,Fitness and gym,gym|gym membership,Health
 medical-visits,,Medical visits,doctor|clinic|copay,Health
 diapers,,Diapers,nappies,Baby & kids
+training-pants,diapers,Training pants,pull ups,
 baby-wipes,,Baby wipes,,Baby & kids
 baby-formula,,Baby formula,formula,Baby & kids
 baby-food,,Baby food,,Baby & kids
-baby-care,,Baby care,diaper cream|baby lotion,Baby & kids
-toys-and-games,,Toys and games,toy|board game,Baby & kids
+baby-food-pouches,baby-food,Baby food pouches,pouches,
+baby-cereal,baby-food,Baby cereal,,
+toddler-snacks,baby-food,Toddler snacks,baby puffs,
+baby-care,,Baby care,,Baby & kids
+diaper-cream,baby-care,Diaper cream,diaper rash cream,
+baby-lotion,baby-care,Baby lotion,,
+baby-shampoo,baby-care,Baby shampoo,baby wash,
+baby-bottles,baby-care,Baby bottles,bottle nipples,
+pacifiers,baby-care,Pacifiers,dummy,
+toys-and-games,,Toys and games,toy,Baby & kids
+board-games,toys-and-games,Board games,board game,
+puzzles,toys-and-games,Puzzles,jigsaw puzzle,
+building-blocks,toys-and-games,Building blocks,lego,
+stuffed-animals,toys-and-games,Stuffed animals,plush toy,
 kids-clothing,,Kids clothing,,Baby & kids
-school-supplies,,School supplies,notebook|pencils|crayons,Baby & kids
+school-supplies,,School supplies,,Baby & kids
+notebooks,school-supplies,Notebooks,notebook,
+pencils,school-supplies,Pencils,pencil,
+crayons,school-supplies,Crayons,,
+markers,school-supplies,Markers,felt tips,
+glue-sticks,school-supplies,Glue sticks,,
 dog-food,,Dog food,,Pet
+dry-dog-food,dog-food,Dry dog food,kibble,
+wet-dog-food,dog-food,Wet dog food,canned dog food,
 cat-food,,Cat food,,Pet
+dry-cat-food,cat-food,Dry cat food,,
+wet-cat-food,cat-food,Wet cat food,canned cat food,
 pet-treats,,Pet treats,,Pet
+dog-treats,pet-treats,Dog treats,,
+cat-treats,pet-treats,Cat treats,,
 cat-litter,,Cat litter,litter,Pet
-pet-supplies,,Pet supplies,leash|pet toy,Pet
+pet-supplies,,Pet supplies,,Pet
+leashes-and-collars,pet-supplies,Leashes and collars,leash|collar|harness,
+pet-toys,pet-supplies,Pet toys,pet toy|chew toy,
+pet-beds,pet-supplies,Pet beds,,
+poop-bags,pet-supplies,Poop bags,dog waste bags,
 vet-care,,Vet care,vet|veterinary,Pet
 clothing,,Clothing,apparel,Shopping
+t-shirts,clothing,T-shirts,tee|tshirt,
+jeans,clothing,Jeans,,
+socks,clothing,Socks,,
+underwear,clothing,Underwear,,
+jackets,clothing,Jackets,coat,
+sweaters,clothing,Sweaters,hoodie|sweatshirt,
 shoes,,Shoes,footwear,Shopping
+sneakers,shoes,Sneakers,trainers|running shoes,
+sandals,shoes,Sandals,flip flops,
+boots,shoes,Boots,,
 accessories-and-jewelry,,Accessories and jewelry,jewelry|watch,Shopping
+sunglasses,accessories-and-jewelry,Sunglasses,,
+belts,accessories-and-jewelry,Belts,,
+hats,accessories-and-jewelry,Hats,cap|beanie,
 electronics,,Electronics,,Shopping
-phone-and-computer-accessories,,Phone and computer accessories,charger|cable|phone case,Shopping
+headphones,electronics,Headphones,earbuds|airpods,
+smartphones,electronics,Smartphones,iphone,
+laptops,electronics,Laptops,laptop,
+tablets,electronics,Tablets,ipad,
+tvs,electronics,TVs,television,
+phone-and-computer-accessories,,Phone and computer accessories,,Shopping
+chargers,phone-and-computer-accessories,Chargers,charger|charging cable,
+cables,phone-and-computer-accessories,Cables,cable|usb cable|hdmi cable,
+phone-cases,phone-and-computer-accessories,Phone cases,phone case|screen protector,
+keyboards-and-mice,phone-and-computer-accessories,Keyboards and mice,keyboard|computer mouse,
+memory-cards,phone-and-computer-accessories,Memory cards,sd card|usb drive|flash drive,
 home-decor,,Home decor,decor,Shopping
+candles,home-decor,Candles,scented candles,
+picture-frames,home-decor,Picture frames,,
+rugs,home-decor,Rugs,,
+throw-pillows,home-decor,Throw pillows,,
+flowers,home-decor,Flowers,bouquet|fresh flowers,
 kitchen-appliances,,Kitchen appliances,appliance,Shopping
-cookware-and-utensils,,Cookware and utensils,frying pan|cooking pot|utensils,Shopping
-bedding-and-bath,,Bedding and bath,towels|bed sheets|pillow,Shopping
+coffee-maker,kitchen-appliances,Coffee maker,coffee machine,
+blender,kitchen-appliances,Blender,,
+toaster,kitchen-appliances,Toaster,,
+microwave,kitchen-appliances,Microwave,,
+air-fryer,kitchen-appliances,Air fryer,,
+kettle,kitchen-appliances,Kettle,electric kettle,
+cookware-and-utensils,,Cookware and utensils,utensils,Shopping
+pans,cookware-and-utensils,Pans,frying pan|skillet,
+pots,cookware-and-utensils,Pots,cooking pot|saucepan,
+kitchen-knives,cookware-and-utensils,Kitchen knives,chef knife,
+bakeware,cookware-and-utensils,Bakeware,baking sheet|baking pan,
+dinnerware,cookware-and-utensils,Dinnerware,plates|bowls|mugs,
+bedding-and-bath,,Bedding and bath,,Shopping
+towels,bedding-and-bath,Towels,bath towels,
+bed-sheets,bedding-and-bath,Bed sheets,sheet set,
+pillows,bedding-and-bath,Pillows,pillow,
+blankets,bedding-and-bath,Blankets,duvet|comforter|throw blanket,
+shower-curtain,bedding-and-bath,Shower curtain,bath mat,
 books-and-magazines,,Books and magazines,book|magazine,Shopping
-office-supplies,,Office supplies,stationery|printer paper,Shopping
-gifts-and-greeting-cards,,Gifts and greeting cards,greeting card,Shopping
+office-supplies,,Office supplies,stationery,Shopping
+printer-paper,office-supplies,Printer paper,copy paper,
+pens,office-supplies,Pens,pen|ballpoint,
+printer-ink,office-supplies,Printer ink,ink cartridges|toner,
+tape,office-supplies,Tape,scotch tape|packing tape,
+envelopes,office-supplies,Envelopes,,
+gifts-and-greeting-cards,,Gifts and greeting cards,,Shopping
+greeting-cards,gifts-and-greeting-cards,Greeting cards,greeting card,
+gift-wrap,gifts-and-greeting-cards,Gift wrap,wrapping paper|gift bags,
 sporting-goods,,Sporting goods,sports equipment,Shopping
-luggage-and-bags,,Luggage and bags,luggage|backpack,Shopping
-fuel,,Fuel,gas|petrol|diesel,Transport
+yoga-mat,sporting-goods,Yoga mat,,
+weights,sporting-goods,Weights,dumbbells,
+sports-balls,sporting-goods,Sports balls,basketball|soccer ball|tennis balls,
+bicycles,sporting-goods,Bicycles,bicycle|bike,
+luggage-and-bags,,Luggage and bags,,Shopping
+suitcases,luggage-and-bags,Suitcases,luggage|carry on,
+backpacks,luggage-and-bags,Backpacks,backpack,
+handbags,luggage-and-bags,Handbags,purse|tote bag,
+fuel,,Fuel,,Transport
+gasoline,fuel,Gasoline,gas|petrol|unleaded|regular unleaded,
+diesel,fuel,Diesel,,
 ev-charging,,EV charging,charging,Transport
-car-care,,Car care,car wash|motor oil|washer fluid,Transport
-car-parts-and-repairs,,Car parts and repairs,auto repair|tires,Transport
+car-care,,Car care,,Transport
+car-wash,car-care,Car wash,,
+motor-oil,car-care,Motor oil,oil change,
+washer-fluid,car-care,Washer fluid,windshield washer fluid,
+car-parts-and-repairs,,Car parts and repairs,auto repair,Transport
+tires,car-parts-and-repairs,Tires,tyres,
+car-battery,car-parts-and-repairs,Car battery,,
+wiper-blades,car-parts-and-repairs,Wiper blades,,
 parking,,Parking,,Transport
 transit-fares,,Transit fares,bus|train|metro,Transport
 rideshare-and-taxi,,Rideshare and taxi,uber|lyft|taxi,Transport
 tolls,,Tolls,toll,Transport
 rent-and-mortgage,,Rent and mortgage,rent|mortgage,Housing
 hardware-and-tools,,Hardware and tools,tools|hardware,Housing
-home-repair-supplies,,Home repair supplies,paint|plumbing|electrical,Housing
-garden-supplies,,Garden supplies,garden|soil|plants,Housing
+screws-and-nails,hardware-and-tools,Screws and nails,screws|nails,
+hand-tools,hardware-and-tools,Hand tools,screwdriver|hammer|wrench,
+power-tools,hardware-and-tools,Power tools,drill,
+home-repair-supplies,,Home repair supplies,,Housing
+paint,home-repair-supplies,Paint,interior paint|primer,
+paint-supplies,home-repair-supplies,Paint supplies,paint brushes|paint rollers,
+plumbing-supplies,home-repair-supplies,Plumbing supplies,plumbing,
+electrical-supplies,home-repair-supplies,Electrical supplies,electrical|extension cord,
+caulk,home-repair-supplies,Caulk,,
+garden-supplies,,Garden supplies,garden,Housing
+potting-soil,garden-supplies,Potting soil,soil|compost|mulch,
+plants,garden-supplies,Plants,houseplants,
+garden-seeds,garden-supplies,Garden seeds,seed packets,
+fertilizer,garden-supplies,Fertilizer,,
 furniture,,Furniture,,Housing
 home-services,,Home services,cleaning service|repairs,Housing
 electricity,,Electricity,power|electric,Utilities
@@ -628,14 +740,24 @@ water-and-sewer,,Water and sewer,water bill,Utilities
 internet,,Internet,broadband|wifi,Utilities
 mobile-phone,,Mobile phone,cell phone|phone plan,Utilities
 streaming-subscriptions,,Streaming subscriptions,streaming,Entertainment
+video-streaming,streaming-subscriptions,Video streaming,netflix|hulu|disney plus|hbo max|prime video,
+music-streaming,streaming-subscriptions,Music streaming,spotify|apple music,
 event-tickets,,Event tickets,concert tickets|movie tickets,Entertainment
 video-games,,Video games,video game|console game,Entertainment
 music-and-apps,,Music and apps,app purchase|music,Entertainment
 hobbies-and-crafts,,Hobbies and crafts,craft|hobby,Entertainment
+yarn,hobbies-and-crafts,Yarn,knitting,
+art-supplies,hobbies-and-crafts,Art supplies,paint set|canvas|sketchbook,
 flights,,Flights,airfare|airline,Travel
 hotels-and-lodging,,Hotels and lodging,hotel|lodging,Travel
+vacation-rental,hotels-and-lodging,Vacation rental,airbnb|vrbo,
 car-rental,,Car rental,rental car,Travel
-tobacco-and-vaping,,Tobacco and vaping,cigarettes|vape,Other
-postage-and-shipping,,Postage and shipping,postage|shipping,Other
+tobacco-and-vaping,,Tobacco and vaping,,Other
+cigarettes,tobacco-and-vaping,Cigarettes,,
+vapes,tobacco-and-vaping,Vapes,vape|e cigarette,
+cigars,tobacco-and-vaping,Cigars,,
+postage-and-shipping,,Postage and shipping,postage,Other
+stamps,postage-and-shipping,Stamps,postage stamps,
+shipping,postage-and-shipping,Shipping,shipping label|courier,
 lottery,,Lottery,,Other
 donations,,Donations,donation|charity,Other
