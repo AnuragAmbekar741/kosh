@@ -436,42 +436,148 @@ fast-food,,Fast food,takeout,Dining out
 coffee-shop-drinks,,Coffee shop drinks,latte|espresso|cappuccino,Dining out
 bar-drinks,,Bar drinks,cocktail|draft beer,Dining out
 cafe-snacks-and-desserts,,Cafe snacks and desserts,cafe dessert,Dining out
-laundry-detergent,,Laundry detergent,detergent|laundry pods,Household
-fabric-care,,Fabric care,fabric softener|dryer sheets|stain remover,Household
+laundry-detergent,,Laundry detergent,detergent,Household
+liquid-detergent,laundry-detergent,Liquid detergent,liquid laundry detergent,
+laundry-pods,laundry-detergent,Laundry pods,detergent pods|tide pods,
+powder-detergent,laundry-detergent,Powder detergent,washing powder,
+fabric-care,,Fabric care,,Household
+fabric-softener,fabric-care,Fabric softener,,
+dryer-sheets,fabric-care,Dryer sheets,,
+stain-remover,fabric-care,Stain remover,oxiclean|spot remover,
 dish-soap,,Dish soap,dishwashing liquid,Household
-dishwasher-detergent,,Dishwasher detergent,dishwasher tabs|dishwasher pods,Household
-surface-and-floor-cleaners,,Surface and floor cleaners,all purpose cleaner|disinfectant|bleach,Household
+dishwasher-detergent,,Dishwasher detergent,,Household
+dishwasher-pods,dishwasher-detergent,Dishwasher pods,dishwasher tabs|dishwasher tablets,
+rinse-aid,dishwasher-detergent,Rinse aid,,
+surface-and-floor-cleaners,,Surface and floor cleaners,all purpose cleaner,Household
+disinfectant-spray,surface-and-floor-cleaners,Disinfectant spray,disinfectant|lysol spray,
+disinfecting-wipes,surface-and-floor-cleaners,Disinfecting wipes,clorox wipes|cleaning wipes,
+bleach,surface-and-floor-cleaners,Bleach,,
+glass-cleaner,surface-and-floor-cleaners,Glass cleaner,windex,
+floor-cleaner,surface-and-floor-cleaners,Floor cleaner,,
+toilet-cleaner,surface-and-floor-cleaners,Toilet cleaner,toilet bowl cleaner,
 paper-towels,,Paper towels,kitchen roll,Household
 toilet-paper,,Toilet paper,bath tissue|tp,Household
 facial-tissues,,Facial tissues,tissues|kleenex,Household
 trash-bags,,Trash bags,garbage bags|bin liners,Household
-food-storage-and-wraps,,Food storage and wraps,foil|plastic wrap|zip bags,Household
-disposable-tableware,,Disposable tableware,paper plates|paper cups|napkins,Household
-batteries,,Batteries,aa|aaa,Household
-light-bulbs,,Light bulbs,bulb|led bulb,Household
-cleaning-tools,,Cleaning tools,sponges|mop|cleaning gloves,Household
+food-storage-and-wraps,,Food storage and wraps,,Household
+aluminum-foil,food-storage-and-wraps,Aluminum foil,foil|tin foil,
+plastic-wrap,food-storage-and-wraps,Plastic wrap,cling film|saran wrap,
+storage-bags,food-storage-and-wraps,Storage bags,zip bags|ziploc|sandwich bags|freezer bags,
+parchment-paper,food-storage-and-wraps,Parchment paper,baking paper,
+food-containers,food-storage-and-wraps,Food containers,tupperware|meal prep containers,
+disposable-tableware,,Disposable tableware,,Household
+paper-plates,disposable-tableware,Paper plates,,
+paper-cups,disposable-tableware,Paper cups,,
+napkins,disposable-tableware,Napkins,paper napkins,
+plastic-cutlery,disposable-tableware,Plastic cutlery,plastic forks|disposable cutlery,
+straws,disposable-tableware,Straws,,
+batteries,,Batteries,,Household
+aa-batteries,batteries,AA batteries,aa,
+aaa-batteries,batteries,AAA batteries,aaa,
+9v-batteries,batteries,9V batteries,9 volt,
+coin-batteries,batteries,Coin batteries,cr2032|button batteries,
+light-bulbs,,Light bulbs,bulb,Household
+led-bulbs,light-bulbs,LED bulbs,led bulb,
+cleaning-tools,,Cleaning tools,,Household
+sponges,cleaning-tools,Sponges,scrub sponge,
+mop,cleaning-tools,Mop,mop refills|swiffer,
+cleaning-gloves,cleaning-tools,Cleaning gloves,rubber gloves,
+microfiber-cloths,cleaning-tools,Microfiber cloths,cleaning cloths,
+broom,cleaning-tools,Broom,dustpan,
 air-fresheners,,Air fresheners,,Household
-pest-control,,Pest control,insect spray|mouse traps,Household
-hair-care,,Hair care,shampoo|conditioner,Personal care
-body-wash-and-soap,,Body wash and soap,soap|body wash,Personal care
-oral-care,,Oral care,toothpaste|toothbrush|floss|mouthwash,Personal care
+pest-control,,Pest control,,Household
+insect-spray,pest-control,Insect spray,bug spray|raid,
+mouse-traps,pest-control,Mouse traps,,
+ant-bait,pest-control,Ant bait,roach bait,
+hair-care,,Hair care,,Personal care
+shampoo,hair-care,Shampoo,,
+conditioner,hair-care,Conditioner,,
+hair-styling,hair-care,Hair styling,hair gel|hair spray|mousse|pomade,
+hair-color,hair-care,Hair color,hair dye,
+dry-shampoo,hair-care,Dry shampoo,,
+body-wash-and-soap,,Body wash and soap,,Personal care
+body-wash,body-wash-and-soap,Body wash,shower gel,
+bar-soap,body-wash-and-soap,Bar soap,soap|soap bar,
+hand-soap,body-wash-and-soap,Hand soap,liquid hand soap,
+oral-care,,Oral care,,Personal care
+toothpaste,oral-care,Toothpaste,,
+toothbrush,oral-care,Toothbrush,,
+dental-floss,oral-care,Dental floss,floss,
+mouthwash,oral-care,Mouthwash,listerine,
 deodorant,,Deodorant,antiperspirant,Personal care
-shaving,,Shaving,razor|shaving cream,Personal care
-skincare,,Skincare,moisturizer|lotion|sunscreen,Personal care
+shaving,,Shaving,,Personal care
+razors,shaving,Razors,razor|razor blades|razor cartridges,
+shaving-cream,shaving,Shaving cream,shaving gel|shave foam,
+aftershave,shaving,Aftershave,,
+skincare,,Skincare,,Personal care
+moisturizer,skincare,Moisturizer,face cream|face moisturizer,
+body-lotion,skincare,Body lotion,lotion|hand cream,
+sunscreen,skincare,Sunscreen,spf|sunblock,
+face-wash,skincare,Face wash,cleanser|facial cleanser,
+lip-balm,skincare,Lip balm,chapstick,
 cosmetics,,Cosmetics,makeup,Personal care
-feminine-care,,Feminine care,tampons|sanitary pads,Personal care
-cotton-and-swabs,,Cotton and swabs,cotton balls|q tips,Personal care
+foundation,cosmetics,Foundation,,
+mascara,cosmetics,Mascara,,
+lipstick,cosmetics,Lipstick,lip gloss,
+makeup-remover,cosmetics,Makeup remover,micellar water,
+nail-polish,cosmetics,Nail polish,,
+feminine-care,,Feminine care,,Personal care
+tampons,feminine-care,Tampons,,
+sanitary-pads,feminine-care,Sanitary pads,,
+panty-liners,feminine-care,Panty liners,,
+menstrual-cup,feminine-care,Menstrual cup,,
+cotton-and-swabs,,Cotton and swabs,,Personal care
+cotton-balls,cotton-and-swabs,Cotton balls,,
+cotton-swabs,cotton-and-swabs,Cotton swabs,q tips|cotton buds,
+cotton-pads,cotton-and-swabs,Cotton pads,,
 hand-sanitizer,,Hand sanitizer,,Personal care
-hair-and-beauty-services,,Hair and beauty services,haircut|salon,Personal care
-pain-relief,,Pain relief,ibuprofen|acetaminophen|aspirin,Health
-cold-flu-and-allergy,,Cold flu and allergy,allergy|cough|decongestant,Health
-digestive-health,,Digestive health,antacid|laxative,Health
-vitamins-and-supplements,,Vitamins and supplements,vitamins|supplement,Health
-first-aid,,First aid,bandages|band aid,Health
+hair-and-beauty-services,,Hair and beauty services,salon,Personal care
+haircut,hair-and-beauty-services,Haircut,barber,
+manicure,hair-and-beauty-services,Manicure,pedicure|nail salon,
+spa-treatments,hair-and-beauty-services,Spa treatments,massage|facial,
+pain-relief,,Pain relief,pain reliever,Health
+ibuprofen,pain-relief,Ibuprofen,advil|motrin,
+acetaminophen,pain-relief,Acetaminophen,tylenol|paracetamol,
+aspirin,pain-relief,Aspirin,,
+naproxen,pain-relief,Naproxen,aleve,
+pain-relief-cream,pain-relief,Pain relief cream,muscle rub,
+cold-flu-and-allergy,,Cold flu and allergy,cold medicine,Health
+allergy-medicine,cold-flu-and-allergy,Allergy medicine,allergy|antihistamine|claritin|zyrtec,
+cough-syrup,cold-flu-and-allergy,Cough syrup,cough|cough medicine,
+decongestant,cold-flu-and-allergy,Decongestant,sudafed|nasal spray,
+throat-lozenges,cold-flu-and-allergy,Throat lozenges,cough drops,
+cold-and-flu-relief,cold-flu-and-allergy,Cold and flu relief,dayquil|nyquil,
+digestive-health,,Digestive health,,Health
+antacids,digestive-health,Antacids,antacid|tums,
+laxatives,digestive-health,Laxatives,laxative,
+anti-diarrheal,digestive-health,Anti-diarrheal,imodium,
+probiotics,digestive-health,Probiotics,,
+vitamins-and-supplements,,Vitamins and supplements,supplement,Health
+multivitamin,vitamins-and-supplements,Multivitamin,vitamins|multivitamins,
+vitamin-d,vitamins-and-supplements,Vitamin D,,
+vitamin-c,vitamins-and-supplements,Vitamin C,,
+fish-oil,vitamins-and-supplements,Fish oil,omega 3,
+melatonin,vitamins-and-supplements,Melatonin,,
+magnesium,vitamins-and-supplements,Magnesium,,
+first-aid,,First aid,,Health
+bandages,first-aid,Bandages,band aid|plasters,
+antiseptic,first-aid,Antiseptic,hydrogen peroxide|rubbing alcohol|neosporin,
+gauze,first-aid,Gauze,medical tape,
 prescriptions,,Prescriptions,rx|pharmacy,Health
-eye-care,,Eye care,contact lens solution|eye drops,Health
-sports-nutrition,,Sports nutrition,protein powder,Health
-medical-supplies,,Medical supplies,thermometer|test kit,Health
+eye-care,,Eye care,,Health
+contact-lenses,eye-care,Contact lenses,,
+contact-lens-solution,eye-care,Contact lens solution,,
+eye-drops,eye-care,Eye drops,,
+reading-glasses,eye-care,Reading glasses,,
+sports-nutrition,,Sports nutrition,,Health
+protein-powder,sports-nutrition,Protein powder,whey protein,
+pre-workout,sports-nutrition,Pre-workout,,
+creatine,sports-nutrition,Creatine,,
+protein-shakes,sports-nutrition,Protein shakes,protein drink,
+medical-supplies,,Medical supplies,,Health
+thermometer,medical-supplies,Thermometer,,
+test-kits,medical-supplies,Test kits,test kit|covid test|pregnancy test,
+blood-pressure-monitor,medical-supplies,Blood pressure monitor,,
 fitness-and-gym,,Fitness and gym,gym|gym membership,Health
 medical-visits,,Medical visits,doctor|clinic|copay,Health
 diapers,,Diapers,nappies,Baby & kids
