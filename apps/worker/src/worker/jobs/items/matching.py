@@ -74,6 +74,12 @@ class CatalogIndex:
                 return row
         return None
 
+    def get(self, row_id: UUID | None) -> CatalogItem | None:
+        return self._rows.get(row_id) if row_id else None
+
+    def by_slug(self, slug: str | None) -> CatalogItem | None:
+        return next((row for row in self._rows.values() if row.slug == slug), None)
+
     def category_of(self, row: CatalogItem) -> str | None:
         if row.category is not None:
             return row.category
