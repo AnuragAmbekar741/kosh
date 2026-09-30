@@ -3,7 +3,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from ai.schemas import LineItem, ReceiptExtraction, StatementExtraction, Transaction
-from worker.consumers.extraction.services.draft_mapper import drafts
+from worker.jobs.extraction.drafts import to_spend_items
 
 
 def test_receipt_creates_only_line_item_drafts() -> None:
@@ -34,7 +34,7 @@ def test_receipt_creates_only_line_item_drafts() -> None:
             ),
         ],
     )
-    rows = drafts(uuid4(), extraction)
+    rows = to_spend_items(uuid4(), extraction)
     assert [row.line_index for row in rows] == [0, 1]
     assert [row.category for row in rows] == ["Groceries", "Household"]
     assert [row.description for row in rows] == ["MILK", "SOAP"]
@@ -66,7 +66,7 @@ def test_statement_skips_credits() -> None:
             ),
         ],
     )
-    rows = drafts(uuid4(), extraction)
+    rows = to_spend_items(uuid4(), extraction)
     assert len(rows) == 1
     assert rows[0].merchant == "Starbucks"
     assert rows[0].category == "Dining out"

@@ -60,6 +60,7 @@ Revisit when: ...
 | 44 | Spend page filters | **Route path** for Bills / Items plus **URL search params** for filters; no React context |
 | 45 | List pagination | Shared `Page` mixin + `{data, total}` envelope; `skip`/`limit` |
 | 46 | Product catalog | **`catalog.csv` in `packages/storage` → `catalog_items`** via `python -m storage.catalog load`; runtime reads Postgres only |
+| 47 | Worker layout | **`runtime.py` + `jobs/<name>/`** registry (`JOBS`, priority order); one poll loop, each job owns claim, handler, status |
 
 ### Locked detail rows
 
@@ -219,6 +220,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Importing an outside dataset (GS1, USDA, Open Food Facts) into the database; reading the CSV at runtime; seeding through Alembic data migrations
 - Why: A reviewable diff for every catalog change, foreign keys and SQL joins from spend lines, per-user rows later, and no license or size baggage. Outside datasets are only reference material while writing the CSV. Migrations stay about schema.
 - Revisit when: The catalog outgrows one hand-reviewed file, or users need to edit shared rows
+
+**Worker jobs run through one runtime**
+
+- Chosen: `worker/runtime.py` defines `Claim(id, token)` and `Job(name, reclaim, claim, run)`; `jobs/__init__.py` lists `JOBS` in priority order; each job lives in `jobs/<name>/` (`job.py` claim + status, `handler.py` orchestration, plain modules for the rest). The loop serves the first job with work and sleeps only when all are idle.
+- Rejected: `consumers/<x>/services/*` (two levels for one-line wrappers); a second `while True` per job in `main.py`; `packages/queue` or a broker now
+- Why: The catalog matcher is the second job. Registering it should be a folder and one line, and extraction should keep priority so uploads stay fast. The claim protocol stays in `storage` crud.
+- Revisit when: Jobs need separate processes or hosts, or a second app needs the same loop
 
 **Scanned documents always save itemized spend**
 

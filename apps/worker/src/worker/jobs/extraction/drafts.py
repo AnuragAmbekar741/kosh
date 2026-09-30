@@ -2,6 +2,9 @@ from decimal import Decimal
 from uuid import UUID
 
 from ai.schemas import ReceiptExtraction, StatementExtraction
+from sqlmodel import Session
+from storage.crud.spend import upsert_drafts
+from storage.models.document import Document
 from storage.models.spend import SpendItem, SpendSource, SpendStatus
 
 
@@ -9,7 +12,7 @@ def _decimal(value: str | None) -> Decimal | None:
     return Decimal(value) if value is not None else None
 
 
-def drafts(
+def to_spend_items(
     user_id: UUID, extraction: ReceiptExtraction | StatementExtraction
 ) -> list[SpendItem]:
     if isinstance(extraction, ReceiptExtraction):
@@ -53,3 +56,20 @@ def drafts(
             )
         )
     return rows
+
+
+def save(
+    session: Session,
+    document: Document,
+    attempt_id: UUID,
+    extraction: ReceiptExtraction | StatementExtraction,
+) -> None:
+    """Upsert the drafts without committing; the job commits with the status."""
+    upsert_drafts(
+        session,
+        user_id=document.user_id,
+        document_id=document.id,
+        extraction_attempt_id=attempt_id,
+        drafts=to_spend_items(document.user_id, extraction),
+        commit=False,
+    )

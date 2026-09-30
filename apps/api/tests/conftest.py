@@ -50,7 +50,6 @@ def db_engine(tmp_path, monkeypatch) -> Iterator[Engine]:
 def blob_store(monkeypatch) -> dict[str, bytes]:
     import api.modules.documents.services.upload as documents_mod
     import storage.blobs as blobs_mod
-    import worker.consumers.extraction.services.loader as pipeline_mod
 
     store: dict[str, bytes] = {}
 
@@ -72,7 +71,6 @@ def blob_store(monkeypatch) -> dict[str, bytes]:
     monkeypatch.setattr(blobs_mod, "delete_bytes", delete_bytes)
     monkeypatch.setattr(documents_mod, "put_bytes", put_bytes)
     monkeypatch.setattr(documents_mod, "delete_bytes", delete_bytes)
-    monkeypatch.setattr(pipeline_mod, "get_bytes", get_bytes)
     return store
 
 
