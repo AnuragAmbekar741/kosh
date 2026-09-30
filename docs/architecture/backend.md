@@ -84,6 +84,11 @@ apps/worker/src/worker/
       drafts.py              extraction → SpendItem drafts; save() upserts without committing
       validation.py          receipt totals mismatch → warning
       attempts.py            ExtractionAttempt rows
+    items/
+      __init__.py            JOB = Job("items", reclaim_stuck_lines, claim, run)
+      job.py                 claim one bill's pending lines → handler → finish_line per line
+      handler.py             saved answer → string match → ai.classify_items; returns Outcome + results
+      matching.py            CatalogIndex: normalized keys, longest-ending match, family category
 ```
 
 **The runtime** gives one unit of work per round to the first job in `JOBS` that has any, and sleeps only when every job is idle. A crash is logged with the job name and never stops the loop.

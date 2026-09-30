@@ -61,6 +61,7 @@ Revisit when: ...
 | 45 | List pagination | Shared `Page` mixin + `{data, total}` envelope; `skip`/`limit` |
 | 46 | Product catalog | **`catalog.csv` in `packages/storage` → `catalog_items`** via `python -m storage.catalog load`; runtime reads Postgres only |
 | 47 | Worker layout | **`runtime.py` + `jobs/<name>/`** registry (`JOBS`, priority order); one poll loop, each job owns claim, handler, status |
+| 48 | Item matching | Confirmed receipt lines → `jobs/items`: saved answer → string match → one model call per bill; the item's family sets the category unless the user did |
 
 ### Locked detail rows
 
@@ -227,6 +228,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: `consumers/<x>/services/*` (two levels for one-line wrappers); a second `while True` per job in `main.py`; `packages/queue` or a broker now
 - Why: The catalog matcher is the second job. Registering it should be a folder and one line, and extraction should keep priority so uploads stay fast. The claim protocol stays in `storage` crud.
 - Revisit when: Jobs need separate processes or hosts, or a second app needs the same loop
+
+**Receipt lines are matched to catalog items in the worker**
+
+- Chosen: Confirming a receipt, adding a line, or editing a tracked line's text or merchant marks it `pending`; statement rows are never matched. `jobs/items` claims one bill's pending lines under one token (`crud/item_matching.py`) and resolves each line in order: a saved answer (`catalog_aliases`: store code at this merchant, text at this merchant, then user-made text at any merchant), the free string matcher (longest ending of the normalized text against names and synonyms; one-word endings only from the model's cleaned-up name), then one `ai.classify_items` call per bill for the rest. Model answers at ≥ 0.8 confidence are saved as answers; lower confidence or "unsure" becomes `needs_review`. A resolved line takes its item's family category unless `category_source = user`. The line's text is never changed.
+- Rejected: Matching drafts at extraction time (drafts get rewritten or abandoned); one model call per line; the model creating new catalog items (C2 adds user corrections first); embeddings or pg_trgm
+- Why: Repeat purchases cost nothing after the first answer, most lines never reach the model, and the claim token lets an edit win over an in-flight match.
+- Revisit when: Needs-review volume is high enough to warrant model-created items, or the catalog outgrows one prompt
 
 **Scanned documents always save itemized spend**
 

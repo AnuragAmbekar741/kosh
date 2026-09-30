@@ -31,11 +31,12 @@ apps/api/src/api/          FastAPI app factory + feature modules
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession
   models/spend.py          SpendItem, Category (the 14 visible categories)
-  models/catalog.py        CatalogItem: catalog families and items (shared or per user)
+  models/catalog.py        CatalogItem (families + items), CatalogAlias (saved answers)
   models/document.py       Document, ExtractionAttempt
   crud/user.py             identity queries
   crud/spend.py            ledger + draft upsert
-  crud/catalog.py          load_shared_catalog, name_key
+  crud/catalog.py          load_shared_catalog, name_key, active_catalog, saved answers
+  crud/item_matching.py    claim / finish / release pending receipt lines for item matching
   catalog/                 catalog.csv + loader: python -m storage.catalog load
   crud/document.py         upload metadata, claim_next, reclaim_stuck
   pagination.py            skip/limit + count helper for list statements
@@ -46,7 +47,7 @@ packages/storage/src/storage/
 packages/security/src/security/   argon2 hash, access JWT, hashed refresh, CurrentUserDep
   google.py                Google ID token verify (JWKS)
 
-packages/ai/src/ai/        OpenRouter client, normalize, ReceiptExtraction | StatementExtraction
+packages/ai/src/ai/        OpenRouter client (chat_json), extraction, classify_items for catalog matching
 
 packages/observability/src/observability/   stdlib logging to stdout: text | JSON, redaction, bound ids
 
@@ -55,7 +56,9 @@ apps/worker/               background jobs over Postgres claims
   src/worker/bootstrap.py  logging, settings + Postgres ping
   src/worker/runtime.py    Claim, Job, the loop (first job with work wins; sleep when idle)
   src/worker/outcome.py    ready | retry | failed
-  src/worker/jobs/         JOBS registry; extraction/ = job → handler → drafts/validation/attempts
+  src/worker/jobs/         JOBS registry (extraction, items)
+    extraction/            job → handler → drafts/validation/attempts
+    items/                 job → handler → matching (saved answer → string match → ai.classify_items)
 
 apps/web/                  React + Vite + shadcn (not a uv member)
   src/app/                 entry, App, global CSS, typeset
