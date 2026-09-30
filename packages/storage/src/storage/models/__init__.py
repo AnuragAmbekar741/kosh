@@ -1,4 +1,4 @@
-from storage.models.catalog import CatalogItem
+from storage.models.catalog import CatalogAlias, CatalogItem
 from storage.models.document import (
     Document,
     DocumentSource,
@@ -11,6 +11,7 @@ from storage.models.user import AuthIdentity, AuthProvider, RefreshSession, User
 __all__ = [
     "AuthIdentity",
     "AuthProvider",
+    "CatalogAlias",
     "CatalogItem",
     "Document",
     "DocumentSource",

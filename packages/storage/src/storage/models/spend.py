@@ -18,6 +18,30 @@ class SpendStatus(StrEnum):
     CONFIRMED = "confirmed"
 
 
+class CategorySource(StrEnum):
+    EXTRACTION = "extraction"
+    ITEM = "item"
+    USER = "user"
+
+
+class ItemStatus(StrEnum):
+    """Where a receipt line is in catalog matching."""
+
+    NONE = "none"
+    PENDING = "pending"
+    PROCESSING = "processing"
+    RESOLVED = "resolved"
+    NEEDS_REVIEW = "needs_review"
+    NOT_PRODUCT = "not_product"
+    FAILED = "failed"
+
+
+class ItemMethod(StrEnum):
+    ALIAS = "alias"
+    MATCH = "match"
+    MODEL = "model"
+
+
 class Category(StrEnum):
     GROCERIES = "Groceries"
     DINING_OUT = "Dining out"
@@ -62,6 +86,15 @@ class SpendItem(SQLModel, table=True):
     currency: str
     spent_at: date = Field(index=True)
     category: str | None = None
+    category_source: str | None = None
+    catalog_item_id: UUID | None = Field(
+        default=None, foreign_key="catalog_items.id", index=True
+    )
+    item_status: str = Field(default=ItemStatus.NONE, index=True)
+    item_method: str | None = None
+    item_claim_token: UUID | None = None
+    item_claimed_at: datetime | None = None
+    item_attempts: int = 0
     source: str
     status: str
     document_id: UUID | None = Field(
