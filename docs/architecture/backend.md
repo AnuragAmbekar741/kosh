@@ -16,10 +16,10 @@ Stamina is NestJS; we are FastAPI. The framework differs, the **layering does no
 | `<f>.module.ts` | `<f>/__init__.py` | Wiring — exports `router` |
 | `common/filters/` | `common/exception_handlers.py` | Domain error → HTTP status |
 | `common/decorators/` | `common/dependencies.py` | `SessionDep`, guards |
-| worker `<x>.controller.ts` | `consumers/<x>/consumer.py` | Queue in, ack/nack out |
-| worker `<x>.handler.ts` | `consumers/<x>/handler.py` | Orchestration, returns outcome |
-| worker `<d>/*.service.ts` | `consumers/<x>/services/*.py` | One responsibility each |
-| `BootstrapPubSubMicroservice` | `packages/queue` runtime | Transport loop, hidden from consumers |
+| worker `<x>.controller.ts` | `jobs/<x>/job.py` | Claim in, status out (ack/nack) |
+| worker `<x>.handler.ts` | `jobs/<x>/handler.py` | Orchestration, returns `Outcome` |
+| worker `<d>/*.service.ts` | `jobs/<x>/<module>.py` | One responsibility each |
+| `BootstrapPubSubMicroservice` | `worker/runtime.py` | Poll loop over registered jobs |
 
 ## The one rule
 
@@ -66,34 +66,33 @@ Stamina keeps controllers to roughly a screen — parse, delegate, return. Docum
 
 ## apps/worker
 
-The worker is the bigger gap. `main.py:19-33` fuses the poll loop, the claim, the dispatch and the crash handler into one `while True`; `pipeline.py:32-116` then does blob read, extraction, three distinct failure classifications, attempt recording, draft mapping and status transition in a single 85-line function that re-fetches the claimed row four separate times.
-
-Stamina splits exactly this into transport / orchestration / single-responsibility services. Same split here:
+One loop, many jobs. The runtime knows nothing about documents; each job owns its claim, its orchestration and its status writes, and calls `packages/*` for data and AI.
 
 ```
 apps/worker/src/worker/
-  bootstrap.py               load env, init logging, hand to runtime   (stamina bootstrap.ts)
-  main.py                    pick consumer, start runtime              (stamina main.ts)
-  consumers/
+  main.py                    bootstrap(), then runtime.run(JOBS)       (stamina main.ts)
+  bootstrap.py               logging, settings, Postgres ping          (stamina bootstrap.ts)
+  settings.py                poll interval
+  runtime.py                 Claim(id, token), Job(name, reclaim, claim, run), the loop
+  outcome.py                 Outcome: ready | retry | failed
+  jobs/
+    __init__.py              JOBS: the registry; order = priority
     extraction/
-      consumer.py            claim → handler → ack/nack. No rules.
-      handler.py             orchestrates services, returns Outcome
-      schemas.py             ReceiptExtraction | StatementExtraction
-      services/
-        loader.py            blob fetch, BlobError → Outcome.failed
-        extractor.py         calls packages/ai; classifies retryable
-        attempt_writer.py    ExtractionAttempt rows
-        draft_mapper.py      extraction → list[SpendItem]  (from pipeline:119)
-        validator.py         receipt totals mismatch → warning
-  common/
-    outcome.py               Outcome: Ready | Retry | Failed(reason)
+      __init__.py            JOB = Job("extraction", reclaim_stuck, claim, run)
+      job.py                 claim(); run(): re-check claim → handler → status write. No rules.
+      handler.py             blob → ai.extract → validation → attempt → drafts; returns Outcome
+      drafts.py              extraction → SpendItem drafts; save() upserts without committing
+      validation.py          receipt totals mismatch → warning
+      attempts.py            ExtractionAttempt rows
 ```
 
-Two things this buys, both of which the current code lacks:
+**The runtime** gives one unit of work per round to the first job in `JOBS` that has any, and sleeps only when every job is idle. A crash is logged with the job name and never stops the loop.
 
-**The handler stops branching on transport.** Every failure path returns an `Outcome` instead of calling `mark_failed` / `mark_retry` inline. One place — the consumer — reads the outcome and writes the status. The four `get_claimed_document` re-fetches collapse to one.
+**A job** exposes `reclaim(session) -> int`, `claim(session) -> Claim | None` and `run(Claim)`. Claims use `FOR UPDATE SKIP LOCKED` plus a claim token through `storage` crud; `run` re-checks the token before and after the handler, and the status write commits the attempt and drafts in the same transaction.
 
-**A second job costs a folder, not a rewrite.** Categorisation, recurring-spend detection and notification each become `consumers/<name>/` with the same five files, sharing `runtime` and `common`. Stamina runs 20+ consumers off this shape; today a second job would mean a second `while True` in `main.py`.
+**The handler never writes a status.** Every failure path returns an `Outcome`; `job.py` alone maps it to `mark_ready` / `mark_retry` / `mark_failed`.
+
+**A second job costs a folder and one line.** Add `jobs/<name>/` with the same shape and append its `JOB` to `JOBS`. Tests mirror it: `apps/worker/tests/<name>/`, plus `test_runtime.py` for the loop.
 
 ## packages (= stamina `library/`)
 
@@ -101,7 +100,7 @@ Already correct: `storage`, `security`. Add as the need lands, not before:
 
 | Package | Pull from | Why now |
 |---|---|---|
-| `queue` | `storage/crud/document.py` claim helpers + `worker/main.py` loop | The claim protocol is transport, not document logic. Consumers should receive a job, not poll for one. |
+| `queue` | `worker/runtime.py` + the claim helpers in `storage/crud` | Only when a second app needs the same loop, or multiple worker hosts need a real broker. |
 | `ai` | `worker/extract.py` | `apps/agent` (see overview.md) needs the same OpenRouter client. Stamina keeps this in `library/ai`. |
 | `observability` | — | Api and worker both need one formatter, redaction and bound request/job ids. Not named `logging`: a top-level module of that name shadows the standard library for every importer. |
 
@@ -115,13 +114,12 @@ flowchart LR
     R[router] --> S[service]
   end
   subgraph wrk[apps/worker]
-    C[consumer] --> H[handler] --> SV[services]
+    RT[runtime] --> J[job] --> H[handler] --> M[job modules]
   end
   S --> P[packages/storage]
-  SV --> P
-  SV --> AI[packages/ai]
-  C -.claim.-> Q[packages/queue]
-  Q --> P
+  J -.claim / status.-> P
+  M --> P
+  H --> AI[packages/ai]
   P --> PG[(Postgres)]
   P --> S3[(Object storage)]
 ```
@@ -135,6 +133,6 @@ Each step ships green on its own; none needs the next.
 3. `modules/spend/` — smallest feature, proves the layout. `_public` becomes `presenter.py`.
 4. `modules/documents/` — the payoff: `confirm` policy moves to `services/confirm.py`, and the private cross-import at `documents.py:28` dies.
 5. `modules/auth|users|health/` — mechanical once 3 and 4 land.
-6. Worker `Outcome` + `consumers/extraction/` — split `pipeline.py` last; it is the one place with no test seam yet beyond `tests/test_extract.py`.
+6. Worker `Outcome` + `jobs/extraction/` — split `pipeline.py` last; it is the one place with no test seam yet beyond `tests/test_extract.py`.
 
 Tests move with their module (`tests/modules/<f>/`), mirroring stamina's per-project `jest.config.ts`.

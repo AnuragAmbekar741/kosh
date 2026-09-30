@@ -50,11 +50,12 @@ packages/ai/src/ai/        OpenRouter client, normalize, ReceiptExtraction | Sta
 
 packages/observability/src/observability/   stdlib logging to stdout: text | JSON, redaction, bound ids
 
-apps/worker/               document extraction loop
-  src/worker/main.py       reclaim + claim + dispatch
+apps/worker/               background jobs over Postgres claims
+  src/worker/main.py       bootstrap, then runtime.run(JOBS)
   src/worker/bootstrap.py  logging, settings + Postgres ping
-  src/worker/consumers/extraction/  consumer → handler → services; one outcome line per job
-  src/worker/common/outcome.py      Ready | Retry | Failed
+  src/worker/runtime.py    Claim, Job, the loop (first job with work wins; sleep when idle)
+  src/worker/outcome.py    ready | retry | failed
+  src/worker/jobs/         JOBS registry; extraction/ = job → handler → drafts/validation/attempts
 
 apps/web/                  React + Vite + shadcn (not a uv member)
   src/app/                 entry, App, global CSS, typeset
