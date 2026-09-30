@@ -6,7 +6,13 @@ from uuid import UUID
 from sqlalchemy import func, or_
 from sqlmodel import Session, col, select
 
-from storage.models.spend import SpendItem, SpendSource, SpendStatus
+from storage.models.spend import (
+    CategorySource,
+    ItemStatus,
+    SpendItem,
+    SpendSource,
+    SpendStatus,
+)
 from storage.pagination import paginate
 
 __all__ = [
@@ -35,6 +41,8 @@ def create_spend_item(
     status: str,
     description: str | None = None,
     category: str | None = None,
+    category_source: str | None = None,
+    item_status: str = ItemStatus.NONE,
     document_id: UUID | None = None,
     extraction_attempt_id: UUID | None = None,
     line_index: int | None = None,
@@ -49,6 +57,8 @@ def create_spend_item(
         currency=currency,
         spent_at=spent_at,
         category=category,
+        category_source=category_source,
+        item_status=item_status,
         source=source,
         status=status,
         document_id=document_id,
@@ -212,6 +222,7 @@ def update_spend_item(
     spent_at: date | None = None,
     clear_description: bool = False,
     mark_edited: bool = False,
+    requeue_item: bool = False,
 ) -> SpendItem:
     if merchant is not None:
         item.merchant = merchant
@@ -221,6 +232,13 @@ def update_spend_item(
         item.description = description
     if category is not None:
         item.category = category
+        item.category_source = CategorySource.USER
+    if requeue_item and item.item_status != ItemStatus.NONE:
+        # A new claim token is required, so an in-flight match is discarded.
+        item.item_status = ItemStatus.PENDING
+        item.item_claim_token = None
+        item.item_claimed_at = None
+        item.item_attempts = 0
     if amount is not None:
         item.amount = amount
     if currency is not None:
@@ -282,6 +300,7 @@ def upsert_drafts(
         current.quantity = draft.quantity
         current.unit_price = draft.unit_price
         current.category = draft.category
+        current.category_source = draft.category_source
         current.amount = draft.amount
         current.currency = draft.currency
         current.spent_at = draft.spent_at
@@ -309,7 +328,9 @@ def confirm_document_items(
     *,
     user_id: UUID,
     document_id: UUID,
+    queue_items: bool = False,
 ) -> list[SpendItem]:
+    """Confirm every draft line; queue_items marks them for catalog matching."""
     rows = list_document_spend_items(session, user_id=user_id, document_id=document_id)
     confirmed: list[SpendItem] = []
     now = datetime.now(UTC)
@@ -321,6 +342,8 @@ def confirm_document_items(
             session.delete(row)
             continue
         row.status = SpendStatus.CONFIRMED
+        if queue_items:
+            row.item_status = ItemStatus.PENDING
         row.updated_at = now
         session.add(row)
         confirmed.append(row)

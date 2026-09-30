@@ -741,3 +741,77 @@ def test_delete_manual_document_skips_blob(client, monkeypatch, blob_store) -> N
     assert client.get(f"/documents/{document_id}", headers=headers).status_code == 404
     assert client.get("/spend-items", headers=headers).json()["data"] == []
     assert blob_store == {}
+
+
+def _lines(document_id: str) -> list[SpendItem]:
+    with Session(database.engine) as session:
+        return list(
+            session.exec(
+                select(SpendItem)
+                .where(SpendItem.document_id == UUID(document_id))
+                .order_by(SpendItem.line_index)
+            ).all()
+        )
+
+
+def test_confirming_a_receipt_queues_lines_for_items(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt_two_lines())
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
+    lines = _lines(document_id)
+    assert [line.item_status for line in lines] == ["pending", "pending"]
+    assert {line.category_source for line in lines} == {"extraction"}
+
+
+def test_confirming_a_statement_does_not_queue(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _statement())
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
+    assert [line.item_status for line in _lines(document_id)] == ["none"]
+
+
+def test_added_lines_are_queued_with_the_users_category(client, monkeypatch) -> None:
+    headers = _auth(client)
+    receipt_id = _process(client, monkeypatch, headers, _receipt())
+    client.post(f"/documents/{receipt_id}/confirm", headers=headers)
+    manual_id = client.post(
+        "/documents/manual", json={"title": "Market"}, headers=headers
+    ).json()["id"]
+    for document_id in (receipt_id, manual_id):
+        added = client.post(
+            f"/documents/{document_id}/line-items",
+            json={"description": "Bananas", "amount": "2.50", "category": "Groceries"},
+            headers=headers,
+        ).json()
+        line = next(row for row in _lines(document_id) if str(row.id) == added["id"])
+        assert line.item_status == "pending"
+        assert line.category_source == "user"
+
+
+def test_editing_text_requeues_and_editing_category_marks_it_user_set(
+    client, monkeypatch
+) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
+    line_id = _lines(document_id)[0].id
+    with Session(database.engine) as session:
+        line = session.get(SpendItem, line_id)
+        assert line is not None
+        line.item_status = "resolved"
+        line.item_claim_token = uuid4()
+        session.add(line)
+        session.commit()
+    client.patch(
+        f"/spend-items/{line_id}", json={"category": "Health"}, headers=headers
+    )
+    line = _lines(document_id)[0]
+    assert (line.item_status, line.category_source) == ("resolved", "user")
+    client.patch(
+        f"/spend-items/{line_id}",
+        json={"description": "ORGAIN PROTEIN"},
+        headers=headers,
+    )
+    line = _lines(document_id)[0]
+    assert line.item_status == "pending"
+    assert line.item_claim_token is None
