@@ -6,6 +6,7 @@ from ai.client import (
     inspect_and_normalize,
     strict_json_schema,
 )
+from ai.items import ItemChoice, ItemLine, classify_items
 from ai.schemas import (
     SCHEMA_VERSION,
     Category,
@@ -22,11 +23,14 @@ __all__ = [
     "ExtractError",
     "ExtractMeta",
     "Extraction",
+    "ItemChoice",
+    "ItemLine",
     "LineItem",
     "ReceiptExtraction",
     "RetryableExtractError",
     "StatementExtraction",
     "Transaction",
+    "classify_items",
     "extract",
     "inspect_and_normalize",
     "strict_json_schema",

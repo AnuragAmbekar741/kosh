@@ -76,8 +76,8 @@ class ExtractMeta:
         self.completion_tokens = completion_tokens
 
 
-def strict_json_schema() -> dict[str, Any]:
-    schema = TypeAdapter(Extraction).json_schema()
+def strict_json_schema(target: Any = Extraction) -> dict[str, Any]:
+    schema = TypeAdapter(target).json_schema()
     _force_additional_properties_false(schema)
     schema = _inline_refs(schema)
     _require_all_properties(schema)
@@ -195,52 +195,70 @@ def extract(
     data: bytes, mime: str, *, max_upload_mb: int
 ) -> tuple[Extraction, ExtractMeta]:
     settings = get_settings()
-    api_key = settings.require_openrouter()
+    settings.require_openrouter()
     payload, mime = inspect_and_normalize(data, mime, max_upload_mb=max_upload_mb)
     content = [{"type": "text", "text": _PROMPT}, _part(payload, mime, "document")]
+    extraction, meta = chat_json(
+        content,
+        target=Extraction,
+        name="extraction",
+        model=settings.openrouter_model,
+        extra_body={
+            "plugins": [
+                {"id": "file-parser", "pdf": {"engine": settings.openrouter_pdf_engine}}
+            ],
+        },
+    )
+    return cast(Extraction, extraction), meta
+
+
+def chat_json(
+    content: list[dict[str, Any]],
+    *,
+    target: Any,
+    name: str,
+    model: str,
+    extra_body: dict[str, Any] | None = None,
+) -> tuple[Any, ExtractMeta]:
+    """One OpenRouter chat call that must answer with strict JSON for `target`.
+
+    Rate limits, timeouts and 5xx raise RetryableExtractError; other API
+    errors and invalid output raise ExtractError.
+    """
+    api_key = get_settings().require_openrouter()
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
     try:
         response = client.chat.completions.create(
-            model=settings.openrouter_model,
+            model=model,
             messages=cast(Any, [{"role": "user", "content": content}]),
             response_format=cast(
                 Any,
                 {
                     "type": "json_schema",
                     "json_schema": {
-                        "name": "extraction",
+                        "name": name,
                         "strict": True,
-                        "schema": strict_json_schema(),
+                        "schema": strict_json_schema(target),
                     },
                 },
             ),
-            extra_body={
-                "provider": {"require_parameters": True},
-                "plugins": [
-                    {
-                        "id": "file-parser",
-                        "pdf": {"engine": settings.openrouter_pdf_engine},
-                    }
-                ],
-            },
+            extra_body={"provider": {"require_parameters": True}, **(extra_body or {})},
         )
     except APIError as exc:
         status_code = getattr(exc, "status_code", None)
         if status_code is None or status_code in {408, 409, 429} or status_code >= 500:
             raise RetryableExtractError(f"openrouter error: {exc}") from exc
         raise ExtractError(f"openrouter error: {exc}") from exc
-    message = response.choices[0].message
-    raw = message.content
+    raw = response.choices[0].message.content
     if not raw:
         raise ExtractError("empty model response")
     try:
-        parsed = json.loads(raw)
-        extraction: Extraction = TypeAdapter(Extraction).validate_python(parsed)
+        parsed = TypeAdapter(target).validate_python(json.loads(raw))
     except (json.JSONDecodeError, ValidationError) as exc:
         raise ExtractError("invalid model output") from exc
     usage = response.usage
-    return extraction, ExtractMeta(
-        model=response.model or settings.openrouter_model,
+    return parsed, ExtractMeta(
+        model=response.model or model,
         provider=getattr(response, "provider", None),
         prompt_tokens=getattr(usage, "prompt_tokens", None) if usage else None,
         completion_tokens=getattr(usage, "completion_tokens", None) if usage else None,
