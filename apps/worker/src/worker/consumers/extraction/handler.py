@@ -6,7 +6,6 @@ from storage.blobs import BlobError
 from storage.crud.spend import upsert_drafts
 from storage.models.document import Document
 
-from worker.common.outcome import Outcome
 from worker.consumers.extraction.services import (
     attempt_writer,
     draft_mapper,
@@ -14,6 +13,7 @@ from worker.consumers.extraction.services import (
     loader,
     validator,
 )
+from worker.outcome import Outcome
 
 logger = logging.getLogger(__name__)
 

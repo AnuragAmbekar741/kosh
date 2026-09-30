@@ -9,13 +9,13 @@ class Outcome:
     warning: str | None = None
 
     @staticmethod
-    def ready(warning: str | None = None) -> "Outcome":
+    def ready(warning: str | None = None) -> Outcome:
         return Outcome(kind="ready", warning=warning)
 
     @staticmethod
-    def retry(reason: str) -> "Outcome":
+    def retry(reason: str) -> Outcome:
         return Outcome(kind="retry", reason=reason)
 
     @staticmethod
-    def failed(reason: str) -> "Outcome":
+    def failed(reason: str) -> Outcome:
         return Outcome(kind="failed", reason=reason)
