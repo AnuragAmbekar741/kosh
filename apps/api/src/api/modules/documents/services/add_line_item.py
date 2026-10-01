@@ -5,7 +5,13 @@ from sqlmodel import Session
 from storage.crud.document import get_document, latest_attempt
 from storage.crud.spend import create_spend_item, list_document_spend_items
 from storage.models.document import Document, DocumentSource, DocumentStatus
-from storage.models.spend import SpendItem, SpendSource, SpendStatus
+from storage.models.spend import (
+    CategorySource,
+    ItemStatus,
+    SpendItem,
+    SpendSource,
+    SpendStatus,
+)
 
 from api.common.errors import (
     DocumentBillNotItemizedError,
@@ -72,6 +78,8 @@ def _add_manual_line(
         merchant=merchant,
         description=body.description,
         category=body.category,
+        category_source=CategorySource.USER,
+        item_status=ItemStatus.PENDING,
         amount=body.amount,
         currency=currency,
         spent_at=spent_at,
@@ -117,6 +125,8 @@ def _add_receipt_line(
         merchant=anchor.merchant,
         description=body.description,
         category=body.category,
+        category_source=CategorySource.USER,
+        item_status=ItemStatus.PENDING,
         amount=body.amount,
         currency=anchor.currency,
         spent_at=anchor.spent_at,

@@ -3,16 +3,20 @@ import unicodedata
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from typing import NamedTuple
+from uuid import UUID
 
 from sqlmodel import Session, col, select
 
-from storage.models.catalog import CatalogItem
+from storage.models.catalog import AliasSource, CatalogAlias, CatalogItem
 
 __all__ = [
     "CatalogLoadResult",
     "CatalogRow",
+    "active_catalog",
+    "find_alias",
     "load_shared_catalog",
     "name_key",
+    "save_alias",
 ]
 
 
@@ -91,3 +95,66 @@ def load_shared_catalog(
     else:
         session.flush()
     return CatalogLoadResult(inserted=inserted, updated=updated, retired=retired)
+
+
+def active_catalog(session: Session) -> list[CatalogItem]:
+    """Shared rows that are not retired, families before items."""
+    return list(
+        session.exec(
+            select(CatalogItem)
+            .where(
+                col(CatalogItem.user_id).is_(None), col(CatalogItem.retired).is_(False)
+            )
+            .order_by(col(CatalogItem.parent_id).is_not(None), col(CatalogItem.name))
+        ).all()
+    )
+
+
+def find_alias(
+    session: Session, *, user_id: UUID, kind: str, merchant_key: str, key: str
+) -> CatalogAlias | None:
+    return session.exec(
+        select(CatalogAlias).where(
+            CatalogAlias.user_id == user_id,
+            CatalogAlias.kind == kind,
+            CatalogAlias.merchant_key == merchant_key,
+            CatalogAlias.key == key,
+        )
+    ).first()
+
+
+def save_alias(
+    session: Session,
+    *,
+    user_id: UUID,
+    kind: str,
+    merchant_key: str,
+    key: str,
+    catalog_item_id: UUID | None,
+    source: str,
+) -> None:
+    """Insert or update a saved answer; a model answer never replaces a user one.
+
+    The caller commits.
+    """
+    alias = find_alias(
+        session, user_id=user_id, kind=kind, merchant_key=merchant_key, key=key
+    )
+    if (
+        alias is not None
+        and alias.source == AliasSource.USER
+        and source != alias.source
+    ):
+        return
+    if alias is None:
+        alias = CatalogAlias(
+            user_id=user_id,
+            kind=kind,
+            merchant_key=merchant_key,
+            key=key,
+            source=source,
+        )
+    alias.catalog_item_id = catalog_item_id
+    alias.source = source
+    alias.updated_at = datetime.now(UTC)
+    session.add(alias)

@@ -14,7 +14,7 @@ from storage.crud.spend import (
     update_spend_item,
     user_has_confirmed_spend,
 )
-from storage.models.spend import SpendItem, SpendSource, SpendStatus
+from storage.models.spend import CategorySource, SpendItem, SpendSource, SpendStatus
 
 from api.common.errors import NotFoundError
 from api.modules.spend.presenter import to_summary
@@ -37,6 +37,7 @@ def create(session: Session, user_id: UUID, body: SpendItemCreate) -> SpendItem:
         currency=body.currency,
         spent_at=body.spent_at,
         category=body.category,
+        category_source=CategorySource.USER,
         source=SpendSource.MANUAL,
         status=SpendStatus.CONFIRMED,
     )
@@ -92,6 +93,7 @@ def update(
         spent_at=fields.get("spent_at"),
         clear_description="description" in fields and fields["description"] is None,
         mark_edited=True,
+        requeue_item="description" in fields or "merchant" in fields,
     )
 
 

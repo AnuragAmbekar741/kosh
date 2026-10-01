@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 from storage.crud.spend import create_spend_item
-from storage.models.spend import SpendSource, SpendStatus
+from storage.models.spend import SpendItem, SpendSource, SpendStatus
 
 _PASSWORD = "password1"
 
@@ -468,3 +468,16 @@ def test_paging_does_not_change_summary(client) -> None:
     ).json()
     assert paged["total"] == full["total"]
     assert paged["item_count"] == full["item_count"]
+
+
+def test_loose_spend_is_user_categorized_and_not_queued(client, db_engine) -> None:
+    headers = _auth(client)
+    created = client.post("/spend-items", json=_payload(), headers=headers).json()
+    client.patch(
+        f"/spend-items/{created['id']}", json={"merchant": "Target"}, headers=headers
+    )
+    with Session(db_engine) as session:
+        item = session.get(SpendItem, UUID(created["id"]))
+        assert item is not None
+        assert item.category_source == "user"
+        assert item.item_status == "none"

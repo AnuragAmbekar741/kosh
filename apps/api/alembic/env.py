@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 from storage.models import (  # noqa: F401
     AuthIdentity,
+    CatalogAlias,
     CatalogItem,
     Document,
     ExtractionAttempt,

@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from sqlmodel import Session
-from storage.crud.document import get_document
+from storage.crud.document import get_document, latest_attempt
 from storage.crud.spend import confirm_document_items, list_document_spend_items
 from storage.models.document import DocumentStatus
 from storage.models.spend import SpendItem, SpendStatus
@@ -28,4 +28,11 @@ def confirm(
     drafts = [item for item in rows if item.status == SpendStatus.PENDING_REVIEW]
     if not any(item.line_index is not None for item in drafts):
         raise NoDraftsToConfirmError
-    return confirm_document_items(session, user_id=user_id, document_id=document_id)
+    attempt = latest_attempt(session, document_id)
+    kind = attempt.payload.get("document_kind") if attempt and attempt.payload else None
+    return confirm_document_items(
+        session,
+        user_id=user_id,
+        document_id=document_id,
+        queue_items=kind == "receipt",
+    )

@@ -5,7 +5,7 @@ from ai.schemas import ReceiptExtraction, StatementExtraction
 from sqlmodel import Session
 from storage.crud.spend import upsert_drafts
 from storage.models.document import Document
-from storage.models.spend import SpendItem, SpendSource, SpendStatus
+from storage.models.spend import CategorySource, SpendItem, SpendSource, SpendStatus
 
 
 def _decimal(value: str | None) -> Decimal | None:
@@ -31,6 +31,7 @@ def to_spend_items(
                     currency=extraction.currency,
                     spent_at=extraction.purchased_at,
                     category=item.category,
+                    category_source=CategorySource.EXTRACTION,
                     source=SpendSource.DOCUMENT,
                     status=SpendStatus.PENDING_REVIEW,
                     line_index=index,
@@ -50,6 +51,7 @@ def to_spend_items(
                 currency=extraction.currency,
                 spent_at=txn.spent_at,
                 category=txn.category,
+                category_source=CategorySource.EXTRACTION,
                 source=SpendSource.DOCUMENT,
                 status=SpendStatus.PENDING_REVIEW,
                 line_index=index,
