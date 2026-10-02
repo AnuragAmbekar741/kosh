@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/layout/AppHeader"
 import { AppSidebar } from "@/components/layout/AppSidebar"
 import { DashboardSkeleton } from "@/components/layout/DashboardSkeleton"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useGetMe } from "@/hooks/users/use-me"
 
@@ -29,6 +30,7 @@ export function AppShell() {
           </div>
         </SidebarInset>
       </SidebarProvider>
+      <Toaster position="bottom-right" />
     </TooltipProvider>
   )
 }

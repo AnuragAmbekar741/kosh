@@ -1,6 +1,7 @@
 import base64
 import copy
 import json
+from datetime import UTC, datetime
 from io import BytesIO
 from typing import Any, cast
 
@@ -34,6 +35,8 @@ _PROMPT = (
     "Use document_kind receipt for store receipts and statement for bank or card statements. "
     "Money fields must be decimal strings such as 56.71. "
     "Dates must be ISO 8601 (YYYY-MM-DD). Treat 10/19/24 as 2024-10-19 when the locale is US. "
+    "When a printed year has two digits or is hard to read, choose the year that puts the "
+    "date closest to today; a document is never dated after today. "
     "Assign every line item and transaction exactly one category by what was bought, "
     "not by the store. "
     "Groceries: food and drink bought to take home. "
@@ -197,7 +200,8 @@ def extract(
     settings = get_settings()
     settings.require_openrouter()
     payload, mime = inspect_and_normalize(data, mime, max_upload_mb=max_upload_mb)
-    content = [{"type": "text", "text": _PROMPT}, _part(payload, mime, "document")]
+    prompt = f"Today is {datetime.now(UTC).date().isoformat()}. {_PROMPT}"
+    content = [{"type": "text", "text": prompt}, _part(payload, mime, "document")]
     extraction, meta = chat_json(
         content,
         target=Extraction,

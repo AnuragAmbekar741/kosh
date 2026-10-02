@@ -18,6 +18,12 @@ export function fromIsoDate(iso: string) {
   return new Date(`${iso}T00:00:00`)
 }
 
+/** Whole days from today to an ISO date: negative in the past, positive ahead. */
+export function daysFromToday(iso: string, now = new Date()) {
+  const today = fromIsoDate(toIsoDate(now))
+  return Math.round((fromIsoDate(iso).getTime() - today.getTime()) / 86_400_000)
+}
+
 export function parseIsoDate(value: string | null) {
   if (!value || !ISO_DATE.test(value)) return null
   const date = fromIsoDate(value)

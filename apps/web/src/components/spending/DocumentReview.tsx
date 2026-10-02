@@ -22,12 +22,18 @@ import {
 import { useUpdateSpendItem } from "@/hooks/spend-items/use-spend-items"
 
 import { CategoryBadge } from "./CategoryBadge"
+import { daysFromToday } from "./spend-period"
 import { formatDate, formatMoney } from "./spending-formatters"
+
+export type ConfirmedBill = {
+  merchant: string
+  spentAt?: string
+}
 
 type DocumentReviewProps = {
   documentId: string
   onBack: () => void
-  onConfirmed: (spentAt?: string) => void
+  onConfirmed: (bill: ConfirmedBill) => void
   onTryAnother: () => void
 }
 
@@ -280,7 +286,7 @@ function ReadyDocument({
 }: {
   document: DocumentDetail
   onBack: () => void
-  onConfirmed: (spentAt?: string) => void
+  onConfirmed: (bill: ConfirmedBill) => void
 }) {
   const extraction = document.extraction!
   const lineDrafts = document.drafts.filter((item) => item.line_index !== null)
@@ -297,6 +303,12 @@ function ReadyDocument({
     )
   )
   const [validationError, setValidationError] = useState("")
+  const isReceipt = extraction.document_kind === "receipt"
+  const [receiptDate, setReceiptDate] = useState(
+    extraction.document_kind === "receipt" ? extraction.purchased_at : ""
+  )
+  const dateOffset = isReceipt && receiptDate ? daysFromToday(receiptDate) : 0
+  const unlikelyDate = dateOffset < -365 || dateOffset > 1
   const confirm = useConfirmDocument()
   const updateItem = useUpdateSpendItem()
 
@@ -322,6 +334,10 @@ function ReadyDocument({
   }
 
   async function save() {
+    if (isReceipt && !receiptDate) {
+      setValidationError("Enter the receipt date.")
+      return
+    }
     const invalid = lineDrafts.find((item) => {
       const edit = edits[item.id]
       return (
@@ -345,11 +361,13 @@ function ReadyDocument({
             description: edit.name.trim(),
             amount: edit.amount,
             category: edit.category,
+            ...(isReceipt ? { spent_at: receiptDate } : {}),
           }
           const unchanged =
             updates.description === draftName(item) &&
             updates.amount === item.amount &&
-            updates.category === item.category
+            updates.category === item.category &&
+            (!isReceipt || receiptDate === item.spent_at)
           return unchanged
             ? []
             : [updateItem.mutateAsync({ id: item.id, updates })]
@@ -358,7 +376,7 @@ function ReadyDocument({
       const confirmed = await confirm.mutateAsync({ documentId: document.id })
       const spentAt =
         confirmed[0]?.spent_at ?? documentDate ?? lineDrafts[0]?.spent_at
-      onConfirmed(spentAt ?? undefined)
+      onConfirmed({ merchant, spentAt: spentAt ?? undefined })
     } catch {
       // Mutation state renders the API error below the review.
     }
@@ -403,10 +421,27 @@ function ReadyDocument({
                 </Tooltip>
               ) : null}
             </div>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {documentDate ? formatDate(documentDate) : "Date not found"} ·{" "}
-              {document.filename}
-            </p>
+            {isReceipt ? (
+              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                <Input
+                  aria-invalid={unlikelyDate}
+                  aria-label="Receipt date"
+                  className="h-7 w-36"
+                  onChange={(event) => {
+                    setReceiptDate(event.target.value)
+                    setValidationError("")
+                  }}
+                  type="date"
+                  value={receiptDate}
+                />
+                <span className="truncate">{document.filename}</span>
+              </div>
+            ) : (
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {documentDate ? formatDate(documentDate) : "Date not found"} ·{" "}
+                {document.filename}
+              </p>
+            )}
           </div>
           <p className="shrink-0 text-xl font-medium tabular-nums">
             {formatMoney(total, extraction.currency)}
@@ -437,6 +472,18 @@ function ReadyDocument({
         </div>
 
         {validationError ? <FieldError>{validationError}</FieldError> : null}
+
+        {unlikelyDate ? (
+          <Alert>
+            <AlertTriangleIcon />
+            <AlertTitle>Check the date</AlertTitle>
+            <AlertDescription>
+              This receipt is dated {formatDate(receiptDate)},{" "}
+              {dateOffset > 0 ? "in the future" : "more than a year ago"}. If
+              the year was misread, fix the date above before adding it.
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
         {document.error ? (
           <Alert>

@@ -1,8 +1,11 @@
 import { useState } from "react"
 import { FileUpIcon, PenLineIcon, PlusIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { apiDetail } from "@/api/client"
 import { AddDocumentFlow } from "@/components/spending/AddDocumentDialog"
+import type { ConfirmedBill } from "@/components/spending/DocumentReview"
+import { formatDate } from "@/components/spending/spending-formatters"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -59,8 +62,14 @@ export function AddSpendingDialog() {
     }
   }
 
-  function finishUpload(spentAt?: string) {
-    if (spentAt) filters.revealDate(spentAt)
+  function finishUpload({ merchant, spentAt }: ConfirmedBill) {
+    // Never move the period on its own: other bills would seem to vanish.
+    if (spentAt && !filters.isInView(spentAt)) {
+      toast(`Saved ${merchant}`, {
+        description: `Dated ${formatDate(spentAt)}, outside the period you're viewing.`,
+        action: { label: "Show", onClick: () => filters.revealDate(spentAt) },
+      })
+    }
     setUploadStarted(false)
     handleOpenChange(false)
   }

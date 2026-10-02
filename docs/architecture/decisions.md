@@ -63,6 +63,7 @@ Revisit when: ...
 | 47 | Worker layout | **`runtime.py` + `jobs/<name>/`** registry (`JOBS`, priority order); one poll loop, each job owns claim, handler, status |
 | 48 | Item matching | Confirmed receipt lines → `jobs/items`: saved answer → string match → one model call per bill; the item's family sets the category unless the user did |
 | 49 | Item corrections | `PUT /spend-items/{id}/item` (existing item, new private item, or not a product); saved as user answers and applied to the user's same-text lines |
+| 50 | Confirm keeps the period | Confirming a bill never moves the Spending period; an out-of-view bill gets a sonner toast with **Show**. Notifications use `sonner` |
 
 ### Locked detail rows
 
@@ -243,6 +244,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Model-created items; sharing corrections across users; corrections that rename the line
 - Why: One fix covers every repeat of that receipt text, now and later, without a model call, and a wrong correction can't affect anyone else.
 - Revisit when: Common private items should be promoted into `catalog.csv`, or users need to edit or delete their own items
+
+**Confirming a bill never moves the period**
+
+- Chosen: After confirming, Spending stays on the period the user chose. If the new bill is outside it, a `sonner` toast names the bill and its date and offers **Show**, which jumps to that month. Review shows a receipt's date as an editable field and warns when it is more than a year ago or in the future. The extraction prompt carries today's date so two-digit years resolve near today.
+- Rejected: Jumping to the bill's month automatically (#21); an inline banner on the ledger (the add dialog lives in the header, not the page)
+- Why: The automatic jump hid every other bill, which looked like data loss, and a misread year (2026 → 2020) made it jump years away.
+- Revisit when: Bulk uploads need a summary instead of one toast per bill
 
 **Scanned documents always save itemized spend**
 

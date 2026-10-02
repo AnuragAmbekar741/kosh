@@ -22,9 +22,13 @@ the global monochrome visual system.
    merchant title. Mismatched totals still produce a review warning. The list caps
    at `max-h-72` and scrolls so the header and confirm action stay reachable.
 5. `POST /documents/{id}/confirm` adds all reviewed drafts to Spending and
-   refreshes the ledger. If the receipt date falls outside the current period
-   filter, Spending jumps to that month so the new bill is visible. There is
-   no total-versus-itemized choice or partial selection.
+   refreshes the ledger. The period never changes on its own: if the bill's
+   date falls outside the visible period, a sonner toast ("Saved <merchant>",
+   the date, "outside the period you're viewing") offers a Show action that
+   jumps to that month. There is no total-versus-itemized choice or partial
+   selection. Before confirming, a receipt's date is an editable date field;
+   a "Check the date" alert appears when it is more than a year ago or in the
+   future, and a changed date is saved on every line.
 6. Add manually asks only for a bill name. `POST /documents/manual` creates a
    fileless ready document. The bill appears in the ledger immediately, even
    with zero lines, and opens so the add-row is visible.

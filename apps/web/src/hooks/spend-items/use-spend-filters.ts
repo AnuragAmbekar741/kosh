@@ -184,6 +184,11 @@ export function useSpendFilters() {
     })
   }, [write])
 
+  const isInView = useCallback(
+    (isoDate: string) => dateInRange(isoDate, range.from, range.to),
+    [range.from, range.to]
+  )
+
   const revealDate = useCallback(
     (isoDate: string) => {
       const day = parseIsoDate(
@@ -220,6 +225,7 @@ export function useSpendFilters() {
     setQ,
     setPage,
     resetFilters,
+    isInView,
     revealDate,
   }
 }
