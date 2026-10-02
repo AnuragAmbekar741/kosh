@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID, uuid4
 
+from api.modules.spend.analytics import _previous_range
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 from storage.crud.spend import create_spend_item
@@ -481,3 +482,134 @@ def test_loose_spend_is_user_categorized_and_not_queued(client, db_engine) -> No
         assert item is not None
         assert item.category_source == "user"
         assert item.item_status == "none"
+
+
+def _bill(client: TestClient, headers: dict[str, str], title: str, *lines) -> None:
+    created = client.post("/documents/manual", json={"title": title}, headers=headers)
+    for description, amount, category in lines:
+        client.post(
+            f"/documents/{created.json()['id']}/line-items",
+            json={"description": description, "amount": amount, "category": category},
+            headers=headers,
+        )
+
+
+def test_analytics_breakdowns(client) -> None:
+    headers = _auth(client)
+    _bill(
+        client,
+        headers,
+        "Costco",
+        ("Milk", "4.00", "Groceries"),
+        ("Soap", "6.00", "Household"),
+    )
+    _bill(client, headers, "Costco", ("Eggs", "10.00", "Groceries"))
+    client.post(
+        "/spend-items",
+        json=_payload(merchant="Uber", amount="30.00", category="Transport"),
+        headers=headers,
+    )
+    body = client.get("/spend-items/analytics", headers=headers).json()
+    assert body["total"] == "50.00"
+    assert body["bill_count"] == 3
+    assert body["item_count"] == 4
+    assert body["comparison"] is None
+    assert [row["category"] for row in body["categories"]] == [
+        "Transport",
+        "Groceries",
+        "Household",
+    ]
+    assert body["categories"][1]["total"] == "14.00"
+    assert body["categories"][1]["share"] == 0.28
+    assert body["merchants"][0] == {
+        "merchant": "Uber",
+        "total": "30.00",
+        "bill_count": 1,
+    }
+    assert body["merchants"][1] == {
+        "merchant": "Costco",
+        "total": "20.00",
+        "bill_count": 2,
+    }
+    assert [bill["total"] for bill in body["largest_bills"]] == [
+        "30.00",
+        "10.00",
+        "10.00",
+    ]
+    assert len(body["weekdays"]) == 7
+    assert sum(Decimal(day["total"]) for day in body["weekdays"]) == Decimal("50.00")
+    assert sum(Decimal(point["total"]) for point in body["trend"]) == Decimal("50.00")
+
+
+def test_analytics_trend_and_comparison(client) -> None:
+    headers = _auth(client)
+    for spent_at, amount in [
+        ("2024-08-10", "100.00"),
+        ("2024-09-02", "50.00"),
+        ("2024-09-20", "75.00"),
+    ]:
+        client.post(
+            "/spend-items",
+            json=_payload(amount=amount, spent_at=spent_at),
+            headers=headers,
+        )
+    body = client.get(
+        "/spend-items/analytics",
+        params={"spent_from": "2024-09-01", "spent_to": "2024-09-30"},
+        headers=headers,
+    ).json()
+    assert body["total"] == "125.00"
+    assert body["daily_average"] == "4.17"
+    assert body["bucket"] == "day"
+    assert len(body["trend"]) == 30
+    assert body["trend"][1] == {"start": "2024-09-02", "total": "50.00"}
+    assert body["comparison"] == {
+        "previous_total": "100.00",
+        "delta_percent": 25.0,
+        "previous_from": "2024-08-01",
+        "previous_to": "2024-08-31",
+    }
+    year = client.get(
+        "/spend-items/analytics",
+        params={"spent_from": "2024-01-01", "spent_to": "2024-12-31"},
+        headers=headers,
+    ).json()
+    assert year["bucket"] == "month"
+    assert len(year["trend"]) == 12
+    assert year["trend"][7] == {"start": "2024-08-01", "total": "100.00"}
+    assert year["comparison"]["delta_percent"] is None
+
+
+def test_analytics_previous_range_to_date() -> None:
+    month_to_date = _previous_range(
+        date(2024, 10, 1), date(2024, 10, 31), date(2024, 10, 2)
+    )
+    assert month_to_date == (date(2024, 9, 1), date(2024, 9, 2))
+    assert _previous_range(date(2024, 3, 1), date(2024, 3, 31), date(2024, 3, 31)) == (
+        date(2024, 2, 1),
+        date(2024, 2, 29),
+    )
+    assert _previous_range(date(2024, 9, 10), date(2024, 9, 19), date(2024, 9, 19)) == (
+        date(2024, 8, 31),
+        date(2024, 9, 9),
+    )
+
+
+def test_analytics_respects_filters_and_owner(client) -> None:
+    headers = _auth(client)
+    client.post("/spend-items", json=_payload(amount="10.00"), headers=headers)
+    client.post(
+        "/spend-items",
+        json=_payload(amount="5.00", merchant="Lyft", category="Transport"),
+        headers=headers,
+    )
+    body = client.get(
+        "/spend-items/analytics", params={"category": "Transport"}, headers=headers
+    ).json()
+    assert body["total"] == "5.00"
+    assert [row["category"] for row in body["categories"]] == ["Transport"]
+    other = client.get("/spend-items/analytics", headers=_auth(client)).json()
+    assert other["has_spend"] is False
+    assert other["total"] == "0.00"
+    assert other["daily_average"] == "0.00"
+    assert other["categories"] == []

@@ -10,4 +10,6 @@ export const spendItemQueryKeys = {
     ["spend-items", "list", query, page] as const,
   summary: (query: SpendSummaryQuery) =>
     ["spend-items", "summary", query] as const,
+  analytics: (query: SpendQuery) =>
+    ["spend-items", "analytics", query] as const,
 }

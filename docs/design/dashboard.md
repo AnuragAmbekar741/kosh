@@ -27,7 +27,7 @@ the loaded layout. The status is announced as “Opening your workspace.”
 | `/`                   | Redirect  | Signed-in users go to `/overview`. Guests go to `/login`.                     |
 | `/overview`           | Overview  | Empty destination. CTA to Spending. Future totals and breakdowns.             |
 | `/spending`           | Redirect  | Preserves search params and opens Bills.                                      |
-| `/spending/analytics` | Analytics | Reserved; shown as unavailable and redirects to Bills until its screen ships. |
+| `/spending/analytics` | Analytics | Charts over the filtered ledger. See [spending.md](./spending.md#analytics). |
 | `/spending/bills`     | Bills     | Existing grouped bill ledger.                                                 |
 | `/spending/items`     | Items     | Existing item table and pager.                                                |
 
@@ -38,7 +38,7 @@ The sidebar and the header title both read from that list.
 The sidebar uses the shadcn `Sidebar` primitive (`variant="inset"`,
 `collapsible="icon"`). Spending is a parent row with Analytics, Bills, and
 Items beneath it; clicking the parent expands or collapses that subtree.
-Analytics remains visibly unavailable until implemented. Collapsing leaves a
+Collapsing leaves a
 3rem icon rail: hovering or activating the centered Spending icon
 opens a keyboard-accessible `DropdownMenu` containing the same children.
 Collapse state persists in the `sidebar_state` cookie and toggles with

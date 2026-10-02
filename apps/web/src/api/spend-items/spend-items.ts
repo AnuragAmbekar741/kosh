@@ -4,6 +4,7 @@ import type {
   Paginated,
   ItemCorrection,
   SpendItem,
+  SpendAnalytics,
   SpendItemUpdate,
   SpendPeriod,
   SpendQuery,
@@ -46,6 +47,17 @@ export async function getSpendSummary(
 ): Promise<SpendSummary> {
   const { data } = await client.get<SpendSummary>("/spend-items/summary", {
     params: toParams(query, query.period),
+    signal,
+  })
+  return data
+}
+
+export async function getSpendAnalytics(
+  query: SpendQuery,
+  signal?: AbortSignal
+): Promise<SpendAnalytics> {
+  const { data } = await client.get<SpendAnalytics>("/spend-items/analytics", {
+    params: toParams(query),
     signal,
   })
   return data

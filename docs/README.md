@@ -27,12 +27,13 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 
 | Done | Next |
 |---|---|
-| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | Overview analytics |
-| Web auth plus document upload, extraction review, and Payments | Overview |
+| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | Overview |
+| Web auth plus document upload, extraction review, and Payments | Item analytics (recurring items) |
 | Manual spend entry (name-only bill + line items) | |
 | Postgres + Alembic; User, AuthIdentity, RefreshSession | |
 | Local auth + Google (`POST /auth/google`) + `GET /users/me` | |
 | SpendItem CRUD | |
+| Spending analytics (`/spending/analytics`) | |
 | Documents upload + worker extraction via OpenRouter | |
 
 

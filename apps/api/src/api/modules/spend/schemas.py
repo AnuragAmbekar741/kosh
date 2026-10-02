@@ -9,8 +9,15 @@ from storage.models.spend import Category
 from api.common.pagination import Page
 
 __all__ = [
+    "AnalyticsBill",
+    "AnalyticsCategory",
+    "AnalyticsComparison",
+    "AnalyticsMerchant",
+    "AnalyticsTrendPoint",
+    "AnalyticsWeekday",
     "ItemCorrection",
     "NewCatalogItem",
+    "SpendAnalytics",
     "SpendItemCatalog",
     "SpendItemCreate",
     "SpendItemPublic",
@@ -24,6 +31,7 @@ __all__ = [
 ]
 
 SpendPeriod = Literal["day", "week", "month", "custom"]
+TrendBucket = Literal["day", "week", "month"]
 
 
 def _require_positive_amount(value: Decimal) -> Decimal:
@@ -131,6 +139,61 @@ class SpendSummary(BaseModel):
     avg_per_bill: Decimal
     has_spend: bool
     comparison: SpendSummaryComparison | None
+
+
+class AnalyticsComparison(BaseModel):
+    previous_total: Decimal
+    delta_percent: float | None
+    previous_from: date
+    previous_to: date
+
+
+class AnalyticsTrendPoint(BaseModel):
+    start: date
+    total: Decimal
+
+
+class AnalyticsCategory(BaseModel):
+    category: str
+    total: Decimal
+    share: float
+    item_count: int
+
+
+class AnalyticsMerchant(BaseModel):
+    merchant: str
+    total: Decimal
+    bill_count: int
+
+
+class AnalyticsBill(BaseModel):
+    document_id: UUID | None
+    merchant: str
+    spent_at: date
+    total: Decimal
+    item_count: int
+
+
+class AnalyticsWeekday(BaseModel):
+    weekday: int = Field(ge=0, le=6, description="0 is Monday")
+    total: Decimal
+
+
+class SpendAnalytics(BaseModel):
+    currency: str
+    total: Decimal
+    bill_count: int
+    item_count: int
+    avg_per_bill: Decimal
+    daily_average: Decimal
+    has_spend: bool
+    comparison: AnalyticsComparison | None
+    bucket: TrendBucket
+    trend: list[AnalyticsTrendPoint]
+    categories: list[AnalyticsCategory]
+    merchants: list[AnalyticsMerchant]
+    largest_bills: list[AnalyticsBill]
+    weekdays: list[AnalyticsWeekday]
 
 
 class NewCatalogItem(BaseModel):
