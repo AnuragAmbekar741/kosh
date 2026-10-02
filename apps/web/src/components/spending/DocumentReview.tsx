@@ -1,11 +1,23 @@
 import { useState } from "react"
-import { AlertCircleIcon, AlertTriangleIcon, CheckIcon } from "lucide-react"
+import {
+  AlertCircleIcon,
+  AlertTriangleIcon,
+  CalendarIcon,
+  CheckIcon,
+} from "lucide-react"
 
 import { apiDetail } from "@/api/client"
 import type { DocumentDetail } from "@/api/documents/documents.types"
 import type { Category, SpendItem } from "@/api/spend-items/spend-items.types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { DialogFooter } from "@/components/ui/dialog"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -22,7 +34,7 @@ import {
 import { useUpdateSpendItem } from "@/hooks/spend-items/use-spend-items"
 
 import { CategoryBadge } from "./CategoryBadge"
-import { daysFromToday } from "./spend-period"
+import { daysFromToday, fromIsoDate, toIsoDate } from "./spend-period"
 import { formatDate, formatMoney } from "./spending-formatters"
 
 export type ConfirmedBill = {
@@ -304,6 +316,7 @@ function ReadyDocument({
   )
   const [validationError, setValidationError] = useState("")
   const isReceipt = extraction.document_kind === "receipt"
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [receiptDate, setReceiptDate] = useState(
     extraction.document_kind === "receipt" ? extraction.purchased_at : ""
   )
@@ -423,17 +436,40 @@ function ReadyDocument({
             </div>
             {isReceipt ? (
               <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <Input
-                  aria-invalid={unlikelyDate}
-                  aria-label="Receipt date"
-                  className="h-7 w-36"
-                  onChange={(event) => {
-                    setReceiptDate(event.target.value)
-                    setValidationError("")
-                  }}
-                  type="date"
-                  value={receiptDate}
-                />
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        aria-label="Receipt date"
+                        aria-invalid={unlikelyDate}
+                      />
+                    }
+                  >
+                    <CalendarIcon data-icon="inline-start" />
+                    {receiptDate ? formatDate(receiptDate) : "Select date"}
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-auto">
+                    <PopoverTitle>Receipt date</PopoverTitle>
+                    <Calendar
+                      mode="single"
+                      captionLayout="dropdown"
+                      defaultMonth={
+                        receiptDate ? fromIsoDate(receiptDate) : undefined
+                      }
+                      selected={
+                        receiptDate ? fromIsoDate(receiptDate) : undefined
+                      }
+                      onSelect={(date) => {
+                        if (!date) return
+                        setReceiptDate(toIsoDate(date))
+                        setValidationError("")
+                        setDatePickerOpen(false)
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
                 <span className="truncate">{document.filename}</span>
               </div>
             ) : (
