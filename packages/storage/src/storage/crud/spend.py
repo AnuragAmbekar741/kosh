@@ -4,8 +4,10 @@ from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import func, or_
+from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, select
 
+from storage.models.catalog import CatalogItem
 from storage.models.spend import (
     CategorySource,
     ItemStatus,
@@ -115,7 +117,9 @@ def _spend_items_statement(
         )
     if status is not None:
         statement = statement.where(SpendItem.status == status)
-    return statement.order_by(
+    return statement.options(
+        selectinload(SpendItem.catalog_item).selectinload(CatalogItem.parent)  # type: ignore[arg-type]
+    ).order_by(
         col(SpendItem.spent_at).desc(),
         col(SpendItem.created_at).desc(),
         col(SpendItem.id).desc(),

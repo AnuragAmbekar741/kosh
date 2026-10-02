@@ -9,6 +9,7 @@ from api.common.pagination import Paginated
 from api.modules.spend import service
 from api.modules.spend.presenter import to_public
 from api.modules.spend.schemas import (
+    ItemCorrection,
     SpendItemCreate,
     SpendItemPublic,
     SpendItemUpdate,
@@ -81,6 +82,13 @@ def patch_item(
     session: SessionDep,
 ) -> SpendItemPublic:
     return to_public(service.update(session, user.id, item_id, body))
+
+
+@router.put("/{item_id}/item")
+def correct_item(
+    item_id: UUID, body: ItemCorrection, user: CurrentUserDep, session: SessionDep
+) -> SpendItemPublic:
+    return to_public(service.correct_item(session, user.id, item_id, body))
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)

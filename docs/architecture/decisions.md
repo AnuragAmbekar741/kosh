@@ -62,6 +62,7 @@ Revisit when: ...
 | 46 | Product catalog | **`catalog.csv` in `packages/storage` → `catalog_items`** via `python -m storage.catalog load`; runtime reads Postgres only |
 | 47 | Worker layout | **`runtime.py` + `jobs/<name>/`** registry (`JOBS`, priority order); one poll loop, each job owns claim, handler, status |
 | 48 | Item matching | Confirmed receipt lines → `jobs/items`: saved answer → string match → one model call per bill; the item's family sets the category unless the user did |
+| 49 | Item corrections | `PUT /spend-items/{id}/item` (existing item, new private item, or not a product); saved as user answers and applied to the user's same-text lines |
 
 ### Locked detail rows
 
@@ -235,6 +236,13 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Matching drafts at extraction time (drafts get rewritten or abandoned); one model call per line; the model creating new catalog items (C2 adds user corrections first); embeddings or pg_trgm
 - Why: Repeat purchases cost nothing after the first answer, most lines never reach the model, and the claim token lets an edit win over an in-flight match.
 - Revisit when: Needs-review volume is high enough to warrant model-created items, or the catalog outgrows one prompt
+
+**Corrections teach the matcher**
+
+- Chosen: A correction sets the line with `item_method = user`, applies the family category unless the user set it, saves user answers for the text (this merchant and any merchant) and the store code, and updates the user's other finished lines with the same text unless they were corrected by hand. New items are private (`catalog_items.user_id`), live under an existing family, and reuse a same-named row in that family. Corrections, answers, and private items never leave the user.
+- Rejected: Model-created items; sharing corrections across users; corrections that rename the line
+- Why: One fix covers every repeat of that receipt text, now and later, without a model call, and a wrong correction can't affect anyone else.
+- Revisit when: Common private items should be promoted into `catalog.csv`, or users need to edit or delete their own items
 
 **Scanned documents always save itemized spend**
 

@@ -3,6 +3,7 @@ from decimal import Decimal
 from storage.models.spend import SpendItem
 
 from api.modules.spend.schemas import (
+    SpendItemCatalog,
     SpendItemPublic,
     SpendSummary,
     SpendSummaryComparison,
@@ -20,6 +21,8 @@ def to_public(item: SpendItem) -> SpendItemPublic:
         currency=item.currency,
         spent_at=item.spent_at,
         category=item.category,
+        item=_catalog_item(item),
+        item_status=item.item_status,
         source=item.source,
         status=item.status,
         document_id=item.document_id,
@@ -27,6 +30,15 @@ def to_public(item: SpendItem) -> SpendItemPublic:
         user_edited=item.user_edited,
         created_at=item.created_at,
         updated_at=item.updated_at,
+    )
+
+
+def _catalog_item(item: SpendItem) -> SpendItemCatalog | None:
+    row = item.catalog_item
+    if row is None:
+        return None
+    return SpendItemCatalog(
+        id=row.id, name=row.name, family=row.parent.name if row.parent else None
     )
 
 

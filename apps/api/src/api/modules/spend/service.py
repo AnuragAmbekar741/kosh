@@ -5,6 +5,8 @@ from decimal import Decimal
 from uuid import UUID
 
 from sqlmodel import Session
+from storage.crud.catalog import create_user_item, name_key, save_alias
+from storage.crud.item_matching import lines_with_text, set_line_item
 from storage.crud.spend import (
     create_spend_item,
     delete_spend_item,
@@ -14,11 +16,25 @@ from storage.crud.spend import (
     update_spend_item,
     user_has_confirmed_spend,
 )
-from storage.models.spend import CategorySource, SpendItem, SpendSource, SpendStatus
+from storage.models.catalog import AliasKind, AliasSource, CatalogItem
+from storage.models.spend import (
+    CategorySource,
+    ItemMethod,
+    ItemStatus,
+    SpendItem,
+    SpendSource,
+    SpendStatus,
+)
 
-from api.common.errors import NotFoundError
+from api.common.errors import (
+    CatalogItemNotFoundError,
+    LineNotMatchableError,
+    NotACatalogFamilyError,
+    NotFoundError,
+)
 from api.modules.spend.presenter import to_summary
 from api.modules.spend.schemas import (
+    ItemCorrection,
     SpendItemCreate,
     SpendItemUpdate,
     SpendPeriod,
@@ -95,6 +111,79 @@ def update(
         mark_edited=True,
         requeue_item="description" in fields or "merchant" in fields,
     )
+
+
+def correct_item(
+    session: Session, user_id: UUID, item_id: UUID, body: ItemCorrection
+) -> SpendItem:
+    """Set a line's catalog item by hand and learn from it.
+
+    The answer is saved for this text (at this merchant and at any merchant)
+    and for the line's store code, and the user's other finished lines with
+    the same text follow, unless they were corrected by hand themselves.
+    """
+    line = get(session, user_id, item_id)
+    if line.item_status == ItemStatus.NONE:
+        raise LineNotMatchableError
+    row: CatalogItem | None = None
+    if body.new_item is not None:
+        family = _visible_row(session, user_id, body.new_item.family_id)
+        if family.parent_id is not None:
+            raise NotACatalogFamilyError
+        row = create_user_item(
+            session, user_id=user_id, family=family, name=body.new_item.name
+        )
+    elif body.catalog_item_id is not None:
+        row = _visible_row(session, user_id, body.catalog_item_id)
+    status = ItemStatus.RESOLVED if row else ItemStatus.NOT_PRODUCT
+    category = (row.parent.category if row.parent else row.category) if row else None
+    row_id = row.id if row else None
+    set_line_item(
+        session,
+        line,
+        status=status,
+        catalog_item_id=row_id,
+        method=ItemMethod.USER,
+        category=category,
+    )
+    merchant_key = name_key(line.merchant)
+    text_key = name_key(line.description or "")
+    answers = [(AliasKind.TEXT, merchant, text_key) for merchant in (merchant_key, "")]
+    if line.item_code:
+        answers.append((AliasKind.CODE, merchant_key, line.item_code.lower()))
+    for kind, merchant, key in answers:
+        if key:
+            save_alias(
+                session,
+                user_id=user_id,
+                kind=kind,
+                merchant_key=merchant,
+                key=key,
+                catalog_item_id=row_id,
+                source=AliasSource.USER,
+            )
+    if text_key:
+        for other in lines_with_text(
+            session, user_id=user_id, text_key=text_key, exclude_id=line.id
+        ):
+            set_line_item(
+                session,
+                other,
+                status=status,
+                catalog_item_id=row_id,
+                method=ItemMethod.ALIAS,
+                category=category,
+            )
+    session.commit()
+    session.refresh(line)
+    return line
+
+
+def _visible_row(session: Session, user_id: UUID, row_id: UUID) -> CatalogItem:
+    row = session.get(CatalogItem, row_id)
+    if row is None or row.retired or row.user_id not in (None, user_id):
+        raise CatalogItemNotFoundError
+    return row
 
 
 def delete(session: Session, user_id: UUID, item_id: UUID) -> None:

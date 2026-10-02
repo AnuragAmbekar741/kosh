@@ -93,3 +93,18 @@ class DocumentNotReceiptError(DomainError):
 class StorageCleanupError(DomainError):
     status_code = 502
     detail = "storage cleanup failed"
+
+
+class CatalogItemNotFoundError(DomainError):
+    status_code = 404
+    detail = "catalog item not found"
+
+
+class NotACatalogFamilyError(DomainError):
+    status_code = 422
+    detail = "family_id must be a catalog family"
+
+
+class LineNotMatchableError(DomainError):
+    status_code = 409
+    detail = "this line is not matched to catalog items"

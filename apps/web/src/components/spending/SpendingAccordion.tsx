@@ -42,6 +42,7 @@ import {
 } from "@/hooks/spend-items/use-spend-items"
 
 import { CategoryBadge } from "./CategoryBadge"
+import { ItemPicker } from "./ItemPicker"
 import { SpendingAddLineRow } from "./SpendingAddLineRow"
 import { formatDate, formatMoney } from "./spending-formatters"
 
@@ -274,6 +275,7 @@ function SpendingLineRow({
               {label}
             </button>
             {categoryBadge}
+            <ItemPicker line={item} />
           </div>
         )}
       </div>

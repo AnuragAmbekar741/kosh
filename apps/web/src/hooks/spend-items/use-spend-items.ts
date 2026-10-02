@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query"
 
 import {
+  correctSpendItemItem,
   deleteSpendItem,
   getSpendItems,
   getSpendSummary,
@@ -16,6 +17,7 @@ import type {
   SpendQuery,
   SpendSummaryQuery,
 } from "@/api/spend-items/spend-items.types"
+import { catalogQueryKeys } from "@/hooks/catalog/query-keys"
 import { spendItemQueryKeys } from "@/hooks/spend-items/query-keys"
 
 export function useSpendItems(query: SpendQuery, page: PageParams) {
@@ -40,6 +42,17 @@ export function useDeleteSpendItem() {
     mutationFn: deleteSpendItem,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: spendItemQueryKeys.all })
+    },
+  })
+}
+
+export function useCorrectSpendItemItem() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: correctSpendItemItem,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: spendItemQueryKeys.all })
+      void queryClient.invalidateQueries({ queryKey: catalogQueryKeys.all })
     },
   })
 }

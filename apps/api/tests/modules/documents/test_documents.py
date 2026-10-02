@@ -815,3 +815,187 @@ def test_editing_text_requeues_and_editing_category_marks_it_user_set(
     line = _lines(document_id)[0]
     assert line.item_status == "pending"
     assert line.item_claim_token is None
+
+
+def test_spend_lines_return_their_catalog_item(client, monkeypatch) -> None:
+    from storage.crud.catalog import CatalogRow, load_shared_catalog
+    from storage.models.catalog import CatalogItem
+
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
+    with Session(database.engine) as session:
+        load_shared_catalog(
+            session,
+            [
+                CatalogRow("chicken", None, "Chicken", (), "Groceries"),
+                CatalogRow("chicken-breast", "chicken", "Chicken breast", (), None),
+            ],
+        )
+        breast = session.exec(
+            select(CatalogItem).where(CatalogItem.slug == "chicken-breast")
+        ).one()
+        line = session.exec(
+            select(SpendItem).where(SpendItem.document_id == UUID(document_id))
+        ).one()
+        line.catalog_item_id = breast.id
+        line.item_status = "resolved"
+        session.add(line)
+        session.commit()
+        line_id = str(line.id)
+    listed = client.get("/spend-items", headers=headers).json()["data"][0]
+    assert listed["item_status"] == "resolved"
+    assert listed["item"]["name"] == "Chicken breast"
+    assert listed["item"]["family"] == "Chicken"
+    one = client.get(f"/spend-items/{line_id}", headers=headers).json()
+    assert one["item"] == listed["item"]
+
+
+def _seed_catalog() -> dict[str, UUID]:
+    from storage.crud.catalog import CatalogRow, load_shared_catalog
+    from storage.models.catalog import CatalogItem
+
+    with Session(database.engine) as session:
+        load_shared_catalog(
+            session,
+            [
+                CatalogRow("sports-nutrition", None, "Sports nutrition", (), "Health"),
+                CatalogRow(
+                    "protein-powder", "sports-nutrition", "Protein powder", (), None
+                ),
+            ],
+        )
+        return {
+            row.slug or "": row.id for row in session.exec(select(CatalogItem)).all()
+        }
+
+
+def _receipt_line(client, monkeypatch, headers) -> str:
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
+    return str(_lines(document_id)[0].id)
+
+
+def _set_status(line_id: str, **fields) -> None:
+    with Session(database.engine) as session:
+        line = session.get(SpendItem, UUID(line_id))
+        assert line is not None
+        for key, value in fields.items():
+            setattr(line, key, value)
+        session.add(line)
+        session.commit()
+
+
+def test_correcting_an_item_learns_and_spreads(client, monkeypatch) -> None:
+    from storage.models.catalog import CatalogAlias
+
+    ids = _seed_catalog()
+    headers = _auth(client)
+    first = _receipt_line(client, monkeypatch, headers)
+    same_text = _receipt_line(client, monkeypatch, headers)
+    hand_set = _receipt_line(client, monkeypatch, headers)
+    _set_status(same_text, item_status="needs_review")
+    _set_status(hand_set, item_status="resolved", item_method="user")
+
+    response = client.put(
+        f"/spend-items/{first}/item",
+        json={"catalog_item_id": str(ids["protein-powder"])},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["item"]["name"] == "Protein powder"
+    assert body["item"]["family"] == "Sports nutrition"
+    assert body["item_status"] == "resolved"
+    assert body["category"] == "Health"
+    assert body["description"] == "ORGAIN VAN 1"
+
+    with Session(database.engine) as session:
+        spread = session.get(SpendItem, UUID(same_text))
+        kept = session.get(SpendItem, UUID(hand_set))
+        assert spread is not None and kept is not None
+        assert (spread.item_status, spread.item_method) == ("resolved", "alias")
+        assert spread.catalog_item_id == ids["protein-powder"]
+        assert kept.catalog_item_id is None
+        aliases = {
+            (a.kind, a.merchant_key, a.source)
+            for a in session.exec(select(CatalogAlias)).all()
+        }
+    merchant = "walmart neighborhood market"
+    assert aliases == {
+        ("text", merchant, "user"),
+        ("text", "", "user"),
+        ("code", merchant, "user"),
+    }
+
+
+def test_marking_not_a_product(client, monkeypatch) -> None:
+    headers = _auth(client)
+    line = _receipt_line(client, monkeypatch, headers)
+    body = client.put(
+        f"/spend-items/{line}/item", json={"not_product": True}, headers=headers
+    ).json()
+    assert (body["item_status"], body["item"], body["category"]) == (
+        "not_product",
+        None,
+        "Groceries",
+    )
+
+
+def test_creating_a_private_item(client, monkeypatch) -> None:
+    ids = _seed_catalog()
+    headers = _auth(client)
+    line = _receipt_line(client, monkeypatch, headers)
+    new_item = {"name": "Vanilla shake mix", "family_id": str(ids["sports-nutrition"])}
+    body = client.put(
+        f"/spend-items/{line}/item", json={"new_item": new_item}, headers=headers
+    ).json()
+    assert body["item"]["name"] == "Vanilla shake mix"
+    again = client.put(
+        f"/spend-items/{line}/item", json={"new_item": new_item}, headers=headers
+    ).json()
+    assert again["item"]["id"] == body["item"]["id"]
+    found = client.get(
+        "/catalog/search", params={"q": "vanilla"}, headers=headers
+    ).json()
+    assert [(e["name"], e["mine"]) for e in found] == [("Vanilla shake mix", True)]
+
+    other = _auth(client)
+    assert (
+        client.get("/catalog/search", params={"q": "vanilla"}, headers=other).json()
+        == []
+    )
+    other_line = _receipt_line(client, monkeypatch, other)
+    hidden = client.put(
+        f"/spend-items/{other_line}/item",
+        json={"catalog_item_id": body["item"]["id"]},
+        headers=other,
+    )
+    assert hidden.status_code == 404
+    not_family = client.put(
+        f"/spend-items/{line}/item",
+        json={"new_item": {"name": "X", "family_id": str(ids["protein-powder"])}},
+        headers=headers,
+    )
+    assert not_family.status_code == 422
+
+
+def test_item_corrections_are_validated(client, monkeypatch) -> None:
+    headers = _auth(client)
+    statement_id = _process(client, monkeypatch, headers, _statement())
+    client.post(f"/documents/{statement_id}/confirm", headers=headers)
+    row = str(_lines(statement_id)[0].id)
+    assert (
+        client.put(
+            f"/spend-items/{row}/item", json={"not_product": True}, headers=headers
+        ).status_code
+        == 409
+    )
+    line = _receipt_line(client, monkeypatch, headers)
+    for body in ({}, {"not_product": True, "catalog_item_id": str(uuid4())}):
+        assert (
+            client.put(
+                f"/spend-items/{line}/item", json=body, headers=headers
+            ).status_code
+            == 422
+        )

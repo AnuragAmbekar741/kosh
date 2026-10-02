@@ -25,8 +25,9 @@ apps/api/src/api/          FastAPI app factory + feature modules
   modules/health/          GET /health
   modules/auth/            register, login, google, refresh, logout
   modules/users/           GET /users/me; UserPublic
-  modules/spend/           SpendItem CRUD + summary + presenter
+  modules/spend/           SpendItem CRUD + summary + item corrections + presenter
   modules/documents/       upload, manual create, list, detail, confirm, line items
+  modules/catalog/         GET /catalog/search for the item picker
 
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession
