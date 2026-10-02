@@ -123,6 +123,15 @@ Line items sort by `line_index`, then spend date. Groups are ordered newest
 first by the first entry's spend date, or the document `created_at` when the
 bill is still empty.
 
+Matched receipt lines also show an item badge after the category badge: a
+neutral outline with the catalog item's name (family on hover), "Matching…"
+while pending, "Not a product", or a dashed "Pick item" when the line needs
+review. Clicking it opens a Popover picker: a search over `/catalog/search`
+(name · family), "Not a product", and "Create “…”" which then asks for the
+family of the new private item. Saving calls `PUT /spend-items/{id}/item`;
+the category follows the item unless the user set it, and the bill text
+never changes. The Items table adds a Product column with the same badge.
+
 The ledger fills the dashboard content panel below `2xl`; at `2xl` it uses a
 wide centered maximum for readability. The page itself does not scroll. Many
 bills scroll the list under Transactions. The accordion card hugs its rows.
@@ -162,6 +171,8 @@ src/components/spending/
   AddSpendingDialog.tsx
   AddDocumentDialog.tsx
   CategoryBadge.tsx
+  ItemBadge.tsx
+  ItemPicker.tsx
   DocumentReview.tsx
   SpendingAccordion.tsx
   SpendingAddLineRow.tsx
