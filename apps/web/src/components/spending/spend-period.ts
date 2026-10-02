@@ -1,5 +1,3 @@
-import type { SpendPeriod } from "@/api/spend-items/spend-items.types"
-
 export type DateRange = {
   from: string
   to: string
@@ -37,99 +35,59 @@ export function currentMonthRange(now = new Date()): DateRange {
   return { from: toIsoDate(from), to: toIsoDate(to) }
 }
 
-export function rangeForPeriod(period: SpendPeriod, anchor: Date): DateRange {
-  if (period === "day") {
-    const iso = toIsoDate(anchor)
-    return { from: iso, to: iso }
-  }
-  if (period === "week") {
-    const weekday = anchor.getDay()
-    const mondayOffset = weekday === 0 ? -6 : 1 - weekday
-    const start = new Date(anchor)
-    start.setDate(anchor.getDate() + mondayOffset)
-    const end = new Date(start)
-    end.setDate(start.getDate() + 6)
-    return { from: toIsoDate(start), to: toIsoDate(end) }
-  }
-  return currentMonthRange(anchor)
+export const DATE_PRESETS = [
+  { value: "this-month", label: "This month" },
+  { value: "last-month", label: "Last month" },
+  { value: "last-3-months", label: "Last 3 months" },
+  { value: "this-year", label: "This year" },
+] as const
+
+export type DatePreset = (typeof DATE_PRESETS)[number]["value"]
+
+/** `all` is the default: no date bounds at all. */
+export type DateFilter = "all" | DatePreset | "custom"
+
+export function isDatePreset(value: string | null): value is DatePreset {
+  return DATE_PRESETS.some((preset) => preset.value === value)
 }
 
-export function shiftRange(
-  period: SpendPeriod,
-  from: string,
-  to: string,
-  direction: -1 | 1
-): DateRange {
-  const start = fromIsoDate(from)
-  const end = fromIsoDate(to)
-  if (period === "day") {
-    start.setDate(start.getDate() + direction)
-    return { from: toIsoDate(start), to: toIsoDate(start) }
+export function presetRange(preset: DatePreset, now = new Date()): DateRange {
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  if (preset === "last-month") {
+    return currentMonthRange(new Date(year, month - 1, 1))
   }
-  if (period === "week") {
-    start.setDate(start.getDate() + direction * 7)
-    end.setDate(end.getDate() + direction * 7)
-    return { from: toIsoDate(start), to: toIsoDate(end) }
+  if (preset === "last-3-months") {
+    return {
+      from: toIsoDate(new Date(year, month - 2, 1)),
+      to: currentMonthRange(now).to,
+    }
   }
-  if (period === "month") {
-    return currentMonthRange(
-      new Date(start.getFullYear(), start.getMonth() + direction, 1)
-    )
+  if (preset === "this-year") {
+    return {
+      from: toIsoDate(new Date(year, 0, 1)),
+      to: toIsoDate(new Date(year, 11, 31)),
+    }
   }
-  const days =
-    Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1
-  start.setDate(start.getDate() + direction * days)
-  end.setDate(end.getDate() + direction * days)
-  return { from: toIsoDate(start), to: toIsoDate(end) }
+  return currentMonthRange(now)
 }
 
-export function periodLabel(period: SpendPeriod, from: string, to: string) {
-  const start = fromIsoDate(from)
-  if (period === "day") {
-    return new Intl.DateTimeFormat(undefined, {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    }).format(start)
-  }
-  if (period === "month") {
-    return new Intl.DateTimeFormat(undefined, {
-      month: "long",
-      year: "numeric",
-    }).format(start)
-  }
-  const end = fromIsoDate(to)
-  const startText = new Intl.DateTimeFormat(undefined, {
+export function rangeLabel({ from, to }: DateRange) {
+  const format = new Intl.DateTimeFormat(undefined, {
     month: "short",
     day: "numeric",
-  }).format(start)
-  const endText = new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-  }).format(end)
-  return `${startText} – ${endText}`
+    year: from.slice(0, 4) === to.slice(0, 4) ? undefined : "numeric",
+  })
+  return `${format.format(fromIsoDate(from))} – ${format.format(fromIsoDate(to))}`
 }
 
-export function spentInLabel(period: SpendPeriod, from: string, to: string) {
-  if (period === "month") {
-    const month = new Intl.DateTimeFormat(undefined, { month: "long" }).format(
-      fromIsoDate(from)
-    )
-    return `spent in ${month}`
-  }
-  if (period === "day") {
-    return `spent on ${periodLabel("day", from, to)}`
-  }
-  return `spent ${periodLabel(period, from, to)}`
+export function dateFilterLabel(filter: DateFilter, range: DateRange | null) {
+  if (filter === "all") return "All time"
+  if (filter === "custom") return range ? rangeLabel(range) : "Custom range"
+  return DATE_PRESETS.find((preset) => preset.value === filter)?.label ?? ""
 }
 
-export function dateInRange(value: string, from: string, to: string) {
+export function dateInRange(value: string, from?: string, to?: string) {
   const day = value.includes("T") ? value.slice(0, 10) : value
-  return day >= from && day <= to
-}
-
-export function anchorDate(from: string, to: string) {
-  const today = toIsoDate(new Date())
-  if (today >= from && today <= to) return new Date()
-  return fromIsoDate(from)
+  return (!from || day >= from) && (!to || day <= to)
 }

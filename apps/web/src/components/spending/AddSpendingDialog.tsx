@@ -63,11 +63,11 @@ export function AddSpendingDialog() {
   }
 
   function finishUpload({ merchant, spentAt }: ConfirmedBill) {
-    // Never move the period on its own: other bills would seem to vanish.
+    // Never change the date filter on its own: other bills would seem to vanish.
     if (spentAt && !filters.isInView(spentAt)) {
       toast(`Saved ${merchant}`, {
-        description: `Dated ${formatDate(spentAt)}, outside the period you're viewing.`,
-        action: { label: "Show", onClick: () => filters.revealDate(spentAt) },
+        description: `Dated ${formatDate(spentAt)}, outside your date filter.`,
+        action: { label: "Show", onClick: filters.revealDate },
       })
     }
     setUploadStarted(false)
@@ -93,7 +93,7 @@ export function AddSpendingDialog() {
     <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogTrigger
         data-slot="add-spending-trigger"
-        render={<Button size="sm" />}
+        render={<Button />}
       >
         <PlusIcon data-icon="inline-start" />
         Add spending
