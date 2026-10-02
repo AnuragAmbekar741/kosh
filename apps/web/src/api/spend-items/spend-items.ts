@@ -2,6 +2,7 @@ import { client } from "@/api/client"
 import type {
   PageParams,
   Paginated,
+  ItemCorrection,
   SpendItem,
   SpendItemUpdate,
   SpendPeriod,
@@ -58,6 +59,20 @@ export async function updateSpendItem({
   updates: SpendItemUpdate
 }): Promise<SpendItem> {
   const { data } = await client.patch<SpendItem>(`/spend-items/${id}`, updates)
+  return data
+}
+
+export async function correctSpendItemItem({
+  id,
+  correction,
+}: {
+  id: string
+  correction: ItemCorrection
+}): Promise<SpendItem> {
+  const { data } = await client.put<SpendItem>(
+    `/spend-items/${id}/item`,
+    correction
+  )
   return data
 }
 

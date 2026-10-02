@@ -48,6 +48,11 @@ export type SpendItem = {
   updated_at: string
 }
 
+export type ItemCorrection =
+  | { catalog_item_id: string }
+  | { new_item: { name: string; family_id: string } }
+  | { not_product: true }
+
 export type SpendItemUpdate = Partial<
   Pick<
     SpendItem,
