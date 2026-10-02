@@ -1,10 +1,5 @@
 import { useState } from "react"
-import {
-  EllipsisVerticalIcon,
-  FileTextIcon,
-  PencilIcon,
-  Trash2Icon,
-} from "lucide-react"
+import { EllipsisVerticalIcon, PencilIcon, Trash2Icon } from "lucide-react"
 
 import { apiDetail } from "@/api/client"
 import type { DocumentSummary } from "@/api/documents/documents.types"
@@ -63,6 +58,7 @@ type SpendingGroup = {
 type SpendingBillRowProps = {
   editingItemId: string
   group: SpendingGroup
+  number: number
   onDeleteBill: (group: SpendingGroup) => void
   onDeleteItem: (item: SpendItem) => void
   onEditBill: (group: SpendingGroup) => void
@@ -73,6 +69,7 @@ type SpendingBillRowProps = {
 type SpendingLineRowProps = {
   isEditing: boolean
   item: SpendItem
+  number: number
   onDelete: (item: SpendItem) => void
   onEdit: (itemId: string) => void
   onStopEditing: () => void
@@ -98,10 +95,7 @@ function canAddLine(group: SpendingGroup) {
   return group.items.some((item) => item.line_index != null)
 }
 
-function groupSpendItems(
-  items: SpendItem[],
-  emptyManual: DocumentSummary[]
-) {
+function groupSpendItems(items: SpendItem[], emptyManual: DocumentSummary[]) {
   const groups = new Map<string, SpendingGroup>()
 
   for (const item of items) {
@@ -148,6 +142,7 @@ function itemName(item: SpendItem) {
 function SpendingLineRow({
   isEditing,
   item,
+  number,
   onDelete,
   onEdit,
   onStopEditing,
@@ -219,7 +214,11 @@ function SpendingLineRow({
   )
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2 pr-4 pl-16 not-first:border-t sm:pr-5 sm:pl-17">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-3 pr-4 pl-4 not-first:border-t sm:pr-5 sm:pl-5">
+      <span className="w-6 text-right text-xs text-muted-foreground tabular-nums">
+        <span className="sr-only">Item </span>
+        {number}.
+      </span>
       <div className="min-w-0">
         {isEditing ? (
           <Field className="gap-1" data-invalid={Boolean(error)}>
@@ -314,6 +313,7 @@ function uniqueCategories(items: SpendItem[]) {
 function SpendingBillRow({
   editingItemId,
   group,
+  number,
   onDeleteBill,
   onDeleteItem,
   onEditBill,
@@ -326,7 +326,7 @@ function SpendingBillRow({
   const categories = uniqueCategories(group.items)
 
   return (
-    <AccordionItem className="group/bill border-b" value={group.id}>
+    <AccordionItem className="group/bill shrink-0" value={group.id}>
       <AccordionTrigger
         actions={
           <span className="flex shrink-0 items-center gap-3">
@@ -362,16 +362,19 @@ function SpendingBillRow({
             </DropdownMenu>
           </span>
         }
-        className="cursor-pointer items-center rounded-none py-0 hover:no-underline **:data-[slot=accordion-trigger-icon]:hidden"
-        headerClassName="px-4 py-4 hover:bg-muted/50 group-data-open/bill:hover:bg-transparent sm:px-5 sm:py-5"
+        className="cursor-pointer items-center gap-3 rounded-none py-0 hover:no-underline"
+        headerClassName="px-4 py-4 hover:bg-muted/50 group-data-open/bill:bg-muted/50 sm:px-5 sm:py-5"
       >
         <span className="flex min-w-0 items-center gap-3 text-left">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent [&_svg]:size-4">
-            {group.source === "manual" ? <PencilIcon /> : <FileTextIcon />}
+            <span className="text-sm tabular-nums">
+              <span className="sr-only">Bill </span>
+              {number}
+            </span>
           </span>
           <span className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="truncate font-medium">{group.title}</span>
-            <span className="flex shrink-0 items-center gap-1.5">
+            <span className="flex min-w-0 flex-wrap items-center gap-1.5">
               <Badge variant="outline">{formatDate(group.spentAt)}</Badge>
               <Badge variant="outline">
                 {group.source === "manual" ? "Manual entry" : "Document"}
@@ -386,13 +389,17 @@ function SpendingBillRow({
           </span>
         </span>
       </AccordionTrigger>
-      <AccordionContent className="border-t pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
-        <div className="max-h-72 overflow-y-auto">
-          {group.items.map((item) => (
+      <AccordionContent className="border-t bg-muted/20 pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
+        <div className="ml-4 border-l sm:ml-9">
+          <p className="px-4 pt-3 pb-1 text-xs font-medium text-muted-foreground sm:px-5">
+            Items in {group.title}
+          </p>
+          {group.items.map((item, index) => (
             <SpendingLineRow
               isEditing={editingItemId === item.id}
               item={item}
               key={item.id}
+              number={index + 1}
               onDelete={onDeleteItem}
               onEdit={onEditItem}
               onStopEditing={onStopEditing}
@@ -415,7 +422,8 @@ export function SpendingAccordion({
   items,
 }: SpendingAccordionProps) {
   const groups = groupSpendItems(items, emptyManual)
-  const newestEmptyId = groups.find((group) => group.items.length === 0)?.id ?? ""
+  const newestEmptyId =
+    groups.find((group) => group.items.length === 0)?.id ?? ""
   const [openBill, setOpenBill] = useState(newestEmptyId)
   const [openedEmptyId, setOpenedEmptyId] = useState(newestEmptyId)
   const [editingItemId, setEditingItemId] = useState("")
@@ -487,18 +495,19 @@ export function SpendingAccordion({
   return (
     <>
       <Accordion
-        className="overflow-hidden rounded-xl border"
+        className="rounded-xl"
         onValueChange={(next) => {
           setOpenBill(next[0] ?? "")
           setEditingItemId("")
         }}
         value={openBill ? [openBill] : []}
       >
-        {groups.map((group) => (
+        {groups.map((group, index) => (
           <SpendingBillRow
             editingItemId={editingItemId}
             group={group}
             key={group.id}
+            number={index + 1}
             onDeleteBill={requestDeleteBill}
             onDeleteItem={requestDeleteItem}
             onEditBill={editBill}
