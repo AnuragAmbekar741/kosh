@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { PlusIcon } from "lucide-react"
 
 import { apiDetail } from "@/api/client"
 import type { Category } from "@/api/spend-items/spend-items.types"
@@ -76,14 +77,15 @@ export function SpendingAddLineRow({
   if (!isOpen) {
     return (
       <button
-        className="grid w-full cursor-pointer items-center gap-3 py-2 pr-4 pl-16 text-left not-first:border-t hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none sm:pr-5 sm:pl-17"
+        className="grid w-full cursor-pointer grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-x-3 px-4 py-2.5 text-left text-muted-foreground not-first:border-t hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:outline-none sm:px-5"
         onClick={() => {
           resetForm()
           setIsOpen(true)
         }}
         type="button"
       >
-        <span className="text-sm text-muted-foreground">Add item</span>
+        <PlusIcon className="size-3.5 justify-self-center" />
+        <span className="text-sm">Add item</span>
       </button>
     )
   }
@@ -165,7 +167,6 @@ export function SpendingAddLineRow({
           className={cn(addLine.isPending && "pointer-events-none")}
           disabled={addLine.isPending}
           onClick={() => void save()}
-          size="sm"
           type="button"
         >
           {addLine.isPending ? <Spinner data-icon="inline-start" /> : null}

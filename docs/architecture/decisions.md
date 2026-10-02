@@ -63,7 +63,8 @@ Revisit when: ...
 | 47 | Worker layout | **`runtime.py` + `jobs/<name>/`** registry (`JOBS`, priority order); one poll loop, each job owns claim, handler, status |
 | 48 | Item matching | Confirmed receipt lines → `jobs/items`: saved answer → string match → one model call per bill; the item's family sets the category unless the user did |
 | 49 | Item corrections | `PUT /spend-items/{id}/item` (existing item, new private item, or not a product); saved as user answers and applied to the user's same-text lines |
-| 50 | Confirm keeps the period | Confirming a bill never moves the Spending period; an out-of-view bill gets a sonner toast with **Show**. Notifications use `sonner` |
+| 50 | Confirm keeps the period | Confirming a bill never moves the Spending date filter; an out-of-view bill gets a sonner toast with **Show** (clears the date filter). Notifications use `sonner` |
+| 51 | Spend date filter | **All time by default**; date presets (this / last month, last 3 months, this year, custom) inside one Filters menu with Category and Source |
 
 ### Locked detail rows
 
@@ -247,7 +248,7 @@ Previously linked accounts are unchanged; review them separately if used with re
 
 **Confirming a bill never moves the period**
 
-- Chosen: After confirming, Spending stays on the period the user chose. If the new bill is outside it, a `sonner` toast names the bill and its date and offers **Show**, which jumps to that month. Review shows a receipt's date as an editable field and warns when it is more than a year ago or in the future. The extraction prompt carries today's date so two-digit years resolve near today.
+- Chosen: After confirming, Spending stays on the period the user chose. If the new bill is outside it, a `sonner` toast names the bill and its date and offers **Show**, which clears the date filter (originally: jumped to that month). Review shows a receipt's date as an editable field and warns when it is more than a year ago or in the future. The extraction prompt carries today's date so two-digit years resolve near today.
 - Rejected: Jumping to the bill's month automatically (#21); an inline banner on the ledger (the add dialog lives in the header, not the page)
 - Why: The automatic jump hid every other bill, which looked like data loss, and a misread year (2026 → 2020) made it jump years away.
 - Revisit when: Bulk uploads need a summary instead of one toast per bill
@@ -335,10 +336,17 @@ Previously linked accounts are unchanged; review them separately if used with re
 
 **Spend page filters live in the URL**
 
-- Chosen: Period, range, source, search, and page are search params on the Spending routes. Bills / Items view is the route path. `useSpendFilters()` is a hook, not a provider.
+- Chosen: Date filter, custom range, category, source, search, and page are search params on the Spending routes. Bills / Items view is the route path. `useSpendFilters()` is a hook, not a provider.
 - Rejected: A `SpendingFiltersProvider` context; session-only state that dies on refresh
 - Why: Deep links, back/forward, and shareable filtered views. The page is a few siblings, not a deep tree; a provider would re-render the ledger on every search keystroke. React Router already broadcasts the URL.
 - Revisit when: a portal outside `/spending` needs the same state without a URL
+
+**Spending shows all time by default**
+
+- Chosen: With no `date` param, Bills and Items list every confirmed spend. A single Filters button opens a DropdownMenu whose Date, Category, and Source submenus apply at once; Date offers All time, This month, Last month, Last 3 months, This year, and a custom range. Presets resolve at read time. Search stays a separate input.
+- Rejected: Defaulting to the current calendar month; a Day / Week / Month toggle with prev/next stepping; one dropdown button per filter in the toolbar
+- Why: A new user's first bills can sit in an earlier month and look missing. Month stepping was rarely needed once presets and a custom range exist, and three button groups crowded the toolbar.
+- Revisit when: bill volume makes an unbounded list slow (Bills requests `limit=200`), or users ask to step month by month again
 
 **List pagination is a mixin plus envelope**
 

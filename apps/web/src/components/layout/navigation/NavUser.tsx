@@ -48,7 +48,7 @@ export function NavUser({ user }: NavUserProps) {
           <DropdownMenuTrigger
             render={
               <SidebarMenuButton
-                className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
+                className="items-center data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
                 size="lg"
                 tooltip={displayName}
               />
@@ -60,11 +60,8 @@ export function NavUser({ user }: NavUserProps) {
             >
               {initials}
             </span>
-            <span className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{displayName}</span>
-              <span className="truncate text-xs text-muted-foreground">
-                {user.email}
-              </span>
+            <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
+              {displayName}
             </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent

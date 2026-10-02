@@ -11,34 +11,27 @@ import type {
 } from "@/api/spend-items/spend-items.types"
 import { isCategory } from "@/components/spending/categories"
 import {
-  anchorDate,
-  currentMonthRange,
+  dateFilterLabel,
   dateInRange,
-  fromIsoDate,
+  isDatePreset,
   parseIsoDate,
-  periodLabel,
-  rangeForPeriod,
-  shiftRange,
-  spentInLabel,
+  presetRange,
+  type DateFilter,
+  type DateRange,
 } from "@/components/spending/spend-period"
 
-const PERIODS = ["day", "week", "month", "custom"] as const
 const SOURCES = ["manual", "document"] as const
 export const PAGE_SIZE = 50
 const BILLS_LIMIT = 200
 
 type FilterPatch = {
-  period?: SpendPeriod
+  date?: DateFilter
   from?: string
   to?: string
   category?: Category[] | null
   source?: SpendSource | null
   q?: string | null
   page?: number
-}
-
-function parsePeriod(value: string | null): SpendPeriod {
-  return PERIODS.find((period) => period === value) ?? "month"
 }
 
 function parseSource(value: string | null): SpendSource | undefined {
@@ -49,16 +42,29 @@ function parseView(pathname: string): "bills" | "items" {
   return pathname === "/spending/items" ? "items" : "bills"
 }
 
+function parseDate(searchParams: URLSearchParams): {
+  date: DateFilter
+  range: DateRange | null
+} {
+  const value = searchParams.get("date")
+  if (isDatePreset(value)) return { date: value, range: presetRange(value) }
+  const from = parseIsoDate(searchParams.get("from"))
+  const to = parseIsoDate(searchParams.get("to"))
+  if (value === "custom" && from && to && from <= to) {
+    return { date: "custom", range: { from, to } }
+  }
+  return { date: "all", range: null }
+}
+
+function summaryPeriod(date: DateFilter): SpendPeriod | undefined {
+  if (date === "all") return undefined
+  return date === "this-month" || date === "last-month" ? "month" : "custom"
+}
+
 export function useSpendFilters() {
   const { pathname } = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const defaults = currentMonthRange()
-  const period = parsePeriod(searchParams.get("period"))
-  const parsedFrom = parseIsoDate(searchParams.get("from"))
-  const parsedTo = parseIsoDate(searchParams.get("to"))
-  const from = parsedFrom ?? defaults.from
-  const to = parsedTo ?? defaults.to
-  const range = from <= to ? { from, to } : defaults
+  const { date, range } = parseDate(searchParams)
   const categories = searchParams.getAll("category").filter(isCategory)
   const source = parseSource(searchParams.get("source"))
   const q = searchParams.get("q")?.trim() || undefined
@@ -72,35 +78,32 @@ export function useSpendFilters() {
       : { skip: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE }
 
   const query: SpendQuery = {
-    spent_from: range.from,
-    spent_to: range.to,
+    ...(range ? { spent_from: range.from, spent_to: range.to } : {}),
     ...(categories.length ? { category: categories } : {}),
     ...(source ? { source } : {}),
     ...(q ? { q } : {}),
   }
-  const summaryQuery: SpendSummaryQuery = { ...query, period }
-  const canReset = Boolean(
-    period !== "month" ||
-    range.from !== defaults.from ||
-    range.to !== defaults.to ||
-    categories.length ||
-    source ||
-    q ||
-    page > 1
-  )
+  const period = summaryPeriod(date)
+  const summaryQuery: SpendSummaryQuery = period ? { ...query, period } : query
+  // Search has its own clear button, so it isn't counted on the Filters button.
+  const filterCount =
+    (date === "all" ? 0 : 1) + (categories.length ? 1 : 0) + (source ? 1 : 0)
+  const canReset = Boolean(filterCount || q || page > 1)
 
   const write = useCallback(
     (patch: FilterPatch) => {
       setSearchParams((prev) => {
-        const fallback = currentMonthRange()
         const next = new URLSearchParams(prev)
-        const nextPeriod = patch.period ?? parsePeriod(next.get("period"))
-        const nextFrom =
-          patch.from ?? parseIsoDate(next.get("from")) ?? fallback.from
-        const nextTo = patch.to ?? parseIsoDate(next.get("to")) ?? fallback.to
-        next.set("period", nextPeriod)
-        next.set("from", nextFrom)
-        next.set("to", nextTo)
+        if ("date" in patch) {
+          next.delete("from")
+          next.delete("to")
+          if (!patch.date || patch.date === "all") next.delete("date")
+          else next.set("date", patch.date)
+          if (patch.date === "custom" && patch.from && patch.to) {
+            next.set("from", patch.from)
+            next.set("to", patch.to)
+          }
+        }
         if ("category" in patch) {
           next.delete("category")
           for (const category of patch.category ?? []) {
@@ -115,6 +118,8 @@ export function useSpendFilters() {
           if (patch.q) next.set("q", patch.q)
           else next.delete("q")
         }
+        // Drop params from the old Day / Week / Month toolbar.
+        next.delete("period")
         next.delete("view")
         if ("page" in patch && Object.keys(patch).length === 1) {
           if (patch.page && patch.page > 1) next.set("page", String(patch.page))
@@ -128,26 +133,15 @@ export function useSpendFilters() {
     [setSearchParams]
   )
 
-  const setPeriod = useCallback(
-    (next: Exclude<SpendPeriod, "custom">) => {
-      const window = rangeForPeriod(next, anchorDate(range.from, range.to))
-      write({ period: next, from: window.from, to: window.to })
-    },
-    [range.from, range.to, write]
-  )
-
-  const shift = useCallback(
-    (direction: -1 | 1) => {
-      const window = shiftRange(period, range.from, range.to, direction)
-      write({ from: window.from, to: window.to })
-    },
-    [period, range.from, range.to, write]
+  const setDate = useCallback(
+    (next: Exclude<DateFilter, "custom">) => write({ date: next }),
+    [write]
   )
 
   const applyCustomRange = useCallback(
     (nextFrom: string, nextTo: string) => {
       write({
-        period: "custom",
+        date: "custom",
         from: nextFrom <= nextTo ? nextFrom : nextTo,
         to: nextFrom <= nextTo ? nextTo : nextFrom,
       })
@@ -155,15 +149,12 @@ export function useSpendFilters() {
     [write]
   )
 
-  const toggleCategory = useCallback(
-    (name: Category) => {
-      const next = categories.includes(name)
-        ? categories.filter((category) => category !== name)
-        : [...categories, name]
-      write({ category: next.length ? next : null })
-    },
-    [categories, write]
-  )
+  function toggleCategory(name: Category) {
+    const next = categories.includes(name)
+      ? categories.filter((category) => category !== name)
+      : [...categories, name]
+    write({ category: next.length ? next : null })
+  }
 
   const setSource = useCallback(
     (next: SpendSource | null) => write({ source: next }),
@@ -171,41 +162,27 @@ export function useSpendFilters() {
   )
   const setQ = useCallback((next: string | null) => write({ q: next }), [write])
   const setPage = useCallback((next: number) => write({ page: next }), [write])
-  const resetFilters = useCallback(() => {
-    const currentMonth = currentMonthRange()
-    write({
-      period: "month",
-      from: currentMonth.from,
-      to: currentMonth.to,
-      category: null,
-      source: null,
-      q: null,
-      page: 1,
-    })
-  }, [write])
-
-  const isInView = useCallback(
-    (isoDate: string) => dateInRange(isoDate, range.from, range.to),
-    [range.from, range.to]
+  const clearFilters = useCallback(
+    () => write({ date: "all", category: null, source: null }),
+    [write]
+  )
+  const resetFilters = useCallback(
+    () =>
+      write({ date: "all", category: null, source: null, q: null, page: 1 }),
+    [write]
   )
 
-  const revealDate = useCallback(
-    (isoDate: string) => {
-      const day = parseIsoDate(
-        isoDate.includes("T") ? isoDate.slice(0, 10) : isoDate
-      )
-      if (!day || dateInRange(day, range.from, range.to)) return
-      // Jump to the spend's month so a just-confirmed receipt is visible.
-      const window = currentMonthRange(fromIsoDate(day))
-      write({ period: "month", from: window.from, to: window.to })
-    },
-    [range.from, range.to, write]
-  )
+  function isInView(isoDate: string) {
+    return dateInRange(isoDate, range?.from, range?.to)
+  }
+
+  // A just-saved bill outside the date filter: drop the date filter to show it.
+  const revealDate = useCallback(() => write({ date: "all" }), [write])
 
   return {
-    period,
-    from: range.from,
-    to: range.to,
+    date,
+    range,
+    dateLabel: dateFilterLabel(date, range),
     categories,
     source,
     q,
@@ -214,16 +191,15 @@ export function useSpendFilters() {
     pageParams,
     query,
     summaryQuery,
-    label: periodLabel(period, range.from, range.to),
-    spentInLabel: spentInLabel(period, range.from, range.to),
+    filterCount,
     canReset,
-    setPeriod,
-    shift,
+    setDate,
     applyCustomRange,
     toggleCategory,
     setSource,
     setQ,
     setPage,
+    clearFilters,
     resetFilters,
     isInView,
     revealDate,

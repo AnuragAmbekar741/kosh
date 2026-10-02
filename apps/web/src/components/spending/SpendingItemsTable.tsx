@@ -10,21 +10,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { PAGE_SIZE } from "@/hooks/spend-items/use-spend-filters"
 
 type SpendingItemsTableProps = {
   items: SpendItem[]
+  page: number
 }
 
 function itemName(item: SpendItem) {
   return item.description || item.merchant
 }
 
-export function SpendingItemsTable({ items }: SpendingItemsTableProps) {
+export function SpendingItemsTable({ items, page }: SpendingItemsTableProps) {
+  const offset = (page - 1) * PAGE_SIZE
+
   return (
-    <div className="min-h-0 flex-1 overflow-auto rounded-xl border">
+    <div className="min-h-0 shrink overflow-auto rounded-xl border [&>[data-slot=table-container]]:overflow-visible">
       <Table>
-        <TableHeader>
+        <TableHeader className="sticky top-0 z-10 bg-background">
           <TableRow>
+            <TableHead className="w-12 text-right">#</TableHead>
             <TableHead aria-sort="descending">Date</TableHead>
             <TableHead>Item</TableHead>
             <TableHead>Product</TableHead>
@@ -35,8 +40,11 @@ export function SpendingItemsTable({ items }: SpendingItemsTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items.map((item) => (
+          {items.map((item, index) => (
             <TableRow key={item.id}>
+              <TableCell className="w-12 text-right text-xs text-muted-foreground tabular-nums">
+                {offset + index + 1}
+              </TableCell>
               <TableCell className="text-muted-foreground">
                 {formatDate(item.spent_at)}
               </TableCell>

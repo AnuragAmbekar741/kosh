@@ -22,11 +22,12 @@ the global monochrome visual system.
    merchant title. Mismatched totals still produce a review warning. The list caps
    at `max-h-72` and scrolls so the header and confirm action stay reachable.
 5. `POST /documents/{id}/confirm` adds all reviewed drafts to Spending and
-   refreshes the ledger. The period never changes on its own: if the bill's
-   date falls outside the visible period, a sonner toast ("Saved <merchant>",
-   the date, "outside the period you're viewing") offers a Show action that
-   jumps to that month. There is no total-versus-itemized choice or partial
-   selection. Before confirming, a receipt's date is an editable date field;
+   refreshes the ledger. The date filter never changes on its own: if the
+   bill's date falls outside it, a sonner toast ("Saved <merchant>", the date,
+   "outside your date filter") offers a Show action that clears the date
+   filter. There is no total-versus-itemized choice or partial
+   selection. Before confirming, a receipt's date is a shadcn date picker
+   (outline button + Calendar popover with month/year dropdowns);
    a "Check the date" alert appears when it is more than a year ago or in the
    future, and a changed date is saved on every line.
 6. Add manually asks only for a bill name. `POST /documents/manual` creates a
@@ -45,40 +46,45 @@ React context. Bare `/spending` preserves its query string and redirects to
 `/spending/bills`. Defaults are not written on first paint. Legacy
 `/spending?view=items` links redirect to `/spending/items`.
 
-| Param        | Default when omitted                            |
-| ------------ | ----------------------------------------------- |
-| `period`     | `month` (`day` / `week` / `month` / `custom`)   |
-| `from`, `to` | current month, ISO dates                        |
-| `category`   | none (repeatable, one of the 14 categories)     |
-| `source`     | none (`manual` or `document`)                   |
-| `q`          | none                                            |
-| `page`       | `1` (1-based; written only when greater than 1) |
+| Param        | Default when omitted                                         |
+| ------------ | ------------------------------------------------------------ |
+| `date`       | all time (`this-month` / `last-month` / `last-3-months` / `this-year` / `custom`) |
+| `from`, `to` | only with `date=custom`, ISO dates                           |
+| `category`   | none (repeatable, one of the 14 categories)                  |
+| `source`     | none (`manual` or `document`)                                |
+| `q`          | none                                                         |
+| `page`       | `1` (1-based; written only when greater than 1)              |
 
-The toolbar is a connected Day / Week / Month toggle (`spacing={0}`). The
-selected segment uses `bg-primary text-primary-foreground` so it reads on
-both themes. Custom, prev/next, the period label, Category, All sources, and
-search sit beside it. Custom opens a
-dual-month range popover;
-the first date starts a fresh range, the second date completes it, and draft
-dates stay local until Apply. Search is local and writes `q` after
-300ms. There is no chip row; filters live on the controls themselves.
-Below `md`, Category / source / search collapse into one Filters sheet.
-Whenever the state differs from the current calendar month, Reset clears all
-filters and pagination and restores that whole month without changing the
-Bills or Items route.
+Presets resolve to dates at read time, so `this-month` stays current. Old
+`period` links are ignored and dropped on the next write.
+
+The toolbar is one row: a Filters button, a secondary count Badge
+(`24 bills` / `128 items`), and search pushed to the right. Filters opens a
+DropdownMenu with three submenus — Date, Category, Source — each showing its
+current value on the right. Submenus open on hover, click, or arrow keys.
+Date is a radio list of All time and the presets, then Custom range…, which
+closes the menu and opens a dual-month range popover anchored to the Filters
+button; the first date starts a fresh range, the second completes it, and
+draft dates stay local until Apply. Category is a checkbox list with
+swatches; Source is a radio list. Choices apply at once and keep the menu
+open. Clear filters (date, category, source) appears when any is set, and the
+button shows that count. Search is local, writes `q` after 300ms, and has
+its own clear button. Below `md`, Filters opens a bottom sheet with the same
+three groups as toggle chips. There is no chip row.
 `GET /spend-items` and `GET /spend-items/summary` share the same query;
-summary also receives `period`. The list is a `{data, total}` page.
+summary also receives `period` (`month` for this / last month, `custom`
+for other ranges, omitted for all time). The list is a `{data, total}` page.
 Items view sends `skip`/`limit` of 50 and shows a numbered pager footer
 (`Showing X–Y of N`) when `total` exceeds 50. Changing any filter resets
 `page`. Bills view requests `limit=200` and is not paged — grouping and
 bill totals are computed client-side from the returned rows.
 
-Bills and Items render only the filter toolbar above Transactions; analytics
+Bills and Items render only the filter toolbar above the ledger; analytics
 are reserved for `/spending/analytics`. The summary payload remains an
 internal source for first-use detection, filtered-empty detection, and the
 bill count. First-use (`has_spend === false`) fades the toolbar. A filtered
-empty period (`has_spend` and `total === "0.00"`) shows a Reset empty
-state.
+empty result (`has_spend` and `total === "0.00"`) shows a Reset empty
+state that clears filters and search.
 
 ## Ledger
 
@@ -87,7 +93,7 @@ manual bills use the same `document_id` grouping; leftover ungrouped
 `POST /spend-items` rows remain individual entries. Empty manual documents
 from `GET /documents` (`source=manual` with no spend items) render as bills
 with a zero total when no category, source, or search filter is set and
-`created_at` falls in the visible range. They stay hidden in Items view.
+`created_at` falls in the date filter. They stay hidden in Items view.
 Each group is a shadcn Accordion item. The trigger is one
 row: merchant title, then outline pill Badges for date, source (`Document` or
 `Manual entry` from spend `source`, or the empty manual document), item
@@ -100,14 +106,19 @@ a confirmation Dialog and, on confirm, removes the whole bill. Uploaded
 document groups call `DELETE /documents/{id}` and remove the source file with
 every line. Manual document groups call the same delete and skip blob cleanup.
 Legacy ungrouped manual rows call `DELETE /spend-items/{id}`. Expanding a
-group reveals products nested under the bill: indented to the
-merchant text column, quieter type, the item name with its category badge on
-the same row, and amounts. Line-index numbers are omitted. The name truncates;
-the badge stays `w-fit` and does not wrap underneath.
+group reveals its products on a `bg-muted/40` panel so they read as part of
+that bill. Each line is a four-column grid that mirrors the bill row: a
+1-based line number centered under the merchant tile, the item name with its
+category badge aligned to the merchant text, the amount aligned to the bill
+total, and an action column under the three-dot tile (the delete icon while
+editing). The name truncates; the badge stays `w-fit` and does not wrap
+underneath. Bill rows use `py-3` (`sm:py-3.5`).
 
-Bills and Items navigation lives only in the Spending sidebar group; the
-Transactions heading does not repeat that route switch. Items is a read-only table:
-Date, Item, Merchant, Category, Source, Amount. Row edit is later.
+Bills and Items navigation lives only in the Spending sidebar group; the page
+has no heading above the ledger. Items is a read-only table: #, Date, Item,
+Product, Merchant, Category, Source, Amount. `#` continues across pages
+(page 2 starts at 51). The table hugs its rows, caps at the space left in the
+panel, scrolls inside, and keeps its header sticky. Row edit is later.
 Clicking a line's badge opens a DropdownMenu of the 14 categories with
 swatches; the current value is checked, and choosing one saves through
 `PATCH /spend-items/{id}`. Double-clicking an item name replaces it with an
@@ -138,7 +149,7 @@ never changes. The Items table adds a Product column with the same badge.
 
 The ledger fills the dashboard content panel below `2xl`; at `2xl` it uses a
 wide centered maximum for readability. The page itself does not scroll. Many
-bills scroll the list under Transactions. The accordion card hugs its rows.
+bills scroll the list under the toolbar. The accordion card hugs its rows.
 Every bill including the last has a `border-b` hairline. An expanded bill
 draws one `border-t` on the panel under the title and animates to content
 height. The open panel caps at `max-h-72` (about seven lines) and scrolls
@@ -160,10 +171,10 @@ bordered `rounded-xl` stack of
 bill rows (icon tile, merchant bar, badge chips, trailing amount, kebab
 tile). Failure of the list uses Alert; a summary failure still shows the
 ledger. First-use uses a compact dashed Empty frame
-centered under the Transactions heading, hugging its copy, pointing at the
+centered under the toolbar, hugging its copy, pointing at the
 top-bar action, and including an EmptyContent button that opens the same Add
-spending dialog. A filtered empty period uses the same Empty frame with
-Clear filters. Long extraction reviews cap the numbered item list at
+spending dialog. A filtered empty result uses the same Empty frame with
+Reset. Long extraction reviews cap the numbered item list at
 `max-h-72` so the Dialog header and confirmation action stay reachable.
 
 ## Structure

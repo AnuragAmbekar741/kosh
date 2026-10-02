@@ -13,8 +13,8 @@ import type {
 
 function toParams(query: SpendQuery, period?: SpendPeriod, page?: PageParams) {
   const params = new URLSearchParams()
-  params.set("spent_from", query.spent_from)
-  params.set("spent_to", query.spent_to)
+  if (query.spent_from) params.set("spent_from", query.spent_from)
+  if (query.spent_to) params.set("spent_to", query.spent_to)
   if (query.source) params.set("source", query.source)
   if (query.q) params.set("q", query.q)
   for (const category of query.category ?? []) {

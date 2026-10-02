@@ -49,7 +49,9 @@ The inset panel is locked to the viewport (`h-svh`, inset margin subtracted
 on `md+`). The header stays put; page content fills the remaining height
 with `overflow-hidden`, so Overview and Spending do not scroll the page.
 
-The account menu sits in the sidebar footer: name, email, and Sign out.
+The account menu sits in the sidebar footer. Its trigger shows the initials
+tile and the name (email when there is no name), centered on one line; the
+open menu shows name, email, and Sign out.
 Settings is out of this step.
 
 ## Visual rules

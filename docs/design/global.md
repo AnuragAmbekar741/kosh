@@ -52,6 +52,29 @@ Buttons use more horizontal than vertical space so actions read as sleek control
 
 Full-width form actions may use a 40px desktop height while keeping 44px on mobile. Feature code should select a shared size variant before adding local height or padding overrides.
 
+### Control sizes
+
+One scale for every control, set in the `ui/` primitives so feature code never
+overrides height or padding:
+
+| Size | Desktop (`sm`+) | Mobile | Used by |
+|---|---|---|---|
+| Default | 36px | 44px | `Button`, `Input`, `InputGroup`, `Toggle` / `ToggleGroup` — toolbars, headers, forms, dialog footers |
+| Compact (`sm`) | 32px | 40px | `Button`, `Toggle` inside dense rows and popovers |
+| Large (`lg`) | 40px | 44px | `Button`, `Toggle` for full-width form actions |
+
+An input and the button beside it use the same size. Icon buttons use the
+matching `icon` / `icon-sm` / `icon-lg` variant.
+
+### Menus
+
+Every `DropdownMenu` row (item, checkbox, radio, submenu trigger, label) uses
+8px × 6px padding, an 8px icon gap, and `cursor-pointer`. Content is `p-1`.
+Pass a width (`w-60`, `min-w-48`) when the trigger is narrower than the
+options. Submenu triggers put their current value in muted text before the
+chevron. Use `DropdownMenu` for choosing options, `Popover` for free-form
+content such as a calendar.
+
 ### Dialogs
 
 Every shadcn Dialog uses the default `DialogContent` width (`sm:max-w-lg`). Do not pass a different `sm:max-w-*`. Confirm dialogs use the same shell as intake dialogs. Tall content scrolls inside the dialog; the width stays fixed.

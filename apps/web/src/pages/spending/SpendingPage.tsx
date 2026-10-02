@@ -66,32 +66,21 @@ export function SpendingPage() {
     filters.view === "items"
       ? (spendItems.data?.total ?? items.length)
       : (summary.data?.bill_count ?? 0) + emptyManual.length
+  const noun = filters.view === "items" ? "item" : "bill"
+  const countLabel =
+    hasLedger || filterEmpty
+      ? `${count} ${noun}${count === 1 ? "" : "s"}`
+      : null
 
   return (
     <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-6 2xl:mx-auto 2xl:max-w-7xl">
       <div className="flex min-h-0 flex-1 flex-col gap-6">
-        <SpendingToolbar disabled={firstUse} />
+        <SpendingToolbar countLabel={countLabel} disabled={firstUse} />
 
         <section
-          aria-labelledby="transactions-heading"
-          className="flex min-h-0 flex-1 flex-col gap-4"
+          aria-label={filters.view === "items" ? "Items" : "Bills"}
+          className="flex min-h-0 flex-1 flex-col gap-3"
         >
-          <div className="flex shrink-0 flex-wrap items-center gap-3">
-            <div className="flex items-center gap-3">
-              <h2
-                className="text-xl font-semibold tracking-tight"
-                id="transactions-heading"
-              >
-                Transactions
-              </h2>
-              {hasLedger || filterEmpty ? (
-                <p className="shrink-0 text-xs text-muted-foreground">
-                  {count} {count === 1 ? "entry" : "entries"}
-                </p>
-              ) : null}
-            </div>
-          </div>
-
           {loading ? (
             <SpendingLedgerSkeleton />
           ) : spendItems.isError ? (
@@ -130,8 +119,8 @@ export function SpendingPage() {
                   <EmptyTitle>Nothing matches</EmptyTitle>
                   <EmptyDescription>
                     {filters.canReset
-                      ? "No bills in this period match the current filters."
-                      : "No bills in this period."}
+                      ? "No bills match the current filters."
+                      : "No bills yet."}
                   </EmptyDescription>
                 </EmptyHeader>
                 {filters.canReset ? (
@@ -146,7 +135,7 @@ export function SpendingPage() {
           ) : hasLedger ? (
             filters.view === "items" ? (
               <div className="flex min-h-0 flex-1 flex-col gap-3">
-                <SpendingItemsTable items={items} />
+                <SpendingItemsTable items={items} page={filters.page} />
                 <SpendingItemsPager
                   onPageChange={filters.setPage}
                   page={filters.page}
