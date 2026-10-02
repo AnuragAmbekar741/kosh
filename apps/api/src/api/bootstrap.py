@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from api.common.exception_handlers import register_exception_handlers
 from api.modules.auth import router as auth
+from api.modules.catalog import router as catalog
 from api.modules.documents import router as documents
 from api.modules.health import router as health
 from api.modules.spend import router as spend
@@ -15,3 +16,4 @@ def register(app: FastAPI) -> None:
     app.include_router(users)
     app.include_router(spend)
     app.include_router(documents)
+    app.include_router(catalog)

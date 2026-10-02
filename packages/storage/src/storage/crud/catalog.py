@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from typing import NamedTuple
 from uuid import UUID
 
+from sqlalchemy import or_
 from sqlmodel import Session, col, select
 
 from storage.models.catalog import AliasSource, CatalogAlias, CatalogItem
@@ -17,6 +18,8 @@ __all__ = [
     "load_shared_catalog",
     "name_key",
     "save_alias",
+    "search_catalog",
+    "visible_catalog",
 ]
 
 
@@ -158,3 +161,37 @@ def save_alias(
     alias.source = source
     alias.updated_at = datetime.now(UTC)
     session.add(alias)
+
+
+def visible_catalog(session: Session, user_id: UUID) -> list[CatalogItem]:
+    """Shared rows plus this user's own rows, none retired."""
+    return list(
+        session.exec(
+            select(CatalogItem).where(
+                or_(col(CatalogItem.user_id).is_(None), CatalogItem.user_id == user_id),
+                col(CatalogItem.retired).is_(False),
+            )
+        ).all()
+    )
+
+
+def search_catalog(
+    session: Session, user_id: UUID, query: str, *, limit: int = 20
+) -> list[CatalogItem]:
+    """Rank by name prefix, then name contains, then a synonym contains."""
+    needle = name_key(query)
+    if not needle:
+        return []
+    ranked: list[tuple[int, int, str, CatalogItem]] = []
+    for row in visible_catalog(session, user_id):
+        if row.name_key.startswith(needle):
+            rank = 0
+        elif needle in row.name_key:
+            rank = 1
+        elif any(needle in name_key(synonym) for synonym in row.synonyms):
+            rank = 2
+        else:
+            continue
+        ranked.append((rank, len(row.name), row.name, row))
+    ranked.sort(key=lambda entry: entry[:3])
+    return [row for *_, row in ranked[:limit]]
