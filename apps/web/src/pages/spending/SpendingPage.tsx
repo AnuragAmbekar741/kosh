@@ -146,7 +146,7 @@ export function SpendingPage() {
           ) : hasLedger ? (
             filters.view === "items" ? (
               <div className="flex min-h-0 flex-1 flex-col gap-3">
-                <SpendingItemsTable items={items} />
+                <SpendingItemsTable items={items} page={filters.page} />
                 <SpendingItemsPager
                   onPageChange={filters.setPage}
                   page={filters.page}
