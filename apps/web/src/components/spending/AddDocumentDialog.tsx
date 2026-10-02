@@ -2,7 +2,10 @@ import { useRef, useState } from "react"
 import { FileImageIcon, FileTextIcon, UploadIcon, XIcon } from "lucide-react"
 
 import { apiDetail } from "@/api/client"
-import { DocumentReview } from "@/components/spending/DocumentReview"
+import {
+  type ConfirmedBill,
+  DocumentReview,
+} from "@/components/spending/DocumentReview"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,7 +34,7 @@ const acceptedExtensions = new Set([
 
 type AddDocumentFlowProps = {
   onBack: () => void
-  onConfirmed: (spentAt?: string) => void
+  onConfirmed: (bill: ConfirmedBill) => void
 }
 
 function isPdf(file: File) {

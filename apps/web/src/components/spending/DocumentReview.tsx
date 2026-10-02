@@ -24,10 +24,15 @@ import { useUpdateSpendItem } from "@/hooks/spend-items/use-spend-items"
 import { CategoryBadge } from "./CategoryBadge"
 import { formatDate, formatMoney } from "./spending-formatters"
 
+export type ConfirmedBill = {
+  merchant: string
+  spentAt?: string
+}
+
 type DocumentReviewProps = {
   documentId: string
   onBack: () => void
-  onConfirmed: (spentAt?: string) => void
+  onConfirmed: (bill: ConfirmedBill) => void
   onTryAnother: () => void
 }
 
@@ -280,7 +285,7 @@ function ReadyDocument({
 }: {
   document: DocumentDetail
   onBack: () => void
-  onConfirmed: (spentAt?: string) => void
+  onConfirmed: (bill: ConfirmedBill) => void
 }) {
   const extraction = document.extraction!
   const lineDrafts = document.drafts.filter((item) => item.line_index !== null)
@@ -358,7 +363,7 @@ function ReadyDocument({
       const confirmed = await confirm.mutateAsync({ documentId: document.id })
       const spentAt =
         confirmed[0]?.spent_at ?? documentDate ?? lineDrafts[0]?.spent_at
-      onConfirmed(spentAt ?? undefined)
+      onConfirmed({ merchant, spentAt: spentAt ?? undefined })
     } catch {
       // Mutation state renders the API error below the review.
     }
