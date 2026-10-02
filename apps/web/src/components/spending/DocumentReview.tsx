@@ -426,7 +426,7 @@ function ReadyDocument({
                 <Input
                   aria-invalid={unlikelyDate}
                   aria-label="Receipt date"
-                  className="h-7 w-36"
+                  className="w-36"
                   onChange={(event) => {
                     setReceiptDate(event.target.value)
                     setValidationError("")
