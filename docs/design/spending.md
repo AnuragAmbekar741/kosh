@@ -26,7 +26,7 @@ the global monochrome visual system.
    date falls outside the visible period, a sonner toast ("Saved <merchant>",
    the date, "outside the period you're viewing") offers a Show action that
    jumps to that month. There is no total-versus-itemized choice or partial
-   selection. Before confirming, a receipt's date is an editable date field;
+   selection. Before confirming, a receipt's date uses the shared Calendar in a Popover with month/year dropdowns; selecting a day closes the picker and preserves the local calendar date;
    a "Check the date" alert appears when it is more than a year ago or in the
    future, and a changed date is saved on every line.
 6. Add manually asks only for a bill name. `POST /documents/manual` creates a
@@ -73,7 +73,7 @@ Items view sends `skip`/`limit` of 50 and shows a numbered pager footer
 `page`. Bills view requests `limit=200` and is not paged — grouping and
 bill totals are computed client-side from the returned rows.
 
-Bills and Items render only the filter toolbar above Transactions; analytics
+Bills and Items render the filter toolbar directly above the ledger, without a Transactions heading; analytics
 are reserved for `/spending/analytics`. The summary payload remains an
 internal source for first-use detection, filtered-empty detection, and the
 bill count. First-use (`has_spend === false`) fades the toolbar. A filtered
@@ -92,8 +92,7 @@ Each group is a shadcn Accordion item. The trigger is one
 row: merchant title, then outline pill Badges for date, source (`Document` or
 `Manual entry` from spend `source`, or the empty manual document), item
 count (`1 item` / `N items`), and a read-only category badge per distinct
-line category. The merchant tile is a pencil for manual bills and a document
-icon otherwise. The group total stays on the right, followed by
+line category. The leading tile numbers bills sequentially in the visible order, starting at 1. A disclosure arrow indicates whether each bill is expanded. The group total stays on the right, followed by
 an accent three-dot tile that matches the merchant icon. That control does not
 toggle the accordion. It opens a dropdown: Edit expands the bill; Delete opens
 a confirmation Dialog and, on confirm, removes the whole bill. Uploaded
@@ -102,11 +101,11 @@ every line. Manual document groups call the same delete and skip blob cleanup.
 Legacy ungrouped manual rows call `DELETE /spend-items/{id}`. Expanding a
 group reveals products nested under the bill: indented to the
 merchant text column, quieter type, the item name with its category badge on
-the same row, and amounts. Line-index numbers are omitted. The name truncates;
+the same row, and amounts. Items are numbered sequentially from 1 within each bill, following their sorted order. A muted panel, an inset hairline, and an “Items in <merchant>” label make the parent bill explicit. The name truncates;
 the badge stays `w-fit` and does not wrap underneath.
 
 Bills and Items navigation lives only in the Spending sidebar group; the
-Transactions heading does not repeat that route switch. Items is a read-only table:
+ledger does not repeat that route switch. Items is a read-only table:
 Date, Item, Merchant, Category, Source, Amount. Row edit is later.
 Clicking a line's badge opens a DropdownMenu of the 14 categories with
 swatches; the current value is checked, and choosing one saves through
@@ -138,16 +137,11 @@ never changes. The Items table adds a Product column with the same badge.
 
 The ledger fills the dashboard content panel below `2xl`; at `2xl` it uses a
 wide centered maximum for readability. The page itself does not scroll. Many
-bills scroll the list under Transactions. The accordion card hugs its rows.
-Every bill including the last has a `border-b` hairline. An expanded bill
-draws one `border-t` on the panel under the title and animates to content
-height. The open panel caps at `max-h-72` (about seven lines) and scrolls
-after that. The items table keeps its own overflow.
-Accordion triggers intentionally omit disclosure icons, use a pointer cursor,
-and reveal a muted hover state while closed. The accordion is a 1px card box
-with `rounded-xl` corners; inner rows stay square. Products use
-`not-first:border-t` so the last product does not stack a second rule on the
-bill divider.
+bills scroll inside the bordered ledger, whose height hugs its content until it
+reaches the remaining page height. Expanded items share that single scroll area,
+so short bills have no empty table space and long bills remain contained.
+The accordion uses `rounded-xl` corners and inner rows stay square. Products use
+`not-first:border-t` separators. The items table keeps its own overflow.
 
 The surface stays flat and monochrome: semantic neutral backgrounds and muted
 fills establish hierarchy. Category badges are the only chromatic marks in
@@ -160,7 +154,7 @@ bordered `rounded-xl` stack of
 bill rows (icon tile, merchant bar, badge chips, trailing amount, kebab
 tile). Failure of the list uses Alert; a summary failure still shows the
 ledger. First-use uses a compact dashed Empty frame
-centered under the Transactions heading, hugging its copy, pointing at the
+centered below the toolbar, hugging its copy, pointing at the
 top-bar action, and including an EmptyContent button that opens the same Add
 spending dialog. A filtered empty period uses the same Empty frame with
 Clear filters. Long extraction reviews cap the numbered item list at
