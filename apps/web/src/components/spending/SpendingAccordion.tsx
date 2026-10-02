@@ -73,6 +73,7 @@ type SpendingBillRowProps = {
 type SpendingLineRowProps = {
   isEditing: boolean
   item: SpendItem
+  position: number
   onDelete: (item: SpendItem) => void
   onEdit: (itemId: string) => void
   onStopEditing: () => void
@@ -151,6 +152,7 @@ function SpendingLineRow({
   onDelete,
   onEdit,
   onStopEditing,
+  position,
 }: SpendingLineRowProps) {
   const label = itemName(item)
   const [name, setName] = useState(label)
@@ -219,7 +221,10 @@ function SpendingLineRow({
   )
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2 pr-4 pl-16 not-first:border-t sm:pr-5 sm:pl-17">
+    <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto_2.75rem] sm:grid-cols-[2.25rem_minmax(0,1fr)_auto_2.25rem] items-center gap-x-3 px-4 py-2.5 not-first:border-t sm:px-5">
+      <span className="text-center text-xs text-muted-foreground tabular-nums">
+        {position}
+      </span>
       <div className="min-w-0">
         {isEditing ? (
           <Field className="gap-1" data-invalid={Boolean(error)}>
@@ -279,10 +284,10 @@ function SpendingLineRow({
           </div>
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <p className="text-sm font-normal tabular-nums">
-          {formatMoney(item.amount, item.currency)}
-        </p>
+      <p className="text-right text-sm font-normal tabular-nums">
+        {formatMoney(item.amount, item.currency)}
+      </p>
+      <div className="flex justify-center">
         {isEditing ? (
           <Button
             aria-label={`Delete ${label}`}
@@ -338,7 +343,7 @@ function SpendingBillRow({
                 aria-label={`Actions for ${group.title}`}
                 render={
                   <Button
-                    className="size-9 rounded-lg bg-accent hover:bg-accent"
+                    className="rounded-lg bg-accent hover:bg-accent"
                     size="icon"
                     variant="ghost"
                   />
@@ -363,7 +368,7 @@ function SpendingBillRow({
           </span>
         }
         className="cursor-pointer items-center rounded-none py-0 hover:no-underline **:data-[slot=accordion-trigger-icon]:hidden"
-        headerClassName="px-4 py-4 hover:bg-muted/50 group-data-open/bill:hover:bg-transparent sm:px-5 sm:py-5"
+        headerClassName="px-4 py-3 hover:bg-muted/50 group-data-open/bill:hover:bg-transparent sm:px-5 sm:py-3.5"
       >
         <span className="flex min-w-0 items-center gap-3 text-left">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent [&_svg]:size-4">
@@ -386,13 +391,14 @@ function SpendingBillRow({
           </span>
         </span>
       </AccordionTrigger>
-      <AccordionContent className="border-t pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
+      <AccordionContent className="border-t bg-muted/40 pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
         <div className="max-h-72 overflow-y-auto">
-          {group.items.map((item) => (
+          {group.items.map((item, index) => (
             <SpendingLineRow
               isEditing={editingItemId === item.id}
               item={item}
               key={item.id}
+              position={index + 1}
               onDelete={onDeleteItem}
               onEdit={onEditItem}
               onStopEditing={onStopEditing}
