@@ -26,7 +26,8 @@ the global monochrome visual system.
    bill's date falls outside it, a sonner toast ("Saved <merchant>", the date,
    "outside your date filter") offers a Show action that clears the date
    filter. There is no total-versus-itemized choice or partial
-   selection. Before confirming, a receipt's date is an editable date field;
+   selection. Before confirming, a receipt's date is a shadcn date picker
+   (outline button + Calendar popover with month/year dropdowns);
    a "Check the date" alert appears when it is more than a year ago or in the
    future, and a changed date is saved on every line.
 6. Add manually asks only for a bill name. `POST /documents/manual` creates a

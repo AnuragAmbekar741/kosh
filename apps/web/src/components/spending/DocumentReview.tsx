@@ -22,6 +22,7 @@ import {
 import { useUpdateSpendItem } from "@/hooks/spend-items/use-spend-items"
 
 import { CategoryBadge } from "./CategoryBadge"
+import { DatePicker } from "./DatePicker"
 import { daysFromToday } from "./spend-period"
 import { formatDate, formatMoney } from "./spending-formatters"
 
@@ -423,15 +424,13 @@ function ReadyDocument({
             </div>
             {isReceipt ? (
               <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <Input
-                  aria-invalid={unlikelyDate}
+                <DatePicker
                   aria-label="Receipt date"
-                  className="w-36"
-                  onChange={(event) => {
-                    setReceiptDate(event.target.value)
+                  invalid={unlikelyDate}
+                  onChange={(next) => {
+                    setReceiptDate(next)
                     setValidationError("")
                   }}
-                  type="date"
                   value={receiptDate}
                 />
                 <span className="truncate">{document.filename}</span>
