@@ -815,3 +815,37 @@ def test_editing_text_requeues_and_editing_category_marks_it_user_set(
     line = _lines(document_id)[0]
     assert line.item_status == "pending"
     assert line.item_claim_token is None
+
+
+def test_spend_lines_return_their_catalog_item(client, monkeypatch) -> None:
+    from storage.crud.catalog import CatalogRow, load_shared_catalog
+    from storage.models.catalog import CatalogItem
+
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt())
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
+    with Session(database.engine) as session:
+        load_shared_catalog(
+            session,
+            [
+                CatalogRow("chicken", None, "Chicken", (), "Groceries"),
+                CatalogRow("chicken-breast", "chicken", "Chicken breast", (), None),
+            ],
+        )
+        breast = session.exec(
+            select(CatalogItem).where(CatalogItem.slug == "chicken-breast")
+        ).one()
+        line = session.exec(
+            select(SpendItem).where(SpendItem.document_id == UUID(document_id))
+        ).one()
+        line.catalog_item_id = breast.id
+        line.item_status = "resolved"
+        session.add(line)
+        session.commit()
+        line_id = str(line.id)
+    listed = client.get("/spend-items", headers=headers).json()["data"][0]
+    assert listed["item_status"] == "resolved"
+    assert listed["item"]["name"] == "Chicken breast"
+    assert listed["item"]["family"] == "Chicken"
+    one = client.get(f"/spend-items/{line_id}", headers=headers).json()
+    assert one["item"] == listed["item"]

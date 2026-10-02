@@ -1,10 +1,11 @@
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, Column, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class CatalogItem(SQLModel, table=True):
@@ -31,6 +32,10 @@ class CatalogItem(SQLModel, table=True):
     retired: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    # SQLModel resolves relationships from the string form only.
+    parent: Optional["CatalogItem"] = Relationship(  # noqa: UP037, UP045
+        sa_relationship_kwargs={"remote_side": "CatalogItem.id"}
+    )
 
 
 class AliasKind(StrEnum):

@@ -9,6 +9,7 @@ from storage.models.spend import Category
 from api.common.pagination import Page
 
 __all__ = [
+    "SpendItemCatalog",
     "SpendItemCreate",
     "SpendItemPublic",
     "SpendItemUpdate",
@@ -71,6 +72,14 @@ class SpendItemUpdate(BaseModel):
         return value.upper()
 
 
+class SpendItemCatalog(BaseModel):
+    """The catalog row a line is matched to; family is None when it is a family."""
+
+    id: UUID
+    name: str
+    family: str | None
+
+
 class SpendItemPublic(BaseModel):
     id: UUID
     merchant: str
@@ -79,6 +88,8 @@ class SpendItemPublic(BaseModel):
     currency: str
     spent_at: date
     category: str | None
+    item: SpendItemCatalog | None = None
+    item_status: str = "none"
     source: str
     status: str
     document_id: UUID | None = None

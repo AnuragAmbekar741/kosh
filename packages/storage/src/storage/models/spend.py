@@ -1,10 +1,14 @@
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, Index, Numeric, column
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from storage.models.catalog import CatalogItem
 
 
 class SpendSource(StrEnum):
@@ -91,6 +95,8 @@ class SpendItem(SQLModel, table=True):
         default=None, foreign_key="catalog_items.id", index=True
     )
     item_status: str = Field(default=ItemStatus.NONE, index=True)
+    # SQLModel resolves relationships from the string form only.
+    catalog_item: Optional["CatalogItem"] = Relationship()  # noqa: UP037, UP045
     item_method: str | None = None
     item_claim_token: UUID | None = None
     item_claimed_at: datetime | None = None
