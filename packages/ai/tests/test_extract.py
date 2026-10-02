@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
 from typing import get_args
@@ -174,6 +175,33 @@ def test_image_pixel_limit_is_strict(monkeypatch) -> None:
     )
     with pytest.raises(ExtractError, match="pixel limit"):
         inspect_and_normalize(_jpeg((11, 10)), "image/jpeg", max_upload_mb=15)
+
+
+def test_extraction_prompt_carries_todays_date(monkeypatch) -> None:
+    seen: dict = {}
+
+    def fake_chat_json(content, **kwargs):
+        seen["prompt"] = content[0]["text"]
+        return "extraction", None
+
+    settings = type(
+        "S",
+        (),
+        {
+            "require_openrouter": lambda self: "key",
+            "openrouter_model": "m",
+            "openrouter_pdf_engine": "native",
+            "max_pdf_pages": 5,
+            "max_image_pixels": 50_000_000,
+        },
+    )()
+    monkeypatch.setattr(extract_mod, "get_settings", lambda: settings)
+    monkeypatch.setattr(extract_mod, "chat_json", fake_chat_json)
+    extract(_jpeg(), "image/jpeg", max_upload_mb=15)
+    assert seen["prompt"].startswith(
+        f"Today is {datetime.now(UTC).date().isoformat()}."
+    )
+    assert "closest to today" in seen["prompt"]
 
 
 @pytest.mark.llm
