@@ -11,14 +11,17 @@ from uuid import UUID, uuid4
 
 from sqlmodel import Session, col, select
 
-from storage.models.spend import CategorySource, ItemStatus, SpendItem
+from storage.crud.catalog import name_key
+from storage.models.spend import CategorySource, ItemMethod, ItemStatus, SpendItem
 
 __all__ = [
     "claim_pending_bill",
     "claimed_lines",
     "finish_line",
+    "lines_with_text",
     "reclaim_stuck_lines",
     "release_lines",
+    "set_line_item",
 ]
 
 _STUCK_AFTER = timedelta(minutes=5)
@@ -103,6 +106,31 @@ def finish_line(
     ).first()
     if line is None:
         return False
+    set_line_item(
+        session,
+        line,
+        status=status,
+        catalog_item_id=catalog_item_id,
+        method=method,
+        category=category,
+    )
+    return True
+
+
+def set_line_item(
+    session: Session,
+    line: SpendItem,
+    *,
+    status: ItemStatus,
+    catalog_item_id: UUID | None = None,
+    method: str | None = None,
+    category: str | None = None,
+) -> None:
+    """Record a line's item; clears any claim so an in-flight match is dropped.
+
+    `category` replaces the line's category unless the user set it. The
+    caller commits.
+    """
     line.item_status = status
     line.catalog_item_id = catalog_item_id
     line.item_method = method
@@ -113,7 +141,34 @@ def finish_line(
         line.category_source = CategorySource.ITEM
     line.updated_at = datetime.now(UTC)
     session.add(line)
-    return True
+
+
+_FINISHED = (
+    ItemStatus.RESOLVED,
+    ItemStatus.NEEDS_REVIEW,
+    ItemStatus.NOT_PRODUCT,
+    ItemStatus.FAILED,
+)
+
+
+def lines_with_text(
+    session: Session, *, user_id: UUID, text_key: str, exclude_id: UUID
+) -> list[SpendItem]:
+    """The user's finished lines with the same bill text, not corrected by hand."""
+    candidates = session.exec(
+        select(SpendItem).where(
+            SpendItem.user_id == user_id,
+            SpendItem.id != exclude_id,
+            col(SpendItem.item_status).in_(_FINISHED),
+            col(SpendItem.description).is_not(None),
+        )
+    ).all()
+    return [
+        line
+        for line in candidates
+        if line.item_method != ItemMethod.USER
+        and name_key(line.description or "") == text_key
+    ]
 
 
 def release_lines(session: Session, document_id: UUID, token: UUID) -> int:

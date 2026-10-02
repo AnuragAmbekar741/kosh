@@ -3,12 +3,14 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from storage.models.spend import Category
 
 from api.common.pagination import Page
 
 __all__ = [
+    "ItemCorrection",
+    "NewCatalogItem",
     "SpendItemCatalog",
     "SpendItemCreate",
     "SpendItemPublic",
@@ -129,3 +131,27 @@ class SpendSummary(BaseModel):
     avg_per_bill: Decimal
     has_spend: bool
     comparison: SpendSummaryComparison | None
+
+
+class NewCatalogItem(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    family_id: UUID
+
+
+class ItemCorrection(BaseModel):
+    """Exactly one of: an existing catalog row, a new private item, or not a product."""
+
+    catalog_item_id: UUID | None = None
+    new_item: NewCatalogItem | None = None
+    not_product: bool = False
+
+    @model_validator(mode="after")
+    def exactly_one(self) -> ItemCorrection:
+        chosen = [
+            self.catalog_item_id is not None,
+            self.new_item is not None,
+            self.not_product,
+        ]
+        if sum(chosen) != 1:
+            raise ValueError("choose one of catalog_item_id, new_item, not_product")
+        return self

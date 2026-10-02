@@ -44,6 +44,7 @@ class ItemMethod(StrEnum):
     ALIAS = "alias"
     MATCH = "match"
     MODEL = "model"
+    USER = "user"
 
 
 class Category(StrEnum):

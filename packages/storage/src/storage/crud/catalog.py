@@ -14,6 +14,7 @@ __all__ = [
     "CatalogLoadResult",
     "CatalogRow",
     "active_catalog",
+    "create_user_item",
     "find_alias",
     "load_shared_catalog",
     "name_key",
@@ -195,3 +196,22 @@ def search_catalog(
         ranked.append((rank, len(row.name), row.name, row))
     ranked.sort(key=lambda entry: entry[:3])
     return [row for *_, row in ranked[:limit]]
+
+
+def create_user_item(
+    session: Session, *, user_id: UUID, family: CatalogItem, name: str
+) -> CatalogItem:
+    """A private item under a family; reuses a visible row with the same name.
+
+    The caller commits.
+    """
+    key = name_key(name)
+    for row in visible_catalog(session, user_id):
+        if row.parent_id == family.id and row.name_key == key:
+            return row
+    item = CatalogItem(
+        user_id=user_id, parent_id=family.id, name=name.strip(), name_key=key
+    )
+    session.add(item)
+    session.flush()
+    return item
