@@ -14,6 +14,21 @@ export type Category =
   | "Travel"
   | "Other"
 
+export type ItemStatus =
+  | "none"
+  | "pending"
+  | "processing"
+  | "resolved"
+  | "needs_review"
+  | "not_product"
+  | "failed"
+
+export type SpendItemCatalog = {
+  id: string
+  name: string
+  family: string | null
+}
+
 export type SpendItem = {
   id: string
   merchant: string
@@ -22,6 +37,8 @@ export type SpendItem = {
   currency: string
   spent_at: string
   category: Category | null
+  item: SpendItemCatalog | null
+  item_status: ItemStatus
   source: string
   status: string
   document_id: string | null
