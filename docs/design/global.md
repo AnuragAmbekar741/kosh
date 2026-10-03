@@ -28,15 +28,18 @@ selected nav, and menu hover stay visible on `#ffffff` / `#f5f6f6`. Icon wells
 use `bg-accent` or `bg-sidebar-accent`, not `bg-muted`. Tailwind radius
 utilities are derived from `--radius`; their suffixes do not directly match
 the design token names.
-Primary inverts against the canvas: charcoal `#3a3a3c` on light, near-white
+Primary inverts against the canvas: slate `#1e293b` on light (light
+neutrals are cool slate grays), near-white
 `#f7f8f8` on dark. `--primary-foreground` is the opposite ink. `--brand-ink`
 and `--ring` stay in the same neutral family so links, focus, and primary
 actions never introduce a second hue. The auth canvas uses gray tonal
 gradients and a gray waveform. Document intake uses a flat neutral canvas.
 Geist carries headings, UI, and body copy. Semantic `--destructive` and
 `--chart-2` (success) stay chromatic. Spend category badges are the other
-chromatic exception: muted `bg` / `fg` pairs (`--category-groceries` …
-`--category-other`) so a ledger can scan by hue without recoloring chrome.
+chromatic exception: `bg` / `fg` / `swatch` triples (`--category-groceries`
+… `--category-other`) so a ledger can scan by hue without recoloring chrome.
+`fg` is badge text; `swatch` is the brighter ink for dots and charts (on
+dark it aliases `fg`).
 
 ## Components
 

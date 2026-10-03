@@ -181,7 +181,7 @@ Reset. Long extraction reviews cap the numbered item list at
 
 `/spending/analytics` uses the same `SpendingToolbar` and URL filters as
 Bills and Items (the badge counts bills), so switching tabs keeps the
-filters. One `GET /spend-items/analytics` call takes the list query and
+filters. It hides search and ignores any `q` carried in the URL. One `GET /spend-items/analytics` call takes the list query and
 returns every chart's numbers; it is aggregated in Python over the filtered
 rows, like the summary.
 
