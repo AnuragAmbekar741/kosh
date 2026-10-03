@@ -193,8 +193,13 @@ rows, like the summary.
 | Top merchants, Largest bills | Top 5 rows with a bar scaled to the first row. Clicking opens Bills searched by that merchant, keeping the other filters |
 | By weekday | Monday–Sunday bars; the busiest day is solid, others faded |
 
-The covered span is the date filter, or first to last spend for All time,
-and never runs past today. The comparison only appears for a bounded date
+Amounts are never summed across currencies. The response covers one
+currency (`?currency=`, default the most used in the range) and lists every
+currency present; with more than one, an "Amounts in" toggle above the stat
+cards switches it (written to the URL). The covered span is the date filter,
+or first spend through today for All time. Nothing after today counts: the
+query, totals, comparison, and trend all stop at today unless the whole
+range is in the future. The comparison only appears for a bounded date
 filter: whole calendar months step back by months and cut to the same
 elapsed days (this month to date vs the same days last month); any other
 range steps back by its own length. With nothing spent in the previous

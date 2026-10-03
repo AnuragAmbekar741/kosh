@@ -5,6 +5,7 @@ import type {
   ItemCorrection,
   SpendItem,
   SpendAnalytics,
+  SpendAnalyticsQuery,
   SpendItemUpdate,
   SpendPeriod,
   SpendQuery,
@@ -53,11 +54,13 @@ export async function getSpendSummary(
 }
 
 export async function getSpendAnalytics(
-  query: SpendQuery,
+  query: SpendAnalyticsQuery,
   signal?: AbortSignal
 ): Promise<SpendAnalytics> {
+  const params = toParams(query)
+  if (query.currency) params.set("currency", query.currency)
   const { data } = await client.get<SpendAnalytics>("/spend-items/analytics", {
-    params: toParams(query),
+    params,
     signal,
   })
   return data

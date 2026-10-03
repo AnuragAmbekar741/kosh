@@ -103,8 +103,15 @@ export type SpendSummary = {
 
 export type TrendBucket = "day" | "week" | "month"
 
+export type SpendAnalyticsQuery = SpendQuery & {
+  /** Defaults to the most used currency in the range. */
+  currency?: string
+}
+
 export type SpendAnalytics = {
   currency: string
+  /** Most used first; amounts are never summed across currencies. */
+  currencies: string[]
   total: string
   bill_count: number
   item_count: number

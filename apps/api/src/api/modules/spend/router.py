@@ -11,11 +11,11 @@ from api.modules.spend.presenter import to_public
 from api.modules.spend.schemas import (
     ItemCorrection,
     SpendAnalytics,
+    SpendAnalyticsQuery,
     SpendItemCreate,
     SpendItemPublic,
     SpendItemUpdate,
     SpendListQuery,
-    SpendQuery,
     SpendSummary,
     SpendSummaryQuery,
 )
@@ -73,7 +73,7 @@ def get_summary(
 def get_analytics(
     user: CurrentUserDep,
     session: SessionDep,
-    query: Annotated[SpendQuery, Query()],
+    query: Annotated[SpendAnalyticsQuery, Query()],
 ) -> SpendAnalytics:
     return analytics.analyze(
         session,
@@ -84,6 +84,7 @@ def get_analytics(
         merchant=query.merchant,
         source=query.source,
         q=query.q,
+        currency=query.currency,
     )
 
 

@@ -1,7 +1,7 @@
 """Spend analytics for the filtered ledger: one payload for every chart."""
 
 from calendar import monthrange
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Sequence
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -37,30 +37,44 @@ def analyze(
     merchant: str | None,
     source: str | None,
     q: str | None,
+    currency: str | None,
     today: date | None = None,
 ) -> SpendAnalytics:
+    """Analytics in one currency (default: the most used); never past today."""
     # ponytail: aggregates in Python over the filtered rows, like the summary;
     # move to GROUP BY queries if one user's ledger reaches tens of thousands.
     today = today or datetime.now(UTC).date()
     filters = {"category": category, "merchant": merchant, "source": source, "q": q}
-    items = list_spend_items(
-        session, user_id=user_id, spent_from=spent_from, spent_to=spent_to, **filters
+    bound = _effective_to(spent_from, spent_to, today)
+    rows = list_spend_items(
+        session, user_id=user_id, spent_from=spent_from, spent_to=bound, **filters
     )
+    currencies = [
+        code for code, _ in Counter(row.currency for row in rows).most_common()
+    ]
+    currency = currency or (currencies[0] if currencies else "USD")
+    items = [row for row in rows if row.currency == currency]
     total = _total(items)
     bills = _bills(items)
-    start, end = _span(items, spent_from, spent_to, today)
+    dates = [item.spent_at for item in items]
+    start = spent_from or min(dates, default=today)
+    end = max(start, bound or max(dates, default=today))
     bucket = _bucket(start, end)
     comparison = None
     if spent_from is not None and spent_to is not None:
         prev_from, prev_to = _previous_range(spent_from, spent_to, end)
         previous = _total(
-            list_spend_items(
-                session,
-                user_id=user_id,
-                spent_from=prev_from,
-                spent_to=prev_to,
-                **filters,
-            )
+            [
+                row
+                for row in list_spend_items(
+                    session,
+                    user_id=user_id,
+                    spent_from=prev_from,
+                    spent_to=prev_to,
+                    **filters,
+                )
+                if row.currency == currency
+            ]
         )
         comparison = AnalyticsComparison(
             previous_total=money(previous),
@@ -71,7 +85,8 @@ def analyze(
             previous_to=prev_to,
         )
     return SpendAnalytics(
-        currency="USD",
+        currency=currency,
+        currencies=currencies,
         total=money(total),
         bill_count=len(bills),
         item_count=len(items),
@@ -86,6 +101,15 @@ def analyze(
         largest_bills=sorted(bills, key=lambda bill: bill.total, reverse=True)[:_TOP],
         weekdays=_weekdays(items),
     )
+
+
+def _effective_to(
+    spent_from: date | None, spent_to: date | None, today: date
+) -> date | None:
+    """The last day counted: today at most, unless the whole range is ahead."""
+    if spent_from is not None and spent_from > today:
+        return spent_to
+    return today if spent_to is None or spent_to > today else spent_to
 
 
 def _total(items: Sequence[SpendItem]) -> Decimal:
@@ -107,21 +131,6 @@ def _bills(items: Sequence[SpendItem]) -> list[AnalyticsBill]:
         )
         for lines in groups.values()
     ]
-
-
-def _span(
-    items: Sequence[SpendItem],
-    spent_from: date | None,
-    spent_to: date | None,
-    today: date,
-) -> tuple[date, date]:
-    """Days the spend covers: the filter, or the data when unbounded, never past today."""
-    dates = [item.spent_at for item in items]
-    start = spent_from or min(dates, default=today)
-    end = spent_to or max(dates, default=today)
-    if start <= today < end:
-        end = today
-    return start, max(start, end)
 
 
 def _bucket(start: date, end: date) -> TrendBucket:
@@ -152,7 +161,7 @@ def _trend(
     totals: dict[date, Decimal] = defaultdict(Decimal)
     for item in items:
         totals[_bucket_start(item.spent_at, bucket)] += item.amount
-    last = max([_bucket_start(end, bucket), *totals])
+    last = _bucket_start(end, bucket)
     points = []
     cursor = _bucket_start(start, bucket)
     while cursor <= last:

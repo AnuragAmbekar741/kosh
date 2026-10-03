@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID, uuid4
 
-from api.modules.spend.analytics import _previous_range
+from api.modules.spend.analytics import _previous_range, analyze
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 from storage.crud.spend import create_spend_item
@@ -613,3 +613,72 @@ def test_analytics_respects_filters_and_owner(client) -> None:
     assert other["total"] == "0.00"
     assert other["daily_average"] == "0.00"
     assert other["categories"] == []
+
+
+def test_analytics_never_sums_currencies(client) -> None:
+    headers = _auth(client)
+    client.post("/spend-items", json=_payload(amount="10.00"), headers=headers)
+    for amount in ("100.00", "50.00"):
+        client.post(
+            "/spend-items",
+            json=_payload(amount=amount, currency="eur", merchant="Lidl"),
+            headers=headers,
+        )
+    most_used = client.get("/spend-items/analytics", headers=headers).json()
+    assert most_used["currency"] == "EUR"
+    assert most_used["currencies"] == ["EUR", "USD"]
+    assert most_used["total"] == "150.00"
+    assert most_used["item_count"] == 2
+    assert [row["merchant"] for row in most_used["merchants"]] == ["Lidl"]
+    usd = client.get(
+        "/spend-items/analytics", params={"currency": "usd"}, headers=headers
+    ).json()
+    assert usd["currency"] == "USD"
+    assert usd["total"] == "10.00"
+    assert usd["categories"][0]["share"] == 1.0
+
+
+def test_analytics_stops_at_today(client, db_engine) -> None:
+    headers = _auth(client)
+    user_id = UUID(client.get("/users/me", headers=headers).json()["id"])
+    for spent_at, amount in [
+        ("2024-09-01", "10.00"),
+        ("2024-10-01", "10.00"),
+        ("2024-10-20", "90.00"),
+    ]:
+        client.post(
+            "/spend-items",
+            json=_payload(amount=amount, spent_at=spent_at),
+            headers=headers,
+        )
+    filters = {"category": None, "merchant": None, "source": None, "q": None}
+    with Session(db_engine) as session:
+        month = analyze(
+            session,
+            user_id,
+            spent_from=date(2024, 10, 1),
+            spent_to=date(2024, 10, 31),
+            currency=None,
+            today=date(2024, 10, 2),
+            **filters,
+        )
+        all_time = analyze(
+            session,
+            user_id,
+            spent_from=None,
+            spent_to=None,
+            currency=None,
+            today=date(2024, 10, 2),
+            **filters,
+        )
+    assert month.total == Decimal("10.00")
+    assert month.daily_average == Decimal("5.00")
+    assert month.comparison is not None
+    assert month.comparison.previous_total == Decimal("10.00")
+    assert month.comparison.delta_percent == 0.0
+    assert [point.start for point in month.trend] == [
+        date(2024, 10, 1),
+        date(2024, 10, 2),
+    ]
+    assert all_time.total == Decimal("20.00")
+    assert all_time.trend[-1].start <= date(2024, 10, 2)

@@ -15,6 +15,7 @@ import {
 } from "@/api/spend-items/spend-items"
 import type {
   PageParams,
+  SpendAnalyticsQuery,
   SpendQuery,
   SpendSummaryQuery,
 } from "@/api/spend-items/spend-items.types"
@@ -37,7 +38,7 @@ export function useSpendSummary(query: SpendSummaryQuery) {
   })
 }
 
-export function useSpendAnalytics(query: SpendQuery) {
+export function useSpendAnalytics(query: SpendAnalyticsQuery) {
   return useQuery({
     queryKey: spendItemQueryKeys.analytics(query),
     queryFn: ({ signal }) => getSpendAnalytics(query, signal),

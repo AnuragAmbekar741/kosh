@@ -18,6 +18,7 @@ __all__ = [
     "ItemCorrection",
     "NewCatalogItem",
     "SpendAnalytics",
+    "SpendAnalyticsQuery",
     "SpendItemCatalog",
     "SpendItemCreate",
     "SpendItemPublic",
@@ -179,8 +180,21 @@ class AnalyticsWeekday(BaseModel):
     total: Decimal
 
 
+class SpendAnalyticsQuery(SpendQuery):
+    currency: str | None = Field(default=None, min_length=3, max_length=3)
+
+    @field_validator("currency")
+    @classmethod
+    def currency_upper(cls, value: str | None) -> str | None:
+        return value.upper() if value else value
+
+
 class SpendAnalytics(BaseModel):
     currency: str
+    currencies: list[str] = Field(
+        description="Currencies in the filtered range, most used first; "
+        "amounts are never summed across them"
+    )
     total: Decimal
     bill_count: int
     item_count: int

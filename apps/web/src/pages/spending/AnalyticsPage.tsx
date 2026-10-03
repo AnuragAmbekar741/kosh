@@ -21,6 +21,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useSpendFilters } from "@/hooks/spend-items/use-spend-filters"
 import { useSpendAnalytics } from "@/hooks/spend-items/use-spend-items"
 
@@ -49,9 +50,10 @@ function openAddSpending() {
 
 export function AnalyticsPage() {
   const filters = useSpendFilters()
-  const analytics = useSpendAnalytics(filters.query)
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const currency = searchParams.get("currency") ?? undefined
+  const analytics = useSpendAnalytics({ ...filters.query, currency })
   const data = analytics.data
   const firstUse = data?.has_spend === false
   const filterEmpty = Boolean(data?.has_spend && data.item_count === 0)
@@ -59,6 +61,15 @@ export function AnalyticsPage() {
     data && !firstUse
       ? `${data.bill_count} bill${data.bill_count === 1 ? "" : "s"}`
       : null
+
+  function setCurrency(next: string | undefined) {
+    if (!next) return
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      params.set("currency", next)
+      return params
+    })
+  }
 
   function openMerchant(merchant: string) {
     const next = new URLSearchParams(searchParams)
@@ -115,6 +126,26 @@ export function AnalyticsPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
+              {data.currencies.length > 1 ? (
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <span>Amounts in</span>
+                  <ToggleGroup
+                    aria-label="Currency"
+                    onValueChange={(value: string[]) => setCurrency(value[0])}
+                    size="sm"
+                    value={[data.currency]}
+                  >
+                    {data.currencies.map((code) => (
+                      <ToggleGroupItem key={code} value={code}>
+                        {code}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                  <span className="hidden sm:inline">
+                    Each currency is totalled on its own.
+                  </span>
+                </div>
+              ) : null}
               <AnalyticsStats data={data} periodLabel={filters.dateLabel} />
               <div className="grid gap-3 lg:grid-cols-5">
                 <TrendChart
