@@ -7,11 +7,11 @@ import type {
 import { client, setAccessToken } from "@/api/client"
 
 export async function register(
-  body: RegisterRequest,
+  body: RegisterRequest
 ): Promise<AccessTokenResponse> {
   const { data } = await client.post<AccessTokenResponse>(
     "/auth/register",
-    body,
+    body
   )
   setAccessToken(data.access_token)
   return data
@@ -24,7 +24,7 @@ export async function login(body: LoginRequest): Promise<AccessTokenResponse> {
 }
 
 export async function google(
-  body: GoogleAuthRequest,
+  body: GoogleAuthRequest
 ): Promise<AccessTokenResponse> {
   const { data } = await client.post<AccessTokenResponse>("/auth/google", body)
   setAccessToken(data.access_token)

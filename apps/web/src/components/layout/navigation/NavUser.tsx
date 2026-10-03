@@ -73,7 +73,9 @@ export function NavUser({ user }: NavUserProps) {
             <DropdownMenuGroup>
               <DropdownMenuLabel className="font-normal">
                 <span className="grid min-w-0 text-left text-sm leading-tight">
-                  <span className="truncate text-foreground">{displayName}</span>
+                  <span className="truncate text-foreground">
+                    {displayName}
+                  </span>
                   <span className="truncate">{user.email}</span>
                 </span>
               </DropdownMenuLabel>

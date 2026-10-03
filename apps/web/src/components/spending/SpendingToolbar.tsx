@@ -17,11 +17,13 @@ type SpendingToolbarProps = {
   /** e.g. "24 bills"; hidden when there is nothing to count. */
   countLabel?: string | null
   disabled?: boolean
+  search?: boolean
 }
 
 export function SpendingToolbar({
   countLabel,
   disabled = false,
+  search = true,
 }: SpendingToolbarProps) {
   const filters = useSpendFilters()
   const { setQ } = filters
@@ -55,33 +57,35 @@ export function SpendingToolbar({
           {countLabel}
         </Badge>
       ) : null}
-      <Field className="ml-auto w-full min-w-0 gap-1 sm:w-64">
-        <FieldLabel className="sr-only" htmlFor="spend-search">
-          Search merchants or items
-        </FieldLabel>
-        <InputGroup>
-          <InputGroupAddon>
-            <SearchIcon />
-          </InputGroupAddon>
-          <InputGroupInput
-            id="spend-search"
-            onChange={(event) => setDraftQ(event.target.value)}
-            placeholder="Search merchants or items"
-            value={draftQ}
-          />
-          {draftQ ? (
-            <InputGroupAddon align="inline-end">
-              <InputGroupButton
-                aria-label="Clear search"
-                onClick={() => setDraftQ("")}
-                size="icon-xs"
-              >
-                <XIcon />
-              </InputGroupButton>
+      {search ? (
+        <Field className="ml-auto w-full min-w-0 gap-1 sm:w-64">
+          <FieldLabel className="sr-only" htmlFor="spend-search">
+            Search merchants or items
+          </FieldLabel>
+          <InputGroup>
+            <InputGroupAddon>
+              <SearchIcon />
             </InputGroupAddon>
-          ) : null}
-        </InputGroup>
-      </Field>
+            <InputGroupInput
+              id="spend-search"
+              onChange={(event) => setDraftQ(event.target.value)}
+              placeholder="Search merchants or items"
+              value={draftQ}
+            />
+            {draftQ ? (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  aria-label="Clear search"
+                  onClick={() => setDraftQ("")}
+                  size="icon-xs"
+                >
+                  <XIcon />
+                </InputGroupButton>
+              </InputGroupAddon>
+            ) : null}
+          </InputGroup>
+        </Field>
+      ) : null}
     </div>
   )
 }

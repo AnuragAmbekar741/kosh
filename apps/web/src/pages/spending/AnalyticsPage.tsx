@@ -53,7 +53,12 @@ export function AnalyticsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const currency = searchParams.get("currency") ?? undefined
-  const analytics = useSpendAnalytics({ ...filters.query, currency })
+  // Analytics has no search box, so a q carried over from Bills is ignored.
+  const analytics = useSpendAnalytics({
+    ...filters.query,
+    q: undefined,
+    currency,
+  })
   const data = analytics.data
   const firstUse = data?.has_spend === false
   const filterEmpty = Boolean(data?.has_spend && data.item_count === 0)
@@ -81,7 +86,11 @@ export function AnalyticsPage() {
   return (
     <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-6 2xl:mx-auto 2xl:max-w-7xl">
       <div className="flex min-h-0 flex-1 flex-col gap-6">
-        <SpendingToolbar countLabel={countLabel} disabled={firstUse} />
+        <SpendingToolbar
+          countLabel={countLabel}
+          disabled={firstUse}
+          search={false}
+        />
 
         <section
           aria-label="Analytics"

@@ -33,11 +33,17 @@ the loaded layout. The status is announced as “Opening your workspace.”
 
 Primary destinations live in
 [`src/components/layout/navigation/navigation.ts`](../../apps/web/src/components/layout/navigation/navigation.ts).
-The sidebar and the header title both read from that list.
+The sidebar and the header both read from that list. For a parent with
+children (Spending) the header is a breadcrumb: `Spending ›` then a ghost
+`DropdownMenu` trigger naming the current child, which switches between
+Analytics, Bills, and Items and keeps the URL filters.
 
 The sidebar uses the shadcn `Sidebar` primitive (`variant="inset"`,
 `collapsible="icon"`). Spending is a parent row with Analytics, Bills, and
-Items beneath it; clicking the parent expands or collapses that subtree.
+Items beneath it as indented icon rows (no guide line); clicking the parent
+expands or collapses that subtree with a 200ms height fade. The parent is
+medium weight while one of its pages is open, and takes the active fill
+itself when the subtree is collapsed.
 Collapsing leaves a
 3rem icon rail: hovering or activating the centered Spending icon
 opens a keyboard-accessible `DropdownMenu` containing the same children.
@@ -63,7 +69,7 @@ Settings is out of this step.
   never the only signal. Do not fill the row with primary.
 - Geist and the monochrome tokens from `global.md`. No pills, no glass, no
   decorative charts in the chrome.
-- Motion is the 200ms sidebar width transition only. Honor
+- Motion is the 200ms sidebar width and subtree expand transitions only. Honor
   `prefers-reduced-motion`.
 
 ## Frontend structure
