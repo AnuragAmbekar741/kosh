@@ -65,5 +65,5 @@ client.interceptors.response.use(
       setAccessToken(null)
       return Promise.reject(error)
     }
-  },
+  }
 )
