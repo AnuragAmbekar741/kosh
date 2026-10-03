@@ -114,8 +114,8 @@ total, and an action column under the three-dot tile (the delete icon while
 editing). The name truncates; the badge stays `w-fit` and does not wrap
 underneath. Bill rows use `py-3` (`sm:py-3.5`).
 
-Bills and Items navigation lives only in the Spending sidebar group; the page
-has no heading above the ledger. Items is a read-only table: #, Date, Item,
+Analytics, Bills, and Items navigation lives in the Spending sidebar group
+and the header breadcrumb dropdown; the page has no heading above the ledger. Items is a read-only table: #, Date, Item,
 Product, Merchant, Category, Source, Amount. `#` continues across pages
 (page 2 starts at 51). The table hugs its rows, caps at the space left in the
 panel, scrolls inside, and keeps its header sticky. Row edit is later.

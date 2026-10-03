@@ -2,7 +2,10 @@ import { useEffect, useRef, useState, type PointerEvent } from "react"
 import { CheckIcon, ChevronDownIcon } from "lucide-react"
 import { NavLink, useLocation } from "react-router"
 
+import { cn } from "@/lib/utils"
+
 import {
+  navChildTarget,
   navigation,
   type NavChild,
   type NavItem,
@@ -31,18 +34,6 @@ function isItemActive(item: NavItem, pathname: string) {
     item.to === pathname ||
     Boolean(item.matchPrefix && pathname.startsWith(`${item.matchPrefix}/`))
   )
-}
-
-function spendingTarget(to: string, search: string) {
-  const searchParams = new URLSearchParams(search)
-  searchParams.delete("view")
-  searchParams.delete("page")
-  const nextSearch = searchParams.toString()
-
-  return {
-    pathname: to,
-    search: nextSearch ? `?${nextSearch}` : "",
-  }
 }
 
 function SpendingRailMenu({ item }: { item: NavItem }) {
@@ -113,7 +104,7 @@ function SpendingRailMenu({ item }: { item: NavItem }) {
               <DropdownMenuItem
                 aria-current={isActive ? "page" : undefined}
                 key={child.to}
-                render={<NavLink to={spendingTarget(child.to, search)} />}
+                render={<NavLink to={navChildTarget(child.to, search)} />}
               >
                 <ChildIcon />
                 {child.label}
@@ -126,6 +117,9 @@ function SpendingRailMenu({ item }: { item: NavItem }) {
     </DropdownMenu>
   )
 }
+
+const subButtonClass =
+  "h-8 translate-x-0 text-muted-foreground transition-colors max-md:h-11 data-active:font-medium [&>svg]:text-muted-foreground data-active:[&>svg]:text-sidebar-accent-foreground hover:[&>svg]:text-sidebar-accent-foreground"
 
 export function NavMain() {
   const { pathname, search } = useLocation()
@@ -151,78 +145,96 @@ export function NavMain() {
             )
           }
 
+          if (!item.children) {
+            return (
+              <SidebarMenuItem key={item.to}>
+                <SidebarMenuButton
+                  className="max-md:h-11"
+                  isActive={isActive}
+                  render={
+                    <NavLink end onClick={closeMobileSidebar} to={item.to} />
+                  }
+                  tooltip={item.label}
+                >
+                  <Icon />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          }
+
           return (
             <SidebarMenuItem key={item.to}>
               <SidebarMenuButton
-                aria-controls={
-                  item.children ? "spending-navigation" : undefined
-                }
-                aria-expanded={item.children ? spendingOpen : undefined}
-                className="h-11"
-                isActive={item.children ? false : isActive}
-                onClick={
-                  item.children
-                    ? () => setSpendingOpen((open) => !open)
-                    : undefined
-                }
-                render={
-                  item.children ? undefined : (
-                    <NavLink
-                      end={!item.children}
-                      onClick={closeMobileSidebar}
-                      to={item.to}
-                    />
-                  )
-                }
+                aria-controls="spending-navigation"
+                aria-expanded={spendingOpen}
+                className={cn(
+                  "max-md:h-11",
+                  // Section is "current" without stealing the child's highlight.
+                  isActive && "font-medium text-sidebar-foreground"
+                )}
+                // Collapsed: the parent carries the highlight for its hidden child.
+                isActive={isActive && !spendingOpen}
+                onClick={() => setSpendingOpen((open) => !open)}
                 tooltip={item.label}
               >
                 <Icon />
                 <span>{item.label}</span>
-                {item.children ? (
-                  <ChevronDownIcon
-                    className="ml-auto text-muted-foreground transition-transform data-[open=true]:rotate-180"
-                    data-open={spendingOpen}
-                  />
-                ) : null}
+                <ChevronDownIcon
+                  className="ml-auto text-muted-foreground transition-transform duration-200 data-[open=false]:-rotate-90 motion-reduce:transition-none"
+                  data-open={spendingOpen}
+                />
               </SidebarMenuButton>
 
-              {item.children && spendingOpen ? (
-                <SidebarMenuSub id="spending-navigation">
-                  {item.children.map((child) => {
-                    const childIsActive = pathname === child.to
+              <div
+                className="grid transition-[grid-template-rows,opacity] duration-200 ease-out data-[open=false]:grid-rows-[0fr] data-[open=false]:opacity-0 data-[open=true]:grid-rows-[1fr] motion-reduce:transition-none"
+                data-open={spendingOpen}
+                inert={!spendingOpen}
+              >
+                <div className="overflow-hidden">
+                  <SidebarMenuSub
+                    className="mx-0 translate-x-0 gap-0.5 border-l-0 px-0 py-1 pl-4"
+                    id="spending-navigation"
+                  >
+                    {item.children.map((child) => {
+                      const ChildIcon = child.icon
+                      const childIsActive = pathname === child.to
 
-                    return (
-                      <SidebarMenuSubItem key={child.to}>
-                        {child.disabled ? (
-                          <SidebarMenuSubButton
-                            aria-disabled="true"
-                            className="cursor-not-allowed max-md:h-11"
-                            tabIndex={-1}
-                          >
-                            <span className="flex-1">{child.label}</span>
-                            <span className="text-xs text-muted-foreground">
-                              Soon
-                            </span>
-                          </SidebarMenuSubButton>
-                        ) : (
-                          <SidebarMenuSubButton
-                            className="max-md:h-11"
-                            isActive={childIsActive}
-                            render={
-                              <NavLink
-                                onClick={closeMobileSidebar}
-                                to={spendingTarget(child.to, search)}
-                              />
-                            }
-                          >
-                            <span>{child.label}</span>
-                          </SidebarMenuSubButton>
-                        )}
-                      </SidebarMenuSubItem>
-                    )
-                  })}
-                </SidebarMenuSub>
-              ) : null}
+                      return (
+                        <SidebarMenuSubItem key={child.to}>
+                          {child.disabled ? (
+                            <SidebarMenuSubButton
+                              aria-disabled="true"
+                              className={subButtonClass}
+                              tabIndex={-1}
+                            >
+                              <ChildIcon />
+                              <span className="flex-1">{child.label}</span>
+                              <span className="text-xs text-muted-foreground">
+                                Soon
+                              </span>
+                            </SidebarMenuSubButton>
+                          ) : (
+                            <SidebarMenuSubButton
+                              className={subButtonClass}
+                              isActive={childIsActive}
+                              render={
+                                <NavLink
+                                  onClick={closeMobileSidebar}
+                                  to={navChildTarget(child.to, search)}
+                                />
+                              }
+                            >
+                              <ChildIcon />
+                              <span>{child.label}</span>
+                            </SidebarMenuSubButton>
+                          )}
+                        </SidebarMenuSubItem>
+                      )
+                    })}
+                  </SidebarMenuSub>
+                </div>
+              </div>
             </SidebarMenuItem>
           )
         })}

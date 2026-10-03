@@ -23,8 +23,8 @@ This file owns tokens and visual rules, and maps them to
 | `rounded.md` | `--radius` |
 
 Dark is the default. Light uses inverse tokens, except light `surface-2`
-(`--secondary`, `--accent`, `--sidebar-accent`) is `#e8eaed` so icon wells,
-selected nav, and menu hover stay visible on `#ffffff` / `#f5f6f6`. Icon wells
+(`--secondary`, `--accent`, `--sidebar-accent`) is slate `#eef2f7` so icon
+wells, selected nav, and menu hover stay visible on `#ffffff` / `#f8fafc`. Icon wells
 use `bg-accent` or `bg-sidebar-accent`, not `bg-muted`. Tailwind radius
 utilities are derived from `--radius`; their suffixes do not directly match
 the design token names.

@@ -48,3 +48,23 @@ export function getNavItem(pathname: string): NavItem | undefined {
       (item.matchPrefix && pathname.startsWith(`${item.matchPrefix}/`))
   )
 }
+
+export function getNavChild(
+  item: NavItem | undefined,
+  pathname: string
+): NavChild | undefined {
+  return item?.children?.find((child) => child.to === pathname)
+}
+
+/** Sibling tabs share URL filters; drop per-tab view and page. */
+export function navChildTarget(to: string, search: string) {
+  const searchParams = new URLSearchParams(search)
+  searchParams.delete("view")
+  searchParams.delete("page")
+  const nextSearch = searchParams.toString()
+
+  return {
+    pathname: to,
+    search: nextSearch ? `?${nextSearch}` : "",
+  }
+}

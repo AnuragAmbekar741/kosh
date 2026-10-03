@@ -21,9 +21,12 @@ export function AppShell() {
 
   return (
     <TooltipProvider>
-      <SidebarProvider className="h-svh overflow-hidden" defaultOpen={readSidebarOpen()}>
+      <SidebarProvider
+        className="h-svh overflow-hidden"
+        defaultOpen={readSidebarOpen()}
+      >
         <AppSidebar user={me.data} />
-        <SidebarInset className="min-h-0 overflow-hidden bg-card max-h-svh md:max-h-[calc(100svh-1rem)] md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border">
+        <SidebarInset className="max-h-svh min-h-0 overflow-hidden bg-card md:max-h-[calc(100svh-1rem)] md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border">
           <AppHeader />
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6">
             <Outlet />
