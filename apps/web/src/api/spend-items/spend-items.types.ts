@@ -100,3 +100,47 @@ export type SpendSummary = {
   has_spend: boolean
   comparison: SpendSummaryComparison | null
 }
+
+export type TrendBucket = "day" | "week" | "month"
+
+export type SpendAnalyticsQuery = SpendQuery & {
+  /** Defaults to the most used currency in the range. */
+  currency?: string
+}
+
+export type SpendAnalytics = {
+  currency: string
+  /** Most used first; amounts are never summed across currencies. */
+  currencies: string[]
+  total: string
+  bill_count: number
+  item_count: number
+  avg_per_bill: string
+  daily_average: string
+  has_spend: boolean
+  comparison: {
+    previous_total: string
+    /** null when the previous period had no spend */
+    delta_percent: number | null
+    previous_from: string
+    previous_to: string
+  } | null
+  bucket: TrendBucket
+  trend: { start: string; total: string }[]
+  categories: {
+    category: Category
+    total: string
+    share: number
+    item_count: number
+  }[]
+  merchants: { merchant: string; total: string; bill_count: number }[]
+  largest_bills: {
+    document_id: string | null
+    merchant: string
+    spent_at: string
+    total: string
+    item_count: number
+  }[]
+  /** Monday first */
+  weekdays: { weekday: number; total: string }[]
+}

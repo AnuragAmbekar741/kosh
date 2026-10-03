@@ -8,12 +8,14 @@ import {
 import {
   correctSpendItemItem,
   deleteSpendItem,
+  getSpendAnalytics,
   getSpendItems,
   getSpendSummary,
   updateSpendItem,
 } from "@/api/spend-items/spend-items"
 import type {
   PageParams,
+  SpendAnalyticsQuery,
   SpendQuery,
   SpendSummaryQuery,
 } from "@/api/spend-items/spend-items.types"
@@ -32,6 +34,14 @@ export function useSpendSummary(query: SpendSummaryQuery) {
   return useQuery({
     queryKey: spendItemQueryKeys.summary(query),
     queryFn: ({ signal }) => getSpendSummary(query, signal),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useSpendAnalytics(query: SpendAnalyticsQuery) {
+  return useQuery({
+    queryKey: spendItemQueryKeys.analytics(query),
+    queryFn: ({ signal }) => getSpendAnalytics(query, signal),
     placeholderData: keepPreviousData,
   })
 }

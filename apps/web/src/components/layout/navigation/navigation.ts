@@ -34,7 +34,6 @@ export const navigation: NavItem[] = [
         label: "Analytics",
         to: "/spending/analytics",
         icon: ChartNoAxesCombined,
-        disabled: true,
       },
       { label: "Bills", to: "/spending/bills", icon: ReceiptText },
       { label: "Items", to: "/spending/items", icon: List },

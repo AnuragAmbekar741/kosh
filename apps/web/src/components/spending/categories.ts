@@ -80,3 +80,8 @@ export function categoryTintClass(category: Category) {
 export function categorySwatchClass(category: Category) {
   return styleFor(category).swatch
 }
+
+/** CSS color for charts: the category's ink, which reads on both themes. */
+export function categoryColor(category: Category) {
+  return `var(--${styleFor(category).swatch.replace("bg-", "")})`
+}

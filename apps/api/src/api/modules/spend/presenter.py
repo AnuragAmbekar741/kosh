@@ -52,14 +52,14 @@ def to_summary(
 ) -> SpendSummary:
     return SpendSummary(
         currency="USD",
-        total=_money(total),
+        total=money(total),
         bill_count=bill_count,
         item_count=item_count,
-        avg_per_bill=_money(total / bill_count) if bill_count else Decimal("0.00"),
+        avg_per_bill=money(total / bill_count) if bill_count else Decimal("0.00"),
         has_spend=has_spend,
         comparison=comparison,
     )
 
 
-def _money(value: Decimal) -> Decimal:
+def money(value: Decimal) -> Decimal:
     return value.quantize(_CENTS)

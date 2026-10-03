@@ -9,6 +9,7 @@ import {
 import { AppShell } from "@/components/layout/AppShell"
 import { AuthPage } from "@/pages/auth/AuthPage"
 import { OverviewPage } from "@/pages/overview/OverviewPage"
+import { AnalyticsPage } from "@/pages/spending/AnalyticsPage"
 import { SpendingPage } from "@/pages/spending/SpendingPage"
 
 function SpendingRedirect({
@@ -44,10 +45,7 @@ export function App() {
           <Route element={<OverviewPage />} path="/overview" />
           <Route path="/spending">
             <Route element={<SpendingRedirect />} index />
-            <Route
-              element={<SpendingRedirect view="bills" />}
-              path="analytics"
-            />
+            <Route element={<AnalyticsPage />} path="analytics" />
             <Route element={<SpendingPage />} path="bills" />
             <Route element={<SpendingPage />} path="items" />
           </Route>

@@ -6,10 +6,12 @@ from security import CurrentUserDep
 
 from api.common.dependencies import SessionDep
 from api.common.pagination import Paginated
-from api.modules.spend import service
+from api.modules.spend import analytics, service
 from api.modules.spend.presenter import to_public
 from api.modules.spend.schemas import (
     ItemCorrection,
+    SpendAnalytics,
+    SpendAnalyticsQuery,
     SpendItemCreate,
     SpendItemPublic,
     SpendItemUpdate,
@@ -64,6 +66,25 @@ def get_summary(
         source=query.source,
         q=query.q,
         period=query.period,
+    )
+
+
+@router.get("/analytics")
+def get_analytics(
+    user: CurrentUserDep,
+    session: SessionDep,
+    query: Annotated[SpendAnalyticsQuery, Query()],
+) -> SpendAnalytics:
+    return analytics.analyze(
+        session,
+        user.id,
+        spent_from=query.spent_from,
+        spent_to=query.spent_to,
+        category=query.category,
+        merchant=query.merchant,
+        source=query.source,
+        q=query.q,
+        currency=query.currency,
     )
 
 

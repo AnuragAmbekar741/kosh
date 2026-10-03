@@ -79,8 +79,8 @@ Items view sends `skip`/`limit` of 50 and shows a numbered pager footer
 `page`. Bills view requests `limit=200` and is not paged — grouping and
 bill totals are computed client-side from the returned rows.
 
-Bills and Items render only the filter toolbar above the ledger; analytics
-are reserved for `/spending/analytics`. The summary payload remains an
+Bills and Items render only the filter toolbar above the ledger; charts
+live on `/spending/analytics` (see Analytics below). The summary payload remains an
 internal source for first-use detection, filtered-empty detection, and the
 bill count. First-use (`has_spend === false`) fades the toolbar. A filtered
 empty result (`has_spend` and `total === "0.00"`) shows a Reset empty
@@ -177,10 +177,49 @@ spending dialog. A filtered empty result uses the same Empty frame with
 Reset. Long extraction reviews cap the numbered item list at
 `max-h-72` so the Dialog header and confirmation action stay reachable.
 
+## Analytics
+
+`/spending/analytics` uses the same `SpendingToolbar` and URL filters as
+Bills and Items (the badge counts bills), so switching tabs keeps the
+filters. One `GET /spend-items/analytics` call takes the list query and
+returns every chart's numbers; it is aggregated in Python over the filtered
+rows, like the summary.
+
+| Block | Shows |
+| --- | --- |
+| Stat cards | Total spent (with change vs the previous period), Bills (items below), Average bill (daily average below), Top category (share and amount) |
+| Spending over time | Area chart in `--chart-1` with a fading fill. Buckets are daily up to 31 days, weekly up to 183, then monthly; empty buckets are zero |
+| By category | Donut in category ink colors with the total in the middle, then a ranked list. Clicking a row or slice toggles that category filter |
+| Top merchants, Largest bills | Top 5 rows with a bar scaled to the first row. Clicking opens Bills searched by that merchant, keeping the other filters |
+| By weekday | Monday–Sunday bars; the busiest day is solid, others faded |
+
+Amounts are never summed across currencies. The response covers one
+currency (`?currency=`, default the most used in the range) and lists every
+currency present; with more than one, an "Amounts in" toggle above the stat
+cards switches it (written to the URL). The covered span is the date filter,
+or first spend through today for All time. Nothing after today counts: the
+query, totals, comparison, and trend all stop at today unless the whole
+range is in the future. The comparison only appears for a bounded date
+filter: whole calendar months step back by months and cut to the same
+elapsed days (this month to date vs the same days last month); any other
+range steps back by its own length. With nothing spent in the previous
+period, the footnote says so instead of a percentage. Up is
+`text-destructive`, down is `text-chart-2`.
+
+Layout: four stat cards (two columns below `lg`), then trend (3/5) beside
+categories (2/5), then merchants, bills, and weekday (three columns at `xl`,
+two at `md` with weekday full width). The panel scrolls under the toolbar.
+Loading is a skeleton of the same grid; first-use and filtered-empty reuse
+the Empty frame with Add spending or Reset.
+
 ## Structure
 
 ```text
 src/pages/spending/SpendingPage.tsx
+src/pages/spending/AnalyticsPage.tsx
+src/components/spending-analytics/
+  AnalyticsStats.tsx  TrendChart.tsx  CategoryBreakdown.tsx
+  TopLists.tsx  WeekdayChart.tsx  analytics-format.ts
 src/hooks/spend-items/use-spend-filters.ts
 src/components/spending/
   AddSpendingDialog.tsx
