@@ -75,10 +75,12 @@ export function AppHeader() {
           aria-label="Breadcrumb"
           className="flex min-w-0 items-center gap-1"
         >
-          <h1 className="text-sm text-muted-foreground">{current.label}</h1>
+          <h1 className="text-sm text-muted-foreground max-sm:sr-only">
+            {current.label}
+          </h1>
           <ChevronRightIcon
             aria-hidden
-            className="size-3.5 text-muted-foreground/70"
+            className="size-3.5 text-muted-foreground/70 max-sm:hidden"
           />
           <ChildSwitcher item={current} />
         </nav>
