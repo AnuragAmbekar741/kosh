@@ -18,7 +18,7 @@ members = [
 
 [tool.pytest.ini_options]
 markers = [
-    "llm: live OpenRouter extraction against a local fixture",
+    "llm: live OpenRouter calls (extraction fixture, agent chat)",
 ]
 addopts = "-m 'not llm'"
 
