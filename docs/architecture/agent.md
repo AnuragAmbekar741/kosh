@@ -24,7 +24,7 @@ apps/api
     tools.py      TOOLS: name → (args model, risk, handler)
     prompt.py     system prompt + PROMPT_VERSION
   modules/spend, modules/documents      services the tools call
-packages/ai      chat-with-tools call to OpenRouter (same openai client as extraction)
+packages/ai      chat.py: chat_with_tools → ChatTurn; function_tool(name, description, ArgsModel)
 packages/storage models/agent.py + crud/agent.py
 apps/worker      unchanged; extracts chat attachments like any upload
 ```
@@ -127,7 +127,7 @@ The agent model never sees the image, so it can stay text-only and cheap.
 
 | Control | Start |
 |---|---|
-| Model | `OPENROUTER_AGENT_MODEL`, defaults to the extraction model |
+| Model | `OPENROUTER_AGENT_MODEL`, defaults to `OPENROUTER_MODEL`; a `model=` argument overrides both (evals) |
 | Steps per turn | 6 |
 | Output tokens per step | 800 |
 | History | last 10 user turns, tool results trimmed |
