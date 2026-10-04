@@ -136,7 +136,62 @@ The agent model never sees the image, so it can stay text-only and cheap.
 
 Every run records tokens and cost, so spend per user per day is one query on `agent_runs`.
 
-## 10. Deployment (open)
+## 10. Database
+
+Four tables in `packages/storage/models/agent.py`. Phase 1 needs the first three.
+
+```
+agent_conversations
+  id              uuid pk
+  user_id         uuid fk users        index (user_id, updated_at desc)
+  channel         str                  web | whatsapp
+  title           str null             first user message, trimmed (no model call)
+  created_at, updated_at
+
+agent_messages                         OpenAI chat shape: history replay is one SELECT
+  id              uuid pk
+  conversation_id uuid fk              unique (conversation_id, seq)
+  run_id          uuid fk null         null on the user's own message
+  seq             int                  order inside the conversation
+  role            str                  user | assistant | tool
+  content         text null
+  tool_calls      jsonb null           assistant: [{id, name, arguments}]
+  tool_call_id    str null             tool: the call this answers
+  document_ids    jsonb null           user: attachments
+  created_at
+
+agent_runs                             one per user turn
+  id              uuid pk
+  conversation_id uuid fk
+  user_id         uuid fk              index (user_id, started_at): daily budget
+  status          str                  running | completed | failed
+  model, prompt_version
+  steps, prompt_tokens, completion_tokens
+  cost_usd        str null             same as extraction_attempts
+  error           str null
+  feedback        smallint null        -1 | 1
+  started_at, finished_at
+
+agent_pending_actions                  phase 2
+  id              uuid pk
+  run_id          uuid fk
+  user_id         uuid fk              index
+  tool_name       str
+  arguments       jsonb                validated; exactly what confirm runs
+  summary         text                 what the card says
+  status          str                  pending | confirmed | cancelled | expired | failed
+  result          jsonb null
+  expires_at, created_at, decided_at
+```
+
+- **Messages in the model's shape.** Rows map one-to-one to chat messages, so the runtime replays history without translation and a transcript reads like the API call that produced it.
+- **No `tool_executions` table.** The assistant's `tool_calls` and the matching `tool` messages already record every call and result. Add one only if querying by tool name gets slow.
+- **`seq`, not `created_at`, orders messages.** A turn writes several rows within the same millisecond.
+- **`user_id` on runs and actions** (not only through the conversation) keeps the budget query and owner checks to one table.
+- **Deleting a user** deletes actions → messages → runs → conversations in that order; no FK CASCADE (row 40).
+- Status and role are plain strings validated by `StrEnum`s in code, like `documents.status`.
+
+## 11. Deployment (open)
 
 Postgres and blobs stay on Neon. Three processes need a host: the static web build, the API (long SSE responses), and the always-on worker. Scale-to-zero serverless fits the last two poorly.
 

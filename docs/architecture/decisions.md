@@ -71,6 +71,8 @@ Revisit when: ...
 | 55 | Agent model | **OpenRouter, cheapest model that passes the evals**; separate `OPENROUTER_AGENT_MODEL` setting; hand-written tool loop on the existing `openai` client, no agent framework |
 | 56 | Agent transcripts | **Full conversations stored in Postgres** (messages, tool calls, tool results, runs); user-owned and deleted with the user; logs still carry ids only |
 | 57 | Agent writes | Write and destructive tools create a **pending action**; only `POST /agent/actions/{id}/confirm` executes it, without a model call |
+| 58 | Agent tables | **`agent_conversations`, `agent_messages`, `agent_runs`, `agent_pending_actions`**; messages stored in the OpenAI chat shape, ordered by `seq` |
+| 59 | Agent tool audit | **No `tool_executions` table**; assistant `tool_calls` plus `tool` messages are the record |
 
 ### Locked detail rows
 
@@ -87,6 +89,13 @@ Revisit when: ...
 - Rejected: Asking the model to wait for "yes" in chat; running writes the model calls immediately
 - Why: Injected text on a receipt or a misread "yes" can never change data without a click on a card the user saw. Confirm costs no tokens
 - Revisit when: Low-risk writes (renaming a line) feel slow enough to auto-apply
+
+**Agent messages in the model's shape**
+
+- Chosen: One `agent_messages` row per chat message (`role`, `content`, `tool_calls`, `tool_call_id`), ordered by `seq`; `agent_runs` holds per-turn model, prompt version, tokens, cost and feedback
+- Rejected: A `tool_executions` table next to messages (BUILD_AND_LEARN §11); storing a whole conversation as one JSON blob
+- Why: History replays to the model with no translation, each row is one thing that happened, and tool calls are not recorded twice. Runs give cost and eval data per turn without parsing messages
+- Revisit when: Analytics by tool name need an index the JSON column cannot give
 
 **Attachments use the extraction pipeline**
 
