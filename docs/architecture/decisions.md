@@ -30,7 +30,7 @@ Revisit when: ...
 | 14 | Shared auth layer | **`packages/security`** — password hash, JWT issue/verify, `CurrentUserDep` |
 | 15 | Auth pattern | `get_current_user` loads `User` from DB in same process (course ch 10) |
 | 16 | API gateway | **No gateway on day one** |
-| 17 | Background processes | `apps/worker` extracts documents; `agent` / `whatsapp` later |
+| 17 | Background processes | `apps/worker` extracts documents; the agent and WhatsApp are **modules inside `apps/api`** (row 52), not processes |
 | 18 | WhatsApp identity | Webhook signature + `channel_accounts` (`wa_id` → `user_id`) |
 | 19 | Agent safety | `user_id` injected by runtime; confirm before mutating/destructive writes |
 | 20 | Build order | storage + security → api → web → worker/documents → agent/whatsapp |
@@ -65,8 +65,35 @@ Revisit when: ...
 | 49 | Item corrections | `PUT /spend-items/{id}/item` (existing item, new private item, or not a product); saved as user answers and applied to the user's same-text lines |
 | 50 | Confirm keeps the period | Confirming a bill never moves the Spending date filter; an out-of-view bill gets a sonner toast with **Show** (clears the date filter). Notifications use `sonner` |
 | 51 | Spend date filter | **All time by default**; date presets (this / last month, last 3 months, this year, custom) inside one Filters menu with Category and Source |
+| 52 | Agent placement | **`apps/api/modules/agent/`**, in-process; tools call module services with the caller's session and user; WhatsApp later is another router into the same runtime |
+| 53 | Agent identity | The agent has **no identity of its own**: it acts as the authenticated user (`CurrentUserDep` on web, `channel_accounts` on WhatsApp) through a tool allowlist; `user_id` is never a tool argument |
+| 54 | Agent attachments | Chat images go **only through the documents pipeline** (`store_upload`, `source=agent`, worker extraction); the agent reads the extracted drafts, never the image |
+| 55 | Agent model | **OpenRouter, cheapest model that passes the evals**; separate `OPENROUTER_AGENT_MODEL` setting; hand-written tool loop on the existing `openai` client, no agent framework |
+| 56 | Agent transcripts | **Full conversations stored in Postgres** (messages, tool calls, tool results, runs); user-owned and deleted with the user; logs still carry ids only |
+| 57 | Agent writes | Write and destructive tools create a **pending action**; only `POST /agent/actions/{id}/confirm` executes it, without a model call |
 
 ### Locked detail rows
+
+**Agent inside the API**
+
+- Chosen: `apps/api/modules/agent/` runs the tool loop in the request that streams the reply; tools call the same `modules/*/service.py` functions as the dashboard routes
+- Rejected: A separate `apps/agent` process calling the API over HTTP with service tokens; an agent framework (LangChain, LangGraph)
+- Why: No internal HTTP or token minting, and the dashboard's validation and user scoping apply to the agent unchanged. One runtime serves web chat and WhatsApp. A ~150-line loop on the existing `openai` client is easier to read, test and cost-control than a framework
+- Revisit when: Agent turns measurably slow the API, or the agent needs its own scaling or deploy cadence
+
+**Confirmation is code, not prompt**
+
+- Chosen: The model may *propose* a write; the runtime stores an `agent_pending_actions` row and the UI shows a card. Confirm runs the stored tool and arguments directly and appends a templated reply
+- Rejected: Asking the model to wait for "yes" in chat; running writes the model calls immediately
+- Why: Injected text on a receipt or a misread "yes" can never change data without a click on a card the user saw. Confirm costs no tokens
+- Revisit when: Low-risk writes (renaming a line) feel slow enough to auto-apply
+
+**Attachments use the extraction pipeline**
+
+- Chosen: Chat uploads become `documents` rows (`source=agent`); the turn waits for the worker, then the agent reads the drafts through `get_document`
+- Rejected: Sending the image to the agent model
+- Why: One reading of each bill, with dedup, idempotency, attempts and evals already in place; the agent model can be text-only and cheap
+- Revisit when: Users need questions about images that are not bills
 
 **Modular monolith over microservices**
 
