@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     openrouter_model: str = "google/gemini-3.6-flash"
     # Catalog matching; falls back to openrouter_model when unset.
     openrouter_item_model: str | None = None
+    # Agent chat; falls back to openrouter_model when unset.
+    openrouter_agent_model: str | None = None
     openrouter_pdf_engine: str = "native"
     max_pdf_pages: int = 30
     max_image_pixels: int = 50_000_000
