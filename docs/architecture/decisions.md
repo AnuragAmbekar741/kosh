@@ -30,7 +30,7 @@ Revisit when: ...
 | 14 | Shared auth layer | **`packages/security`** — password hash, JWT issue/verify, `CurrentUserDep` |
 | 15 | Auth pattern | `get_current_user` loads `User` from DB in same process (course ch 10) |
 | 16 | API gateway | **No gateway on day one** |
-| 17 | Background processes | `apps/worker` extracts documents; `agent` / `whatsapp` later |
+| 17 | Background processes | `apps/worker` extracts documents; the agent and WhatsApp are **modules inside `apps/api`** (row 52), not processes |
 | 18 | WhatsApp identity | Webhook signature + `channel_accounts` (`wa_id` → `user_id`) |
 | 19 | Agent safety | `user_id` injected by runtime; confirm before mutating/destructive writes |
 | 20 | Build order | storage + security → api → web → worker/documents → agent/whatsapp |
@@ -65,8 +65,53 @@ Revisit when: ...
 | 49 | Item corrections | `PUT /spend-items/{id}/item` (existing item, new private item, or not a product); saved as user answers and applied to the user's same-text lines |
 | 50 | Confirm keeps the period | Confirming a bill never moves the Spending date filter; an out-of-view bill gets a sonner toast with **Show** (clears the date filter). Notifications use `sonner` |
 | 51 | Spend date filter | **All time by default**; date presets (this / last month, last 3 months, this year, custom) inside one Filters menu with Category and Source |
+| 52 | Agent placement | **`apps/api/modules/agent/`**, in-process; tools call module services with the caller's session and user; WhatsApp later is another router into the same runtime |
+| 53 | Agent identity | The agent has **no identity of its own**: it acts as the authenticated user (`CurrentUserDep` on web, `channel_accounts` on WhatsApp) through a tool allowlist; `user_id` is never a tool argument |
+| 54 | Agent attachments | Chat images go **only through the documents pipeline** (`store_upload`, `source=agent`, worker extraction); the agent reads the extracted drafts, never the image |
+| 55 | Agent model | **OpenRouter, cheapest model that passes the evals**; separate `OPENROUTER_AGENT_MODEL` setting; hand-written tool loop on the existing `openai` client, no agent framework |
+| 56 | Agent transcripts | **Full conversations stored in Postgres** (messages, tool calls, tool results, runs); user-owned and deleted with the user; logs still carry ids only |
+| 57 | Agent writes | Write and destructive tools create a **pending action**; only `POST /agent/actions/{id}/confirm` executes it, without a model call |
+| 58 | Agent tables | **`agent_conversations`, `agent_messages`, `agent_runs`, `agent_pending_actions`**; messages stored in the OpenAI chat shape, ordered by `seq` |
+| 59 | Agent tool audit | **No `tool_executions` table**; assistant `tool_calls` plus `tool` messages are the record |
+| 60 | Agent evals | **YAML cases with synthetic seeds, run against the real model 3×**, scored by code first; safety 100% and golden ≥ 90% to merge prompt / tool / model changes; `make evals`, not `make test` |
+| 61 | Agent learning | **No fine-tuning**: reviewed failures become eval cases, fixes go to tool descriptions → prompt → model, user corrections become data |
 
 ### Locked detail rows
+
+**Agent inside the API**
+
+- Chosen: `apps/api/modules/agent/` runs the tool loop in the request that streams the reply; tools call the same `modules/*/service.py` functions as the dashboard routes
+- Rejected: A separate `apps/agent` process calling the API over HTTP with service tokens; an agent framework (LangChain, LangGraph)
+- Why: No internal HTTP or token minting, and the dashboard's validation and user scoping apply to the agent unchanged. One runtime serves web chat and WhatsApp. A ~150-line loop on the existing `openai` client is easier to read, test and cost-control than a framework
+- Revisit when: Agent turns measurably slow the API, or the agent needs its own scaling or deploy cadence
+
+**Confirmation is code, not prompt**
+
+- Chosen: The model may *propose* a write; the runtime stores an `agent_pending_actions` row and the UI shows a card. Confirm runs the stored tool and arguments directly and appends a templated reply
+- Rejected: Asking the model to wait for "yes" in chat; running writes the model calls immediately
+- Why: Injected text on a receipt or a misread "yes" can never change data without a click on a card the user saw. Confirm costs no tokens
+- Revisit when: Low-risk writes (renaming a line) feel slow enough to auto-apply
+
+**Agent messages in the model's shape**
+
+- Chosen: One `agent_messages` row per chat message (`role`, `content`, `tool_calls`, `tool_call_id`), ordered by `seq`; `agent_runs` holds per-turn model, prompt version, tokens, cost and feedback
+- Rejected: A `tool_executions` table next to messages (BUILD_AND_LEARN §11); storing a whole conversation as one JSON blob
+- Why: History replays to the model with no translation, each row is one thing that happened, and tool calls are not recorded twice. Runs give cost and eval data per turn without parsing messages
+- Revisit when: Analytics by tool name need an index the JSON column cannot give
+
+**Evals are code-scored, synthetic, and gate changes**
+
+- Chosen: Cases in `apps/api/evals/cases/` with synthetic seed rows and a pinned `today`; checks on tool calls, arguments, numbers and pending actions; an LLM judge only for scope and tone; each case 3×; safety 100%, golden ≥ 90%
+- Rejected: An LLM judge grading whole answers; copying real transcripts into cases; running evals in `make test`
+- Why: Code checks are repeatable and free; a judge drifts with its own model. Real spend data must not enter git. Evals call a paid model, so they run when a change can move them
+- Revisit when: Cases exceed a few hundred, or a hosted eval tool would save more than it costs
+
+**Attachments use the extraction pipeline**
+
+- Chosen: Chat uploads become `documents` rows (`source=agent`); the turn waits for the worker, then the agent reads the drafts through `get_document`
+- Rejected: Sending the image to the agent model
+- Why: One reading of each bill, with dedup, idempotency, attempts and evals already in place; the agent model can be text-only and cheap
+- Revisit when: Users need questions about images that are not bills
 
 **Modular monolith over microservices**
 

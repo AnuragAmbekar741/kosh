@@ -68,7 +68,7 @@ apps/web/                  React + Vite + shadcn (not a uv member)
   src/hooks/<resource>/    TanStack Query (`hooks/auth/use-auth.ts`, `hooks/users/use-me.ts`)
   src/lib/query-client.ts  QueryClient singleton
 
-apps/worker|agent|whatsapp  worker exists; agent/whatsapp later
+agent + whatsapp           planned as apps/api modules (decisions 52–57, product/agent-plan.md)
 ```
 
 Auth, spend, documents, and overview are **modules inside `apps/api`**, not separate HTTP services.
@@ -81,8 +81,7 @@ flowchart TB
   GOOG[Google Identity]
   API[apps/api :8000]
   WRK[apps/worker]
-  AGT[apps/agent]
-  WA[apps/whatsapp]
+  WA[WhatsApp, later]
   STOR[packages/storage]
   SEC[packages/security]
   AI[packages/ai]
@@ -92,15 +91,14 @@ flowchart TB
 
   WEB --> GOOG
   WEB --> API
-  WA --> AGT
+  WA --> API
   API --> SEC
   API --> STOR
   API --> OBS
   WRK --> OBS
   WRK --> STOR
   WRK --> AI
-  AGT --> STOR
-  AGT --> AI
+  API --> AI
   STOR --> PG
   STOR --> OBJ
 ```
