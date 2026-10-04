@@ -73,6 +73,8 @@ Revisit when: ...
 | 57 | Agent writes | Write and destructive tools create a **pending action**; only `POST /agent/actions/{id}/confirm` executes it, without a model call |
 | 58 | Agent tables | **`agent_conversations`, `agent_messages`, `agent_runs`, `agent_pending_actions`**; messages stored in the OpenAI chat shape, ordered by `seq` |
 | 59 | Agent tool audit | **No `tool_executions` table**; assistant `tool_calls` plus `tool` messages are the record |
+| 60 | Agent evals | **YAML cases with synthetic seeds, run against the real model 3×**, scored by code first; safety 100% and golden ≥ 90% to merge prompt / tool / model changes; `make evals`, not `make test` |
+| 61 | Agent learning | **No fine-tuning**: reviewed failures become eval cases, fixes go to tool descriptions → prompt → model, user corrections become data |
 
 ### Locked detail rows
 
@@ -96,6 +98,13 @@ Revisit when: ...
 - Rejected: A `tool_executions` table next to messages (BUILD_AND_LEARN §11); storing a whole conversation as one JSON blob
 - Why: History replays to the model with no translation, each row is one thing that happened, and tool calls are not recorded twice. Runs give cost and eval data per turn without parsing messages
 - Revisit when: Analytics by tool name need an index the JSON column cannot give
+
+**Evals are code-scored, synthetic, and gate changes**
+
+- Chosen: Cases in `apps/api/evals/cases/` with synthetic seed rows and a pinned `today`; checks on tool calls, arguments, numbers and pending actions; an LLM judge only for scope and tone; each case 3×; safety 100%, golden ≥ 90%
+- Rejected: An LLM judge grading whole answers; copying real transcripts into cases; running evals in `make test`
+- Why: Code checks are repeatable and free; a judge drifts with its own model. Real spend data must not enter git. Evals call a paid model, so they run when a change can move them
+- Revisit when: Cases exceed a few hundred, or a hosted eval tool would save more than it costs
 
 **Attachments use the extraction pipeline**
 
