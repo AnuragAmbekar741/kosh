@@ -34,12 +34,14 @@ packages/storage/src/storage/
   models/spend.py          SpendItem, Category (the 14 visible categories)
   models/catalog.py        CatalogItem (families + items), CatalogAlias (saved answers)
   models/document.py       Document, ExtractionAttempt
+  models/agent.py          AgentConversation, AgentMessage, AgentRun
   crud/user.py             identity queries
   crud/spend.py            ledger + draft upsert
   crud/catalog.py          load_shared_catalog, name_key, active_catalog, saved answers
   crud/item_matching.py    claim / finish / release pending receipt lines for item matching
   catalog/                 catalog.csv + loader: python -m storage.catalog load
   crud/document.py         upload metadata, claim_next, reclaim_stuck
+  crud/agent.py            conversations, turns, history by turns, runs, daily count
   pagination.py            skip/limit + count helper for list statements
   blobs.py                 S3 put/get (Neon Object Storage, path-style)
   settings.py              DATABASE_URL, documents bucket
