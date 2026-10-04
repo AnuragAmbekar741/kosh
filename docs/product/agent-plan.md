@@ -12,15 +12,21 @@ Status: **decisions and architecture locked** (rows 52–61 in [decisions.md](..
 | **4. Learning loop** | 👍 / 👎 on replies; review list of failed runs; per-user preferences in context | A reviewed failure becomes a failing case, then a passing one |
 | **5. WhatsApp** | Webhook router; `channel_accounts`; buttons as confirm cards | Same runtime, new transport |
 
-## Phase 1 checklist
+## Phase 1 pull requests
 
-- [ ] `DocumentSource.AGENT` and agent `StrEnum`s; `models/agent.py`, `crud/agent.py`; `alembic revision --autogenerate`
-- [ ] `packages/ai`: chat-with-tools call returning tool calls, text, tokens, cost; `OPENROUTER_AGENT_MODEL`
-- [ ] `modules/agent/`: `tools.py`, `prompt.py`, `runtime.py`, `router.py`
-- [ ] Tests: owner checks, budget 429, `user_id` absent from every tool schema, no DB session across the model call (fake model)
-- [ ] `apps/api/evals/` runner + first golden cases; `make evals`
-- [ ] Web: `src/api/agent/`, `src/hooks/agent/`, chat page with streaming
-- [ ] Docs: overview, scope, design page for chat
+Each PR merges on its own and leaves `main` working; the API is not reachable until PR 5 and there is no UI until PR 7.
+
+| PR | Scope | Tests | Status |
+|---|---|---|---|
+| **1. Storage** | `models/agent.py` (conversations, messages, runs), `crud/agent.py`, migration | Owner scoping, turn + title, chat-shape round trip, history cut by turns, `seq` unique, daily run count | this PR |
+| **2. Model call** | `packages/ai`: `chat_with_tools(messages, tools)` → text, tool calls, tokens, cost; `OPENROUTER_AGENT_MODEL` | Fake OpenAI client: parsing, usage, retryable errors | |
+| **3. Tools + prompt** | `modules/agent/tools.py` (read tools over spend and documents services), `prompt.py` with `PROMPT_VERSION` | Every tool scoped to `ctx.user`; no schema has `user_id`; bad arguments rejected; `limit` ≤ 50 | |
+| **4. Runtime** | `modules/agent/runtime.py`: the loop, step cap, saving messages and the run, event stream | Fake model: tool round trip, 6-step cap, failed run saved, no DB session open during the model call | |
+| **5. Endpoints** | `router.py`: create / list conversations, transcript, `POST …/messages` as SSE; `AGENT_DAILY_RUNS` → 429 | Auth 401, owner 404, budget 429, SSE event order | |
+| **6. Evals** | `apps/api/evals/` runner, ~20 golden cases, `make evals` | The runner itself, on a fake model | |
+| **7. Web chat** | `src/api/agent/`, `src/hooks/agent/`, chat page with `fetch` streaming; `docs/design/agent.md` | Manual run against the local API | |
+
+`DocumentSource.AGENT` moves to phase 2 with attachments.
 
 ## Open
 

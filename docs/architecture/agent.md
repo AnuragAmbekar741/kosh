@@ -57,7 +57,7 @@ POST /agent/conversations/{id}/messages   {text, document_ids?}
 3. Daily budget check on `agent_runs` → 429 when over.
 4. Short DB session: insert the user message and a `running` run; commit; close.
 5. Open `text/event-stream` and loop, at most 6 steps:
-   1. Load the last 20 messages; build `[system, …history]`.
+   1. Load the last 10 user turns (`crud.agent.history`); build `[system, …history]`.
    2. Call OpenRouter with the tool schemas. **No DB connection is held during the call** (Neon connection limits; a call can take seconds).
    3. For each tool call: validate arguments with the tool's Pydantic model, then
       - `read` → run the handler in a short session, append a `tool` message;
@@ -130,7 +130,7 @@ The agent model never sees the image, so it can stay text-only and cheap.
 | Model | `OPENROUTER_AGENT_MODEL`, defaults to the extraction model |
 | Steps per turn | 6 |
 | Output tokens per step | 800 |
-| History | last 20 messages, tool results trimmed |
+| History | last 10 user turns, tool results trimmed |
 | Daily cap | `AGENT_DAILY_RUNS` = 50 per user |
 | Confirm, timeouts, titles | no model call |
 
@@ -155,7 +155,7 @@ agent_messages                         OpenAI chat shape: history replay is one 
   seq             int                  order inside the conversation
   role            str                  user | assistant | tool
   content         text null
-  tool_calls      jsonb null           assistant: [{id, name, arguments}]
+  tool_calls      jsonb null           assistant: as OpenAI returns it, [{id, type, function: {name, arguments}}]
   tool_call_id    str null             tool: the call this answers
   document_ids    jsonb null           user: attachments
   created_at
@@ -186,7 +186,8 @@ agent_pending_actions                  phase 2
 
 - **Messages in the model's shape.** Rows map one-to-one to chat messages, so the runtime replays history without translation and a transcript reads like the API call that produced it.
 - **No `tool_executions` table.** The assistant's `tool_calls` and the matching `tool` messages already record every call and result. Add one only if querying by tool name gets slow.
-- **`seq`, not `created_at`, orders messages.** A turn writes several rows within the same millisecond.
+- **`seq`, not `created_at`, orders messages.** A turn writes several rows within the same millisecond. `append_messages` saves an assistant message and its tool results in one commit.
+- **History is cut by user turns, not message count.** A count can start the window on a `tool` message whose assistant call fell off, which the model API rejects, and one long turn could push out its own question.
 - **`user_id` on runs and actions** (not only through the conversation) keeps the budget query and owner checks to one table.
 - **Deleting a user** deletes actions → messages → runs → conversations in that order; no FK CASCADE (row 40).
 - Status and role are plain strings validated by `StrEnum`s in code, like `documents.status`.
