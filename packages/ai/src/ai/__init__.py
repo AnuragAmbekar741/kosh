@@ -18,7 +18,7 @@ from ai.extraction.schemas import (
     StatementExtraction,
     Transaction,
 )
-from ai.items import ItemChoice, ItemLine, classify_items
+from ai.items.classify import ItemChoice, ItemLine, classify_items
 from ai.openrouter import (
     ExtractError,
     ExtractMeta,

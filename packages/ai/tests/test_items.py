@@ -3,7 +3,7 @@ import json
 import ai.openrouter as client_mod
 import pytest
 from ai import ExtractError, ItemLine, RetryableExtractError, classify_items
-from ai.items import ItemChoices
+from ai.items.classify import ItemChoices
 from ai.openrouter import strict_json_schema
 from openai import APIStatusError
 
@@ -45,7 +45,7 @@ def _fake_openai(monkeypatch, *, content=None, error=None) -> dict:
             },
         )(),
     )
-    monkeypatch.setattr("ai.items.get_settings", client_mod.get_settings)
+    monkeypatch.setattr("ai.items.classify.get_settings", client_mod.get_settings)
     return seen
 
 
