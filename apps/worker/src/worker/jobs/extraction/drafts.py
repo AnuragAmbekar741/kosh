@@ -1,7 +1,7 @@
 from decimal import Decimal
 from uuid import UUID
 
-from ai.schemas import ReceiptExtraction, StatementExtraction
+from ai import ReceiptExtraction, StatementExtraction
 from sqlmodel import Session
 from storage.crud.spend import upsert_drafts
 from storage.models.document import Document

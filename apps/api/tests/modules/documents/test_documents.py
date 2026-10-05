@@ -3,8 +3,15 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID, uuid4
 
-from ai import ExtractError, ExtractMeta, RetryableExtractError
-from ai.schemas import LineItem, ReceiptExtraction, StatementExtraction, Transaction
+from ai import (
+    ExtractError,
+    ExtractMeta,
+    LineItem,
+    ReceiptExtraction,
+    RetryableExtractError,
+    StatementExtraction,
+    Transaction,
+)
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 from storage import database

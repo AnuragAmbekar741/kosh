@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 
-from ai.schemas import LineItem, ReceiptExtraction, StatementExtraction, Transaction
+from ai import LineItem, ReceiptExtraction, StatementExtraction, Transaction
 from worker.jobs.extraction.drafts import to_spend_items
 
 

@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from ai.schemas import ReceiptExtraction
+from ai import ReceiptExtraction
 
 
 def receipt_totals_mismatch(extraction: ReceiptExtraction) -> bool:
