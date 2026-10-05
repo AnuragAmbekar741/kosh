@@ -19,8 +19,8 @@ Each PR merges on its own and leaves `main` working; the API is not reachable un
 | PR | Scope | Tests | Status |
 |---|---|---|---|
 | **1. Storage** | `models/agent.py` (conversations, messages, runs), `crud/agent.py`, migration | Owner scoping, turn + title, chat-shape round trip, history cut by turns, `seq` unique, daily run count | merged (#37) |
-| **2. Model call** | `packages/ai`: `chat_with_tools(messages, tools)` → text, tool calls, tokens, cost; `OPENROUTER_AGENT_MODEL` | Fake OpenAI client: parsing, usage, retryable errors; one live `llm` round trip | this PR |
-| **3. Tools + prompt** | `modules/agent/tools.py` (read tools over spend and documents services), `prompt.py` with `PROMPT_VERSION` | Every tool scoped to `ctx.user`; no schema has `user_id`; bad arguments rejected; `limit` ≤ 50 | |
+| **2. Model call** | `packages/ai`: `chat_with_tools(messages, tools)` → text, tool calls, tokens, cost; `OPENROUTER_AGENT_MODEL` | Fake OpenAI client: parsing, usage, retryable errors; one live `llm` round trip | merged (#38) |
+| **3. Tools + prompt** | `modules/agent/tools.py` (read tools over spend and documents services), `prompt.py` with `PROMPT_VERSION` | Every tool scoped to `ctx.user`; no schema has `user_id`; bad arguments rejected; `limit` ≤ 50 | this PR |
 | **4. Runtime** | `modules/agent/runtime.py`: the loop, step cap, saving messages and the run, event stream | Fake model: tool round trip, 6-step cap, failed run saved, no DB session open during the model call | |
 | **5. Endpoints** | `router.py`: create / list conversations, transcript, `POST …/messages` as SSE; `AGENT_DAILY_RUNS` → 429 | Auth 401, owner 404, budget 429, SSE event order | |
 | **6. Evals** | `apps/api/evals/` runner, ~20 golden cases, `make evals` | The runner itself, on a fake model | |

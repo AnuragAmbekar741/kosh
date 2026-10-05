@@ -28,6 +28,7 @@ apps/api/src/api/          FastAPI app factory + feature modules
   modules/spend/           SpendItem CRUD + summary + item corrections + presenter
   modules/documents/       upload, manual create, list, detail, confirm, line items
   modules/catalog/         GET /catalog/search for the item picker
+  modules/agent/           tools.py (TOOLS, run_tool), prompt.py (system prompt, PROMPT_VERSION); no routes yet
 
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession

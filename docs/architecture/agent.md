@@ -73,19 +73,26 @@ SSE events: `tool` (name, for a "looking up…" chip), `delta` (reply text), `ac
 
 ## 5. Tools
 
-Each entry in `TOOLS`: name, description, Pydantic argument model, `risk` (`read | write | destructive`), handler `(ctx, args) -> dict`. A dict, not a registry class.
+Each entry in `TOOLS` (`modules/agent/tools.py`): description, Pydantic argument model, `risk` (`read | write | destructive`), handler `(ctx, args) -> dict`. A dict, not a registry class. `run_tool(ctx, name, arguments)` returns the JSON text for the `tool` message.
 
-| Tool | Risk | Calls | Phase |
-|---|---|---|---|
-| `get_spending_summary` | read | `spend` summary / analytics | 1 |
-| `list_spend_items` | read | `spend` list; `limit` ≤ 50 | 1 |
-| `get_spend_item` | read | `spend` get | 1 |
-| `list_documents`, `get_document` | read | `documents` list / get (drafts) | 1–2 |
-| `confirm_document` | write | `documents` confirm | 2 |
-| `update_spend_item` | write | `spend` update | 3 |
-| `delete_spend_items` | destructive | `spend` delete; ≤ 50 ids | 3 |
+| Tool | Risk | Calls | Arguments | Phase |
+|---|---|---|---|---|
+| `get_spending_summary` | read | `spend.analytics.analyze` | dates, categories, search, currency | 1 |
+| `list_spend_items` | read | `spend.service.list_items` | dates, categories, search, `limit` ≤ 50, `offset` | 1 |
+| `get_spend_item` | read | `spend.service.get` | `item_id` | 1 |
+| `list_documents` | read | `documents.service.list_owned` | `limit` ≤ 50 | 1 |
+| `get_document` | read | `documents.service.get` + `to_detail` | `document_id` | 1 |
+| `confirm_document` | write | `documents` confirm | | 2 |
+| `update_spend_item` | write | `spend` update | | 3 |
+| `delete_spend_items` | destructive | `spend` delete; ≤ 50 ids | | 3 |
 
-Tool results go back as compact JSON from the existing presenters, trimmed to what the model needs. Totals are computed in SQL; the model quotes them, it does not add them up.
+- **Search, not merchant.** The dashboard's `merchant` filter is an exact match, and the model cannot know how a merchant was stored ("STARBUCKS #12"). Tools expose the case-insensitive `search` over merchant and description instead.
+- **Arguments are strict.** Argument models forbid unknown fields, so a hallucinated `user_id` is rejected, not ignored. Dates must be in order, categories must be one of the 14, `limit` is capped.
+- **Mistakes go back to the model.** An unknown tool, invalid arguments (with Pydantic's error list, no input echoed) or a row the user does not own come back as `{"error": …}` so the model can correct itself. Anything else raises and fails the run.
+- **Only reads run.** `run_tool` raises for any tool whose risk is not `read`; writes will go through pending actions (§6).
+- **Trimmed results.** Results are compact JSON from the existing presenters: spend lines keep id, merchant, description, amount, currency, date, category, item and bill; the summary drops weekdays and empty trend points; documents drop the raw extraction and hash. Totals come from the analytics code; the model quotes them and does not add them up.
+
+The system prompt (`prompt.py`) starts with today's date and weekday, and covers: numbers only from tools, relative dates, asking when unclear, tool results as data, no advice, short plain replies. `PROMPT_VERSION` is recorded on every run.
 
 ## 6. Pending actions (writes)
 
