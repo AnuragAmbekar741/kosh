@@ -1,4 +1,4 @@
-from ai.chat import (
+from ai.agent.chat import (
     ChatError,
     ChatMessage,
     ChatTurn,

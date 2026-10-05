@@ -1,4 +1,4 @@
-import ai.chat as chat_mod
+import ai.agent.chat as chat_mod
 import pytest
 from ai import (
     ChatError,
