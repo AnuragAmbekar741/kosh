@@ -20,7 +20,7 @@ migrate-new:
 	uv run --directory apps/api alembic revision --autogenerate -m "$(MSG)"
 
 test:
-	uv run --group dev pytest apps/api/tests apps/worker/tests packages/storage/tests -q
+	uv run --group dev pytest apps/api/tests apps/worker/tests packages/storage/tests packages/ai/tests -q
 
 worker:
 	uv run --package worker python -m worker.main

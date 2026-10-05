@@ -27,6 +27,7 @@ __all__ = [
     "RetryableExtractError",
     "extract",
     "inspect_and_normalize",
+    "is_retryable",
     "strict_json_schema",
 ]
 
@@ -216,6 +217,12 @@ def extract(
     return cast(Extraction, extraction), meta
 
 
+def is_retryable(exc: APIError) -> bool:
+    """Timeouts, conflicts, rate limits, 5xx, and errors with no status code."""
+    status_code = getattr(exc, "status_code", None)
+    return status_code is None or status_code in {408, 409, 429} or status_code >= 500
+
+
 def chat_json(
     content: list[dict[str, Any]],
     *,
@@ -249,8 +256,7 @@ def chat_json(
             extra_body={"provider": {"require_parameters": True}, **(extra_body or {})},
         )
     except APIError as exc:
-        status_code = getattr(exc, "status_code", None)
-        if status_code is None or status_code in {408, 409, 429} or status_code >= 500:
+        if is_retryable(exc):
             raise RetryableExtractError(f"openrouter error: {exc}") from exc
         raise ExtractError(f"openrouter error: {exc}") from exc
     raw = response.choices[0].message.content
