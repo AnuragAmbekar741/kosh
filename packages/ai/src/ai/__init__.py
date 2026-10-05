@@ -7,15 +7,14 @@ from ai.chat import (
     chat_with_tools,
     function_tool,
 )
-from ai.client import (
+from ai.client import extract, inspect_and_normalize
+from ai.items import ItemChoice, ItemLine, classify_items
+from ai.openrouter import (
     ExtractError,
     ExtractMeta,
     RetryableExtractError,
-    extract,
-    inspect_and_normalize,
     strict_json_schema,
 )
-from ai.items import ItemChoice, ItemLine, classify_items
 from ai.schemas import (
     SCHEMA_VERSION,
     Category,

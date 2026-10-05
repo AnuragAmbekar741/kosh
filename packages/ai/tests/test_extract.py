@@ -54,7 +54,7 @@ def test_pdf_page_limit(monkeypatch) -> None:
 
 
 def _variants() -> tuple[dict, dict]:
-    schema = strict_json_schema()
+    schema = strict_json_schema(Extraction)
     receipt = next(
         variant
         for variant in schema["oneOf"]
@@ -69,7 +69,7 @@ def _variants() -> tuple[dict, dict]:
 
 
 def test_strict_schema_inlines_union() -> None:
-    schema = strict_json_schema()
+    schema = strict_json_schema(Extraction)
     assert "oneOf" in schema
     assert "$defs" not in schema
     assert all("$ref" not in variant for variant in schema["oneOf"])

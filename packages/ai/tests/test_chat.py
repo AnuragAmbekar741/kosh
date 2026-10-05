@@ -5,6 +5,7 @@ from ai import (
     RetryableChatError,
     chat_with_tools,
     function_tool,
+    openrouter,
 )
 from openai import APIStatusError
 from pydantic import BaseModel, Field
@@ -50,7 +51,8 @@ def _fake_openai(monkeypatch, *, response=None, error=None, agent_model=None):
         openrouter_model="base/model",
         openrouter_agent_model=agent_model,
     )
-    monkeypatch.setattr(chat_mod, "OpenAI", _OpenAI)
+    monkeypatch.setattr(openrouter, "OpenAI", _OpenAI)
+    monkeypatch.setattr(openrouter, "get_settings", lambda: settings)
     monkeypatch.setattr(chat_mod, "get_settings", lambda: settings)
     return seen
 

@@ -1,10 +1,10 @@
 import json
 
-import ai.client as client_mod
+import ai.openrouter as client_mod
 import pytest
 from ai import ExtractError, ItemLine, RetryableExtractError, classify_items
-from ai.client import strict_json_schema
 from ai.items import ItemChoices
+from ai.openrouter import strict_json_schema
 from openai import APIStatusError
 
 

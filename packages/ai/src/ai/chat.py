@@ -4,10 +4,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, NotRequired, TypedDict, cast
 
-from openai import APIError, OpenAI
+from openai import APIError
 from pydantic import BaseModel
 
-from ai.client import is_retryable, strict_json_schema
+from ai import openrouter
+from ai.openrouter import is_retryable, strict_json_schema
 from ai.settings import get_settings
 
 __all__ = [
@@ -88,12 +89,10 @@ def chat_with_tools(
     and an empty answer raise ChatError.
     """
     settings = get_settings()
-    api_key = settings.require_openrouter()
     model = model or settings.openrouter_agent_model or settings.openrouter_model
-    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
     optional: dict[str, Any] = {"tools": list(tools)} if tools else {}
     try:
-        response = client.chat.completions.create(
+        response = openrouter.client().chat.completions.create(
             model=model,
             messages=cast(Any, list(messages)),
             max_tokens=max_tokens,
