@@ -96,6 +96,7 @@ name = "api"
 version = "0.1.0"
 source = { editable = "apps/api" }
 dependencies = [
+    { name = "ai" },
     { name = "alembic" },
     { name = "fastapi", extra = ["standard"] },
     { name = "observability" },
@@ -105,6 +106,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ai", editable = "packages/ai" },
     { name = "alembic", specifier = ">=1.19.1" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.141.1" },
     { name = "observability", editable = "packages/observability" },
