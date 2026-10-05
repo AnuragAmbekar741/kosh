@@ -50,8 +50,11 @@ packages/storage/src/storage/
 packages/security/src/security/   argon2 hash, access JWT, hashed refresh, CurrentUserDep
   google.py                Google ID token verify (JWKS)
 
-packages/ai/src/ai/        OpenRouter client (chat_json), extraction, classify_items for catalog matching,
-                           chat.py: chat_with_tools + ChatMessage / ChatTurn for the agent
+packages/ai/src/ai/        one folder per feature; callers import only from `ai`
+  openrouter.py            shared: client(), chat_json, strict_json_schema, is_retryable, errors
+  extraction/              extract.py (prompt + extract), files.py (PDF / image checks), schemas.py
+  items/classify.py        classify_items for catalog matching
+  agent/chat.py            chat_with_tools, ChatMessage / ChatTurn, function_tool
 
 packages/observability/src/observability/   stdlib logging to stdout: text | JSON, redaction, bound ids
 

@@ -5,7 +5,6 @@ from ai import (
     RetryableChatError,
     chat_with_tools,
     function_tool,
-    openrouter,
 )
 from openai import APIStatusError
 from pydantic import BaseModel, Field
@@ -31,30 +30,11 @@ def _response(*, content=None, tool_calls=None, usage=True, choices=True):
     )
 
 
-def _fake_openai(monkeypatch, *, response=None, error=None, agent_model=None):
-    seen: dict = {}
-
-    class _Completions:
-        def create(self, **kwargs):
-            seen.update(kwargs)
-            if error is not None:
-                raise error
-            return response
-
-    class _OpenAI:
-        def __init__(self, **kwargs):
-            seen["client"] = kwargs
-            self.chat = _obj(completions=_Completions())
-
-    settings = _obj(
-        require_openrouter=lambda *_: "key",
-        openrouter_model="base/model",
-        openrouter_agent_model=agent_model,
-    )
-    monkeypatch.setattr(openrouter, "OpenAI", _OpenAI)
-    monkeypatch.setattr(openrouter, "get_settings", lambda: settings)
+def _fake_openai(fake, monkeypatch, *, response=None, error=None, agent_model=None):
+    fake.response, fake.error = response, error
+    settings = _obj(openrouter_model="base/model", openrouter_agent_model=agent_model)
     monkeypatch.setattr(chat_mod, "get_settings", lambda: settings)
-    return seen
+    return fake.seen
 
 
 def _status_error(code: int) -> APIStatusError:
@@ -82,8 +62,10 @@ def test_function_tool_shape() -> None:
     assert "$defs" not in params and "default" not in params["properties"]["limit"]
 
 
-def test_text_reply(monkeypatch) -> None:
-    seen = _fake_openai(monkeypatch, response=_response(content="₹1,240 in Sep."))
+def test_text_reply(monkeypatch, fake_openai) -> None:
+    seen = _fake_openai(
+        fake_openai, monkeypatch, response=_response(content="₹1,240 in Sep.")
+    )
     turn = chat_with_tools(_HISTORY, [])
 
     assert turn.message == {"role": "assistant", "content": "₹1,240 in Sep."}
@@ -96,16 +78,15 @@ def test_text_reply(monkeypatch) -> None:
     assert "tools" not in seen
     assert seen["extra_body"]["provider"] == {"require_parameters": True}
     assert seen["extra_body"]["usage"] == {"include": True}
-    assert seen["client"]["base_url"] == "https://openrouter.ai/api/v1"
 
 
-def test_tool_calls_keep_openai_shape(monkeypatch) -> None:
+def test_tool_calls_keep_openai_shape(monkeypatch, fake_openai) -> None:
     calls = [
         _call("c1", "get_spending_summary", '{"category": "Groceries"}'),
         _call("c2", "list_spend_items", ""),
     ]
     tool = function_tool("list_spend_items", "List.", _Args)
-    seen = _fake_openai(monkeypatch, response=_response(tool_calls=calls))
+    seen = _fake_openai(fake_openai, monkeypatch, response=_response(tool_calls=calls))
     turn = chat_with_tools(_HISTORY, [tool], model="other/model")
 
     assert turn.message == {
@@ -132,23 +113,28 @@ def test_tool_calls_keep_openai_shape(monkeypatch) -> None:
     assert seen["tools"] == [tool]
 
 
-def test_agent_model_setting_wins_over_base(monkeypatch) -> None:
+def test_agent_model_setting_wins_over_base(monkeypatch, fake_openai) -> None:
     seen = _fake_openai(
-        monkeypatch, response=_response(content="ok"), agent_model="cheap/model"
+        fake_openai,
+        monkeypatch,
+        response=_response(content="ok"),
+        agent_model="cheap/model",
     )
     chat_with_tools(_HISTORY, [])
     assert seen["model"] == "cheap/model"
 
 
-def test_missing_usage_is_zero_and_no_cost(monkeypatch) -> None:
-    _fake_openai(monkeypatch, response=_response(content="ok", usage=False))
+def test_missing_usage_is_zero_and_no_cost(monkeypatch, fake_openai) -> None:
+    _fake_openai(
+        fake_openai, monkeypatch, response=_response(content="ok", usage=False)
+    )
     turn = chat_with_tools(_HISTORY, [])
     assert (turn.prompt_tokens, turn.completion_tokens, turn.cost_usd) == (0, 0, None)
 
 
 @pytest.mark.parametrize("response", [_response(), _response(choices=False)])
-def test_empty_answer_is_an_error(monkeypatch, response) -> None:
-    _fake_openai(monkeypatch, response=response)
+def test_empty_answer_is_an_error(monkeypatch, fake_openai, response) -> None:
+    _fake_openai(fake_openai, monkeypatch, response=response)
     with pytest.raises(ChatError, match="empty model response"):
         chat_with_tools(_HISTORY, [])
 
@@ -157,8 +143,8 @@ def test_empty_answer_is_an_error(monkeypatch, response) -> None:
     ("code", "error"),
     [(429, RetryableChatError), (503, RetryableChatError), (400, ChatError)],
 )
-def test_api_errors(monkeypatch, code, error) -> None:
-    _fake_openai(monkeypatch, error=_status_error(code))
+def test_api_errors(monkeypatch, fake_openai, code, error) -> None:
+    _fake_openai(fake_openai, monkeypatch, error=_status_error(code))
     with pytest.raises(error) as raised:
         chat_with_tools(_HISTORY, [])
     assert (type(raised.value) is RetryableChatError) == (code != 400)

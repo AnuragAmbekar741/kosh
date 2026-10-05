@@ -24,7 +24,7 @@ apps/api
     tools.py      TOOLS: name → (args model, risk, handler)
     prompt.py     system prompt + PROMPT_VERSION
   modules/spend, modules/documents      services the tools call
-packages/ai      chat.py: chat_with_tools → ChatTurn; function_tool(name, description, ArgsModel)
+packages/ai      agent/chat.py: chat_with_tools → ChatTurn; function_tool(name, description, ArgsModel)
 packages/storage models/agent.py + crud/agent.py
 apps/worker      unchanged; extracts chat attachments like any upload
 ```
