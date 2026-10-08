@@ -4,9 +4,15 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from api.modules.agent import tools
-from api.modules.agent.prompt import PROMPT_VERSION, system_prompt
-from api.modules.agent.tools import TOOLS, Tool, ToolContext, run_tool, tool_schemas
+from api.modules.agent.core import tools
+from api.modules.agent.core.prompts import PROMPT_VERSION, system_prompt
+from api.modules.agent.core.tools import (
+    TOOLS,
+    Tool,
+    ToolContext,
+    run_tool,
+    tool_schemas,
+)
 from sqlmodel import Session
 from storage.crud.spend import create_spend_item
 from storage.models import Document, DocumentStatus, SpendSource, SpendStatus, User

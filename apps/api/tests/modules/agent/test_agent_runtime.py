@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import ai
 import pytest
-from api.modules.agent import runtime, tools
-from api.modules.agent.runtime import MAX_STEPS, run_turn
+from api.modules.agent.core import runtime, tools
+from api.modules.agent.core.runtime import MAX_STEPS, run_turn
 from sqlmodel import Session, select
 from storage import database
 from storage.crud import agent as crud

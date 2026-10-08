@@ -14,8 +14,8 @@ from storage import database
 from storage.crud import agent as crud
 from storage.models import AgentRun, RunStatus
 
-from api.modules.agent.prompt import system_prompt
-from api.modules.agent.tools import ToolContext, run_tool, tool_schemas
+from api.modules.agent.core.prompts import system_prompt
+from api.modules.agent.core.tools import ToolContext, run_tool, tool_schemas
 
 __all__ = ["HISTORY_TURNS", "MAX_STEPS", "Event", "run_turn"]
 

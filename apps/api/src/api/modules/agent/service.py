@@ -21,8 +21,8 @@ from api.common.errors import (
     AgentUnavailableError,
     NotFoundError,
 )
-from api.modules.agent import runtime
-from api.modules.agent.prompt import PROMPT_VERSION
+from api.modules.agent.core import runtime
+from api.modules.agent.core.prompts import PROMPT_VERSION
 from api.modules.agent.settings import get_settings
 
 __all__ = [
