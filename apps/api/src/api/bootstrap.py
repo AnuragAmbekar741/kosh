@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from api.common.exception_handlers import register_exception_handlers
+from api.modules.agent import router as agent
 from api.modules.auth import router as auth
 from api.modules.catalog import router as catalog
 from api.modules.documents import router as documents
@@ -17,3 +18,4 @@ def register(app: FastAPI) -> None:
     app.include_router(spend)
     app.include_router(documents)
     app.include_router(catalog)
+    app.include_router(agent)
