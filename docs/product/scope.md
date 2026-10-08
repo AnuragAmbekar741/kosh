@@ -62,11 +62,17 @@ Status key: **live** = implemented today.
 | POST | `/documents/{id}/confirm` | **live** |
 | POST | `/documents/{id}/line-items` | **live** |
 | DELETE | `/documents/{id}` | **live** |
+| POST | `/agent/conversations` | **live** |
+| GET | `/agent/conversations` | **live** |
+| GET | `/agent/conversations/{id}` | **live** |
+| POST | `/agent/conversations/{id}/messages` | **live** (SSE) |
 | GET | `/overview` | planned |
 
 Prefer `GET /users/me` over `GET /users/{id}` for profile.
 
 `GET /spend-items` is the confirmed ledger. It returns `{data, total}` and accepts `skip` (default 0), `limit` (default 50, max 200), `spent_from`, `spent_to`, repeatable `category`, exact `merchant`, `source`, and `q` (case-insensitive contains on merchant or description). `GET /spend-items/summary` is the same confirmed slice plus `period` (`day` / `week` / `month` / `custom`): totals, bill/item counts, and optional month-over-month comparison. It is not paged. `GET /spend-items/analytics` takes the list filters (no paging) plus optional `currency` (default: the most used; currencies are never summed, and `currencies` lists all present), stops at today, and returns the stat-card numbers, a zero-filled trend (day / week / month buckets from the range length), category shares, top 5 merchants, top 5 bills, weekday totals, and a comparison with the previous period when both dates are set. Pending document items are returned by `GET /documents/{id}` until the user reviews them; `POST /documents/{id}/confirm` confirms every pending item. `POST /documents/manual` creates a fileless bill from a title. `POST /documents/{id}/line-items` appends a confirmed line to an itemized receipt bill or a manual bill. `DELETE /documents/{id}` removes the document, extraction history, linked spend items, and stored file (manual bills have no file).
+
+`POST /agent/conversations/{id}/messages` takes `{text}` (1–4000 characters) and streams server-sent events: `tool` (`{name}`), `delta` (`{text}`), `done` (`{message_id, run_id}`) or `error` (`{message, run_id}`). It refuses before streaming with 404 (not yours), 409 (a reply is still running there), 429 (daily limit, `AGENT_DAILY_RUNS`, default 50, counted from midnight UTC, failed replies included) or 503 (no OpenRouter key). `GET /agent/conversations/{id}` returns the user's messages and text replies (no tool steps); each user message carries `status` (`running` / `completed` / `failed`; a run older than 5 minutes that never finished shows as `failed`).
 
 Spend lines also return `item` (`{id, name, family}` or null) and `item_status` (`none` / `pending` / `processing` / `resolved` / `needs_review` / `not_product` / `failed`). `GET /catalog/search?q=` searches the shared catalog plus the user's own items. `PUT /spend-items/{id}/item` sets a matched line's item: exactly one of `{catalog_item_id}`, `{new_item: {name, family_id}}` (a private item under a family), or `{not_product: true}`. The answer is saved for that text and store code, and the user's other lines with the same text follow.
 

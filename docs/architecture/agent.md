@@ -49,13 +49,18 @@ If the agent ever moves to its own process, it would get short-lived scoped serv
 ## 4. Serving a message
 
 ```
-POST /agent/conversations/{id}/messages   {text, document_ids?}
+POST /agent/conversations            create          GET /agent/conversations         list, paged
+GET  /agent/conversations/{id}       transcript      POST /agent/conversations/{id}/messages  {text} → SSE
 ```
 
-1. `CurrentUserDep` → user. Any 401 happens before the stream opens.
-2. Conversation owner check → 404 otherwise.
-3. Daily budget check on `agent_runs` → 429 when over.
-4. Short DB session: insert the user message and a `running` run; commit; close.
+`modules/agent/router.py` → `service.py` → `runtime.py`. Every refusal happens before the stream opens, so the browser gets a normal HTTP error:
+
+1. `CurrentUserDep` → user, else 401.
+2. Conversation owner check, else 404.
+3. A run still `running` in this conversation and younger than 5 minutes, else 409. Older ones count as dead (server restart); 5 minutes covers six 45-second model calls.
+4. Runs started since midnight UTC < `AGENT_DAILY_RUNS` (50), else 429. Failed runs count.
+5. OpenRouter key set, else 503.
+6. `start_turn` saves the user message (pointing at its run) and a `running` run in one commit; two sends that race for the same `seq` get 409. The router then **closes the request's session**: FastAPI keeps dependency sessions open until a streamed response ends, so without this the login's connection would be held for the whole reply.
 5. Open `text/event-stream` and loop, at most 6 steps:
    1. Load the last 10 user turns (`crud.agent.history`); build `[system, …history]`.
    2. Call OpenRouter with the tool schemas. **No DB connection is held during the call** (Neon connection limits; a call can take seconds).
@@ -84,7 +89,8 @@ How a turn ends:
 
 - **Web client:** `fetch` with a ReadableStream, because `EventSource` cannot send `Authorization`. Before streaming it reuses the axios refresh path, so one 401 refreshes and retries. The token is checked only when the stream opens; a reply that outlives the 15-minute token still finishes.
 - **Threads:** a sync generator inside `StreamingResponse` holds one worker thread per live turn (default pool 40). Move to async when concurrent chats approach that.
-- **Disconnects:** if the browser drops, the loop must still finish and save, so the reply is there on reload. Closing the response closes the generator, so the router runs `run_turn` to completion on its own and only forwards events to the stream (PR 5).
+- **Disconnects:** `service.stream` runs `run_turn` in its own daemon thread that puts events on a queue; the response only reads the queue. If the browser drops, reading stops but the thread finishes and saves, so the reply is there on reload. The thread runs in a copy of the request's context, so its log lines keep the `request_id`.
+- **Transcript:** `GET /agent/conversations/{id}` shows user messages and assistant text replies, not tool steps. Each user message carries its run's status; a failed one with no reply after it is what the UI offers to retry.
 
 ## 5. Tools
 
@@ -173,7 +179,7 @@ agent_conversations
 agent_messages                         OpenAI chat shape: history replay is one SELECT
   id              uuid pk
   conversation_id uuid fk              unique (conversation_id, seq)
-  run_id          uuid fk null         null on the user's own message
+  run_id          uuid fk null         the run that answers it (user) or wrote it
   seq             int                  order inside the conversation
   role            str                  user | assistant | tool
   content         text null
