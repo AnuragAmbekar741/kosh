@@ -210,7 +210,9 @@ def test_documents_show_drafts_and_stay_private(session, ledger) -> None:
 
 def test_write_tools_never_run_directly(session, ledger, monkeypatch) -> None:
     ada, _ = ledger
-    write = Tool("Delete.", tools.SpendItemArgs, lambda ctx, args: {}, "destructive")
+    write = Tool(
+        "Delete.", tools.spend.SpendItemArgs, lambda ctx, args: {}, "destructive"
+    )
     monkeypatch.setitem(TOOLS, "delete_spend_item", write)
     with pytest.raises(RuntimeError, match="pending action"):
         _call(session, ada, "delete_spend_item", item_id=str(uuid4()))

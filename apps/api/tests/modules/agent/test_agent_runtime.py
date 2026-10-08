@@ -188,7 +188,7 @@ def test_crashing_tool_saves_nothing_half_done(db_engine, turn, monkeypatch) -> 
     def boom(ctx, args):
         raise ValueError("bug")
 
-    broken = tools.Tool("Broken.", tools.DocumentsArgs, boom)
+    broken = tools.Tool("Broken.", tools.documents.DocumentsArgs, boom)
     monkeypatch.setitem(tools.TOOLS, "list_documents", broken)
     events = _run(turn, FakeChat(_turn(calls=[("list_documents", {"limit": 5})])))
 
