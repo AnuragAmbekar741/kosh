@@ -30,4 +30,5 @@ Each PR merges on its own and leaves `main` working; the API is not reachable un
 
 ## Open
 
+- **Concurrency ceiling:** each streaming reply holds one of FastAPI's 40 shared threads; past about 40 live chats every route slows (measured: `/health` 0.01 s → 1.8 s at 60 chats). Planned fix: async stream + global cap on live replies. See [architecture/agent.md §13](../architecture/agent.md#13-concurrency-limits-known-not-fixed-yet). Do before real traffic.
 - **Deployment:** one VM with Docker Compose + Caddy (leaning) or a PaaS. See [architecture/agent.md §12](../architecture/agent.md#12-deployment-open). Not needed until phase 1 runs locally.

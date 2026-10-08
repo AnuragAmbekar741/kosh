@@ -89,7 +89,7 @@ How a turn ends:
 - Tokens and cost are summed over steps; cost stays null when the provider reports none.
 
 - **Web client:** `fetch` with a ReadableStream, because `EventSource` cannot send `Authorization`. Before streaming it reuses the axios refresh path, so one 401 refreshes and retries. The token is checked only when the stream opens; a reply that outlives the 15-minute token still finishes.
-- **Threads:** a sync generator inside `StreamingResponse` holds one worker thread per live turn (default pool 40). Move to async when concurrent chats approach that.
+- **Threads:** each live reply holds one thread from FastAPI's shared pool of 40 while it streams. Fine at today's scale; the ceiling, measurements and planned fix are in §13.
 - **Disconnects:** `service.stream` runs `run_turn` in its own daemon thread that puts events on a queue; the response only reads the queue. If the browser drops, reading stops but the thread finishes and saves, so the reply is there on reload. The thread runs in a copy of the request's context, so its log lines keep the `request_id`.
 - **Transcript:** `GET /agent/conversations/{id}` shows user messages and assistant text replies, not tool steps. Each user message carries its run's status; a failed one with no reply after it is what the UI offers to retry.
 
@@ -312,3 +312,41 @@ Postgres and blobs stay on Neon. Three processes need a host: the static web bui
 | Deploy | Actions → GHCR → SSH `docker compose pull && up -d`; migrations as a one-off container first | push or image deploy; migration as pre-deploy |
 
 Leaning A (cheapest, nothing hidden). Either way: secrets in host env, `LOG_FORMAT=json`, `/health` checks, proxy buffering off for SSE.
+
+## 13. Concurrency limits (known, not fixed yet)
+
+**Status:** measured on 2026-10-08; the fix is planned but deliberately not shipped. Do it before many people chat at once, or before deploying with real traffic.
+
+### How a reply uses resources
+
+| Resource | Per live reply | Shared limit |
+|---|---|---|
+| Background thread (`service.stream` → `run_turn`) | 1, for the whole reply | none (no cap) |
+| FastAPI thread pool | **1, for the whole reply**: the streaming response blocks on `queue.get()` between events | **40, shared by every route** (spend, documents, auth, chat) |
+| Database connection | only during history load, tool runs and saves (milliseconds); none while waiting on the model | 15 per process (pool 5 + overflow 10) |
+| OpenRouter | one call at a time per reply | the key's rate limit |
+
+### Measured
+
+Scripted model taking 1 s per call, 2 calls per reply (ideal reply time ≈ 2 s), throwaway SQLite, the real app through `TestClient`:
+
+| Chatting at once | All replies OK | Time per reply | `/health` meanwhile | DB connections held mid model call |
+|---|---|---|---|---|
+| 10 | yes | 2.1 s for everyone | 0.01 s | 0 |
+| 60 | yes | 2.4–4.3 s | **1.8 s** | 6 (other replies' short DB steps) |
+
+At 10 nothing is shared that matters. Past about 40, every chat and **every other API request** waits for a free pool thread, so the whole dashboard slows down while many people chat. Real model calls take 5–10 s per reply, so threads are held longer and the slowdown starts sooner.
+
+### Other limits
+
+- **OpenRouter rate limits:** many parallel calls can return 429; the reply fails with "try again" (no automatic retry).
+- **No global cost cap:** `AGENT_DAILY_RUNS` limits each user, not the total across users.
+- **Deploys:** replies in progress die with the process (daemon threads); they show as `failed` after 5 minutes (`STALE_AFTER`).
+
+### Planned fix (about 10 lines in `service.py`)
+
+1. **Async stream:** the background thread hands events to an `asyncio` queue (`loop.call_soon_threadsafe`) and the response is an async generator, so waiting for events takes no pool thread. Waiting chats then cost almost nothing and other routes stay fast.
+2. **Global cap on live replies** (for example 20, an env setting): a `threading.BoundedSemaphore` taken before `start_turn`; when full, refuse with 503 "busy, try again in a moment" before streaming. Protects the OpenRouter rate limit and cost.
+3. **Test:** many chats at once with a slow scripted model while timing a normal request; it must stay fast.
+
+When deploying with several API worker processes, each has its own pool of 40 and 15 DB connections; use Neon's connection pooler (`-pooler` host) so connections stay within Neon's limit.
