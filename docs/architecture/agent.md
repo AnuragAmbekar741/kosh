@@ -65,11 +65,26 @@ POST /agent/conversations/{id}/messages   {text, document_ids?}
    4. No tool calls → that text is the reply; stop.
 6. Insert the assistant message; finish the run (status, steps, tokens, cost); emit `done`.
 
+Steps 5–6 are `runtime.run_turn(user_id, conversation_id, run_id, model, chat=None)`, a generator of `Event(type, data)`. The router turns events into SSE; evals read them directly. `chat` defaults to `ai.chat_with_tools`; tests and evals pass their own.
+
 SSE events: `tool` (name, for a "looking up…" chip), `delta` (reply text), `action` (pending card), `document` (attachment status), `done` (message and run ids), `error`.
+
+How a turn ends:
+
+| Case | Saved | Run | Events |
+|---|---|---|---|
+| Model answers | assistant reply | `completed` | `tool`…, `delta`, `done` |
+| 6 steps, still calling tools | fixed "couldn't finish, ask narrower" reply | `failed`, `step limit` | `tool`×6, `delta`, `done` |
+| Model error (`ChatError`) | nothing more | `failed`, error text | `error` |
+| Any other exception | nothing more; logged with `run_id` | `failed`, exception class | `error` |
+
+- The assistant's tool calls and their results are saved together only after every tool has run, so a crash never leaves a call without its result.
+- `delta` carries the whole reply for now; `chat_with_tools` does not stream tokens. Token streaming can come later without changing the event types.
+- Tokens and cost are summed over steps; cost stays null when the provider reports none.
 
 - **Web client:** `fetch` with a ReadableStream, because `EventSource` cannot send `Authorization`. Before streaming it reuses the axios refresh path, so one 401 refreshes and retries. The token is checked only when the stream opens; a reply that outlives the 15-minute token still finishes.
 - **Threads:** a sync generator inside `StreamingResponse` holds one worker thread per live turn (default pool 40). Move to async when concurrent chats approach that.
-- **Disconnects:** if the browser drops, the loop still finishes and saves; the reply is there on reload.
+- **Disconnects:** if the browser drops, the loop must still finish and save, so the reply is there on reload. Closing the response closes the generator, so the router runs `run_turn` to completion on its own and only forwards events to the stream (PR 5).
 
 ## 5. Tools
 
@@ -77,7 +92,7 @@ Each entry in `TOOLS` (`modules/agent/tools.py`): description, Pydantic argument
 
 | Tool | Risk | Calls | Arguments | Phase |
 |---|---|---|---|---|
-| `get_spending_summary` | read | `spend.analytics.analyze` | dates, categories, search, currency | 1 |
+| `get_spending_summary` | read | `spend.analytics.analyze`, plus `comparison.change` so the model never subtracts | dates, categories, search, currency | 1 |
 | `list_spend_items` | read | `spend.service.list_items` | dates, categories, search, `limit` ≤ 50, `offset` | 1 |
 | `get_spend_item` | read | `spend.service.get` | `item_id` | 1 |
 | `list_documents` | read | `documents.service.list_owned` | `limit` ≤ 50 | 1 |
