@@ -93,6 +93,7 @@ def test_summary_counts_only_the_callers_confirmed_spend(session, ledger) -> Non
         "Dining out": "8.50",
     }
     assert result["comparison"]["previous_total"] == "0.00"
+    assert result["comparison"]["change"] == "1248.50"
     assert all(p["total"] != "0.00" for p in result["trend"])
     assert "weekdays" not in result and "has_spend" not in result
 

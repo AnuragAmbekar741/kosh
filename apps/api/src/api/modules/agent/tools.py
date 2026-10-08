@@ -120,6 +120,11 @@ def _summary(ctx: ToolContext, args: SummaryArgs) -> dict[str, Any]:
     )
     data = result.model_dump(mode="json", exclude={"weekdays", "has_spend"})
     data["trend"] = [p for p in data["trend"] if p["total"] != "0.00"]
+    if result.comparison is not None:
+        # The model quotes the difference instead of subtracting.
+        data["comparison"]["change"] = str(
+            result.total - result.comparison.previous_total
+        )
     return data
 
 
@@ -179,8 +184,9 @@ TOOLS: dict[str, Tool] = {
     "get_spending_summary": Tool(
         "Totals for the user's confirmed spending: total, bill and line counts, "
         "breakdown by category, top merchants, largest bills, a trend over time, "
-        "and the change against the previous period of the same length when both "
-        "dates are set. Use it for every 'how much' question; quote its numbers.",
+        "and the change (amount and percent) against the previous period of the "
+        "same length when both dates are set. Use it for every 'how much' "
+        "question; quote its numbers.",
         SummaryArgs,
         _summary,
     ),
