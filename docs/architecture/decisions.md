@@ -76,6 +76,8 @@ Revisit when: ...
 | 60 | Agent evals | **YAML cases with synthetic seeds, run against the real model 3×**, scored by code first; safety 100% and golden ≥ 90% to merge prompt / tool / model changes; `make evals`, not `make test` |
 | 61 | Agent learning | **No fine-tuning**: reviewed failures become eval cases, fixes go to tool descriptions → prompt → model, user corrections become data |
 | 62 | `packages/ai` layout | **One folder per feature** (`extraction/`, `items/`, `agent/`) plus shared `openrouter.py`; callers import only from `ai`; `openrouter.client()` is the one place a client is built and the one thing tests fake |
+| 63 | Agent module layout | **HTTP files at `modules/agent/` top level** (router, schemas, service, presenter, settings) like every module; **the agent in `core/`** (runtime, `prompts/`, `tools/` split by domain). Not in `packages/ai`: tools call API services and `ai` cannot import `api` |
+| 64 | Prompt storage | **In git as Markdown** (`core/prompts/*.md`) with `PROMPT_VERSION` recorded on every run; not in the database |
 
 ### Locked detail rows
 
@@ -106,6 +108,20 @@ Revisit when: ...
 - Rejected: An LLM judge grading whole answers; copying real transcripts into cases; running evals in `make test`
 - Why: Code checks are repeatable and free; a judge drifts with its own model. Real spend data must not enter git. Evals call a paid model, so they run when a change can move them
 - Revisit when: Cases exceed a few hundred, or a hosted eval tool would save more than it costs
+
+**Agent core stays in the API, in core/**
+
+- Chosen: `modules/agent/core/` for runtime, prompts and tools (one file per domain: `spend.py`, `documents.py`, shared `base.py`); the module's top level keeps the HTTP files every module has
+- Rejected: Moving tools, runtime or presenter into `packages/ai/agent/`; one flat `tools.py`
+- Why: Tools call `modules/spend` and `modules/documents` services, and `apps/api` already depends on `ai`, so `ai` importing `api` would be a cycle. `packages/ai` knows how to talk to a model and nothing about Kosh data. Splitting tools by domain gives phase 2 and 3 write tools an obvious home
+- Revisit when: The services move into a package, or another app needs the same agent
+
+**Prompts live in git, not the database**
+
+- Chosen: Prompt text in `core/prompts/*.md` next to the tools it describes; `PROMPT_VERSION` bumped on every wording change and stored on each run
+- Rejected: Prompts in a database table edited at runtime
+- Why: A prompt is tuned together with the tool descriptions and measured by evals. In git every change is reviewed, eval-tested and deployed with the tools it describes, and the version on a run points at exact text. A database prompt can change unreviewed, drift from the tools, and break the link between an eval result and what it measured
+- Revisit when: Non-engineers need to edit prompts, or live A/B tests need a switch; then choose among git-versioned prompts by config rather than storing text in the database
 
 **Attachments use the extraction pipeline**
 

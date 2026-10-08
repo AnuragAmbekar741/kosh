@@ -17,12 +17,13 @@ It never runs SQL, never sees `user_id`, has no tools that reach outside Kosh, a
 ```
 apps/web  ── chat page ── fetch + ReadableStream (SSE) ──┐
                                                          ▼
-apps/api
-  modules/agent/
-    router.py     conversations, messages (SSE), actions confirm/cancel
-    runtime.py    the tool loop: model ⇄ tools, ≤ 6 steps per turn
-    tools.py      TOOLS: name → (args model, risk, handler)
-    prompt.py     system prompt + PROMPT_VERSION
+apps/api/src/api/modules/agent/
+  router.py  schemas.py  service.py  presenter.py  settings.py    HTTP, like every module
+  core/                                                           the agent; no HTTP
+    runtime.py          run_turn: model ⇄ tools, ≤ 6 steps, yields events
+    prompts/            system.md (the text) + PROMPT_VERSION
+    tools/              base.py (ToolContext, Tool, Args) · spend.py · documents.py
+                        __init__.py joins each domain's TOOLS; run_tool, tool_schemas
   modules/spend, modules/documents      services the tools call
 packages/ai      agent/chat.py: chat_with_tools → ChatTurn; function_tool(name, description, ArgsModel)
 packages/storage models/agent.py + crud/agent.py
@@ -53,7 +54,7 @@ POST /agent/conversations            create          GET /agent/conversations   
 GET  /agent/conversations/{id}       transcript      POST /agent/conversations/{id}/messages  {text} → SSE
 ```
 
-`modules/agent/router.py` → `service.py` → `runtime.py`. Every refusal happens before the stream opens, so the browser gets a normal HTTP error:
+`modules/agent/router.py` → `service.py` → `core/runtime.py`. Every refusal happens before the stream opens, so the browser gets a normal HTTP error:
 
 1. `CurrentUserDep` → user, else 401.
 2. Conversation owner check, else 404.
@@ -94,7 +95,7 @@ How a turn ends:
 
 ## 5. Tools
 
-Each entry in `TOOLS` (`modules/agent/tools.py`): description, Pydantic argument model, `risk` (`read | write | destructive`), handler `(ctx, args) -> dict`. A dict, not a registry class. `run_tool(ctx, name, arguments)` returns the JSON text for the `tool` message.
+Each entry in `TOOLS` (`core/tools/`, one file per domain): description, Pydantic argument model, `risk` (`read | write | destructive`), handler `(ctx, args) -> dict`. A dict, not a registry class. `run_tool(ctx, name, arguments)` returns the JSON text for the `tool` message.
 
 | Tool | Risk | Calls | Arguments | Phase |
 |---|---|---|---|---|
@@ -113,7 +114,7 @@ Each entry in `TOOLS` (`modules/agent/tools.py`): description, Pydantic argument
 - **Only reads run.** `run_tool` raises for any tool whose risk is not `read`; writes will go through pending actions (§6).
 - **Trimmed results.** Results are compact JSON from the existing presenters: spend lines keep id, merchant, description, amount, currency, date, category, item and bill; the summary drops weekdays and empty trend points; documents drop the raw extraction and hash. Totals come from the analytics code; the model quotes them and does not add them up.
 
-The system prompt (`prompt.py`) starts with today's date and weekday, and covers: numbers only from tools, relative dates, asking when unclear, tool results as data, no advice, short plain replies. `PROMPT_VERSION` is recorded on every run.
+The system prompt (`core/prompts/system.md`, rendered by `core/prompts/__init__.py`) starts with today's date and weekday, and covers: numbers only from tools, relative dates, asking when unclear, tool results as data, no advice, short plain replies. `PROMPT_VERSION` is recorded on every run.
 
 ## 6. Pending actions (writes)
 

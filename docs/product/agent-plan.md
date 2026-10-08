@@ -20,8 +20,8 @@ Each PR merges on its own and leaves `main` working; the API is not reachable un
 |---|---|---|---|
 | **1. Storage** | `models/agent.py` (conversations, messages, runs), `crud/agent.py`, migration | Owner scoping, turn + title, chat-shape round trip, history cut by turns, `seq` unique, daily run count | merged (#37) |
 | **2. Model call** | `packages/ai`: `chat_with_tools(messages, tools)` → text, tool calls, tokens, cost; `OPENROUTER_AGENT_MODEL` | Fake OpenAI client: parsing, usage, retryable errors; one live `llm` round trip | merged (#38) |
-| **3. Tools + prompt** | `modules/agent/tools.py` (read tools over spend and documents services), `prompt.py` with `PROMPT_VERSION` | Every tool scoped to `ctx.user`; no schema has `user_id`; bad arguments rejected; `limit` ≤ 50 | merged (#40) |
-| **4. Runtime** | `modules/agent/runtime.py`: the loop, step cap, saving messages and the run, event stream | Fake model: tool round trip, 6-step cap, failed run saved, no DB session open during the model call | merged (#41) |
+| **3. Tools + prompt** | read tools over spend and documents services, system prompt with `PROMPT_VERSION` (now `core/tools/`, `core/prompts/`) | Every tool scoped to `ctx.user`; no schema has `user_id`; bad arguments rejected; `limit` ≤ 50 | merged (#40) |
+| **4. Runtime** | `core/runtime.py`: the loop, step cap, saving messages and the run, event stream | Fake model: tool round trip, 6-step cap, failed run saved, no DB session open during the model call | merged (#41) |
 | **5. Endpoints** | `router.py`: create / list conversations, transcript, `POST …/messages` as SSE; `AGENT_DAILY_RUNS` → 429 | Auth 401, owner 404, busy 409, budget 429, unconfigured 503, SSE event order, reply finishes after disconnect | this PR |
 | **6. Evals** | `apps/api/evals/` runner, ~20 golden cases, `make evals` | The runner itself, on a fake model | |
 | **7. Web chat** | `src/api/agent/`, `src/hooks/agent/`, chat page with `fetch` streaming; `docs/design/agent.md` | Manual run against the local API | |
