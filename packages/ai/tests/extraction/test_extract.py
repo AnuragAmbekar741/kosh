@@ -3,10 +3,18 @@ from io import BytesIO
 from pathlib import Path
 from typing import get_args
 
-import ai.client as extract_mod
 import pytest
-from ai import ExtractError, extract, inspect_and_normalize, strict_json_schema
-from ai.schemas import Category, Extraction, ReceiptExtraction
+from ai import (
+    Category,
+    ExtractError,
+    Extraction,
+    ReceiptExtraction,
+    extract,
+    inspect_and_normalize,
+    strict_json_schema,
+)
+from ai.extraction import extract as extract_mod
+from ai.extraction import files as files_mod
 from PIL import Image
 from pydantic import TypeAdapter, ValidationError
 from pypdf import PdfWriter
@@ -38,7 +46,7 @@ def test_normalize_jpeg_downscales() -> None:
 
 def test_pdf_page_limit(monkeypatch) -> None:
     monkeypatch.setattr(
-        extract_mod,
+        files_mod,
         "get_settings",
         lambda: type(
             "S",
@@ -54,7 +62,7 @@ def test_pdf_page_limit(monkeypatch) -> None:
 
 
 def _variants() -> tuple[dict, dict]:
-    schema = strict_json_schema()
+    schema = strict_json_schema(Extraction)
     receipt = next(
         variant
         for variant in schema["oneOf"]
@@ -69,7 +77,7 @@ def _variants() -> tuple[dict, dict]:
 
 
 def test_strict_schema_inlines_union() -> None:
-    schema = strict_json_schema()
+    schema = strict_json_schema(Extraction)
     assert "oneOf" in schema
     assert "$defs" not in schema
     assert all("$ref" not in variant for variant in schema["oneOf"])
@@ -165,7 +173,7 @@ def test_unknown_category_rejected() -> None:
 
 def test_image_pixel_limit_is_strict(monkeypatch) -> None:
     monkeypatch.setattr(
-        extract_mod,
+        files_mod,
         "get_settings",
         lambda: type(
             "S",

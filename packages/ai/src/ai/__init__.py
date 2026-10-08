@@ -1,4 +1,4 @@
-from ai.chat import (
+from ai.agent.chat import (
     ChatError,
     ChatMessage,
     ChatTurn,
@@ -7,16 +7,9 @@ from ai.chat import (
     chat_with_tools,
     function_tool,
 )
-from ai.client import (
-    ExtractError,
-    ExtractMeta,
-    RetryableExtractError,
-    extract,
-    inspect_and_normalize,
-    strict_json_schema,
-)
-from ai.items import ItemChoice, ItemLine, classify_items
-from ai.schemas import (
+from ai.extraction.extract import extract
+from ai.extraction.files import inspect_and_normalize
+from ai.extraction.schemas import (
     SCHEMA_VERSION,
     Category,
     Extraction,
@@ -24,6 +17,13 @@ from ai.schemas import (
     ReceiptExtraction,
     StatementExtraction,
     Transaction,
+)
+from ai.items.classify import ItemChoice, ItemLine, classify_items
+from ai.openrouter import (
+    ExtractError,
+    ExtractMeta,
+    RetryableExtractError,
+    strict_json_schema,
 )
 
 __all__ = [

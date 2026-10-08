@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ai.client import ExtractMeta, chat_json
+from ai.openrouter import ExtractMeta, chat_json
 from ai.settings import get_settings
 
 __all__ = ["ItemChoice", "ItemChoices", "ItemLine", "classify_items"]

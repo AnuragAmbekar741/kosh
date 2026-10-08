@@ -1,6 +1,6 @@
 from datetime import date
 
-from ai.schemas import LineItem, ReceiptExtraction
+from ai import LineItem, ReceiptExtraction
 from worker.jobs.extraction.validation import receipt_totals_mismatch
 
 
