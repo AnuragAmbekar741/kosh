@@ -30,6 +30,7 @@ apps/api/src/api/          FastAPI app factory + feature modules
   modules/catalog/         GET /catalog/search for the item picker
   modules/agent/           router/schemas/service/presenter/settings: /agent conversations + SSE messages
     core/                  runtime.py (run_turn → events), prompts/system.md, tools/{base,spend,documents}.py
+  evals/ (apps/api/evals)  agent evals: make evals; cases/{golden,safety}/*.yaml, synthetic ledger, throwaway SQLite
 
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession

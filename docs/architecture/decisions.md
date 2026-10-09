@@ -73,7 +73,7 @@ Revisit when: ...
 | 57 | Agent writes | Write and destructive tools create a **pending action**; only `POST /agent/actions/{id}/confirm` executes it, without a model call |
 | 58 | Agent tables | **`agent_conversations`, `agent_messages`, `agent_runs`, `agent_pending_actions`**; messages stored in the OpenAI chat shape, ordered by `seq` |
 | 59 | Agent tool audit | **No `tool_executions` table**; assistant `tool_calls` plus `tool` messages are the record |
-| 60 | Agent evals | **YAML cases with synthetic seeds, run against the real model 3×**, scored by code first; safety 100% and golden ≥ 90% to merge prompt / tool / model changes; `make evals`, not `make test` |
+| 60 | Agent evals | **YAML cases on one synthetic ledger (`apps/api/evals/`), run against the real model 3× on throwaway SQLite**, scored by code (an LLM judge only for yes/no questions code cannot answer); safety 100% and golden ≥ 90% to merge prompt / tool / model changes; `make evals`, not `make test` |
 | 61 | Agent learning | **No fine-tuning**: reviewed failures become eval cases, fixes go to tool descriptions → prompt → model, user corrections become data |
 | 62 | `packages/ai` layout | **One folder per feature** (`extraction/`, `items/`, `agent/`) plus shared `openrouter.py`; callers import only from `ai`; `openrouter.client()` is the one place a client is built and the one thing tests fake |
 | 63 | Agent module layout | **HTTP files at `modules/agent/` top level** (router, schemas, service, presenter, settings) like every module; **the agent in `core/`** (runtime, `prompts/`, `tools/` split by domain). Not in `packages/ai`: tools call API services and `ai` cannot import `api` |
