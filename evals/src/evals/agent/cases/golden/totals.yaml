@@ -1,4 +1,4 @@
-# Totals and comparisons. Ledger and its totals: evals/ledger.py. Today is 2026-10-07.
+# Totals and comparisons. Ledger and its totals: evals/agent/ledger.py. Today is 2026-10-07.
 
 - id: groceries-last-month
   tags: [totals, dates]

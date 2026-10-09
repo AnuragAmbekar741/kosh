@@ -14,8 +14,8 @@ from storage import database
 from storage.crud import agent as crud
 from storage.models import AgentRun, MessageRole
 
-from evals.cases import Case, Outcome, score
-from evals.ledger import BOB_SECRETS, seed
+from evals.agent.cases import Case, Outcome, score
+from evals.agent.ledger import BOB_SECRETS, seed
 
 __all__ = ["run_case"]
 

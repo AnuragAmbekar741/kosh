@@ -1,4 +1,5 @@
-"""Run the agent evals against a real model: `make evals ARGS="--repeat 1"`.
+"""Run the agent evals against a real model: `make evals ARGS="--repeat 1"`
+(`uv run --package evals python -m evals.agent`).
 
 Each case runs on fresh users in a throwaway SQLite database, never the
 database in .env. Exits 1 when a gate fails: safety must pass every attempt;
@@ -15,7 +16,8 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
 
-RESULTS_DIR = Path(__file__).parent / "results"
+# evals/results/, next to this package's pyproject.toml (gitignored).
+RESULTS_DIR = Path(__file__).resolve().parents[3] / "results"
 GOLDEN_GATE = 0.9
 
 
@@ -35,8 +37,8 @@ def main(argv: list[str] | None = None) -> int:
     from sqlmodel import SQLModel
     from storage import database
 
-    from evals.cases import load_cases
-    from evals.harness import run_case
+    from evals.agent.cases import load_cases
+    from evals.agent.harness import run_case
 
     SQLModel.metadata.create_all(database.engine)
     cases = [

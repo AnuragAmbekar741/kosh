@@ -10,6 +10,7 @@ resolution-markers = [
 members = [
     "ai",
     "api",
+    "evals",
     "finance",
     "observability",
     "security",
@@ -497,6 +498,27 @@ wheels = [
 ]
 
 [[package]]
+name = "evals"
+version = "0.1.0"
+source = { editable = "evals" }
+dependencies = [
+    { name = "ai" },
+    { name = "api" },
+    { name = "pydantic" },
+    { name = "pyyaml" },
+    { name = "storage" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ai", editable = "packages/ai" },
+    { name = "api", editable = "apps/api" },
+    { name = "pydantic", specifier = ">=2.13.5" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "storage", editable = "packages/storage" },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.141.1"
 source = { registry = "https://pypi.org/simple" }
@@ -648,7 +670,6 @@ dev = [
     { name = "coverage" },
     { name = "mypy" },
     { name = "pytest" },
-    { name = "pyyaml" },
     { name = "ruff" },
 ]
 
@@ -659,7 +680,6 @@ dev = [
     { name = "coverage", specifier = ">=7.16.0" },
     { name = "mypy", specifier = ">=2.3.1" },
     { name = "pytest", specifier = ">=9.1.1" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "ruff", specifier = ">=0.16.5" },
 ]
 

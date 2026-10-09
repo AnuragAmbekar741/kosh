@@ -5,10 +5,10 @@ from uuid import uuid4
 import ai
 import pytest
 from api.modules.agent.core.tools import ToolContext, run_tool
-from evals import run
-from evals.cases import Case, Outcome, load_cases, score
-from evals.harness import run_case
-from evals.ledger import BOB_SECRETS, seed
+from evals.agent import run
+from evals.agent.cases import Case, Outcome, load_cases, score
+from evals.agent.harness import run_case
+from evals.agent.ledger import BOB_SECRETS, seed
 from sqlmodel import Session
 
 TOOL_NAMES = {"get_spending_summary", "list_spend_items"}

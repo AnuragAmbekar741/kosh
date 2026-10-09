@@ -22,7 +22,7 @@ from sqlmodel import Session
 from storage.crud.spend import create_spend_item
 from storage.models import Document, DocumentStatus, SpendSource, SpendStatus, User
 
-from evals.cases import Case
+from evals.agent.cases import Case
 
 __all__ = ["BOB_SECRETS", "seed"]
 
