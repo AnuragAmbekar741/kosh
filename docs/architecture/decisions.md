@@ -73,11 +73,12 @@ Revisit when: ...
 | 57 | Agent writes | Write and destructive tools create a **pending action**; only `POST /agent/actions/{id}/confirm` executes it, without a model call |
 | 58 | Agent tables | **`agent_conversations`, `agent_messages`, `agent_runs`, `agent_pending_actions`**; messages stored in the OpenAI chat shape, ordered by `seq` |
 | 59 | Agent tool audit | **No `tool_executions` table**; assistant `tool_calls` plus `tool` messages are the record |
-| 60 | Agent evals | **YAML cases with synthetic seeds, run against the real model 3×**, scored by code first; safety 100% and golden ≥ 90% to merge prompt / tool / model changes; `make evals`, not `make test` |
+| 60 | Agent evals | **YAML cases on one synthetic ledger (`evals/`, package `evals.agent`), run against the real model 3× on throwaway SQLite**, scored by code (an LLM judge only for yes/no questions code cannot answer); safety 100% and golden ≥ 90% to merge prompt / tool / model changes; `make evals`, not `make test` |
 | 61 | Agent learning | **No fine-tuning**: reviewed failures become eval cases, fixes go to tool descriptions → prompt → model, user corrections become data |
 | 62 | `packages/ai` layout | **One folder per feature** (`extraction/`, `items/`, `agent/`) plus shared `openrouter.py`; callers import only from `ai`; `openrouter.client()` is the one place a client is built and the one thing tests fake |
 | 63 | Agent module layout | **HTTP files at `modules/agent/` top level** (router, schemas, service, presenter, settings) like every module; **the agent in `core/`** (runtime, `prompts/`, `tools/` split by domain). Not in `packages/ai`: tools call API services and `ai` cannot import `api` |
 | 64 | Prompt storage | **In git as Markdown** (`core/prompts/*.md`) with `PROMPT_VERSION` recorded on every run; not in the database |
+| 65 | Evals placement | **Top-level `evals/` uv workspace package** depending on `api`, `ai`, `storage`; one subpackage per suite (`evals.agent` now; extraction later); dev only, never in an app image |
 
 ### Locked detail rows
 
@@ -104,7 +105,7 @@ Revisit when: ...
 
 **Evals are code-scored, synthetic, and gate changes**
 
-- Chosen: Cases in `apps/api/evals/cases/` with synthetic seed rows and a pinned `today`; checks on tool calls, arguments, numbers and pending actions; an LLM judge only for scope and tone; each case 3×; safety 100%, golden ≥ 90%
+- Chosen: Cases in `evals/src/evals/agent/cases/` with synthetic seed rows and a pinned `today`; checks on tool calls, arguments, numbers and pending actions; an LLM judge only for scope and tone; each case 3×; safety 100%, golden ≥ 90%
 - Rejected: An LLM judge grading whole answers; copying real transcripts into cases; running evals in `make test`
 - Why: Code checks are repeatable and free; a judge drifts with its own model. Real spend data must not enter git. Evals call a paid model, so they run when a change can move them
 - Revisit when: Cases exceed a few hundred, or a hosted eval tool would save more than it costs
@@ -122,6 +123,13 @@ Revisit when: ...
 - Rejected: Prompts in a database table edited at runtime
 - Why: A prompt is tuned together with the tool descriptions and measured by evals. In git every change is reviewed, eval-tested and deployed with the tools it describes, and the version on a run points at exact text. A database prompt can change unreviewed, drift from the tools, and break the link between an eval result and what it measured
 - Revisit when: Non-engineers need to edit prompts, or live A/B tests need a switch; then choose among git-versioned prompts by config rather than storing text in the database
+
+**Evals are their own workspace package**
+
+- Chosen: `evals/` as a uv workspace member (`uv run --package evals python -m evals.agent`), one subpackage per suite, its own tests in `make test`
+- Rejected: `apps/api/evals/` (needed `PYTHONPATH` in the makefile and `pythonpath` in pytest, and lives inside a deployable app); `packages/evals` (packages are libraries apps import); `apps/evals` (apps are deployable processes)
+- Why: Evals are a dev tool that imports the agent; as a real package they import `api` without path workarounds and can hold the next suite (receipt extraction accuracy) beside the agent one
+- Revisit when: A suite needs its own dependencies heavy enough to split again
 
 **Attachments use the extraction pipeline**
 

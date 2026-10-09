@@ -14,6 +14,7 @@ members = [
     "apps/worker",
     "packages/ai",
     "packages/observability",
+    "evals",
 ]
 
 [tool.pytest.ini_options]

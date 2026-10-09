@@ -1,0 +1,29 @@
+# Finding specific purchases and bills.
+
+- id: starbucks-purchases
+  tags: [lists, search]
+  messages: ["Show me my Starbucks purchases."]
+  expect:
+    tools: [{name: list_spend_items|get_spending_summary, args: {search: starbucks}}]
+    answer_has: ["8.50", "6.25", "7.10", "5.75"]
+
+- id: uber-trips-count
+  tags: [lists, search]
+  messages: ["How many Uber trips did I take in September and what did they cost?"]
+  expect:
+    tools: [{name: list_spend_items|get_spending_summary, args: {search: uber}}]
+    answer_has: ["42"]
+
+- id: dmart-on-a-day
+  tags: [lists, dates]
+  messages: ["What did I buy at DMart on September 12?"]
+  expect:
+    tools: [{name: list_spend_items|get_spending_summary}]
+    answer_has: ["1000"]
+
+- id: bills-waiting
+  tags: [documents]
+  messages: ["Do I have any bills waiting for review?"]
+  expect:
+    tools: [{name: list_documents|get_document}]
+    answer_has: ["corner"]

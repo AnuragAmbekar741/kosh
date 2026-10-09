@@ -45,3 +45,6 @@ skills-lock.json
 .firecrawl/
 /DESIGN.md
 /PRODUCT.md
+
+# Agent eval runs (make evals)
+evals/results/

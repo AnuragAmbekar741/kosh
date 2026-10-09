@@ -100,6 +100,10 @@ def stream(run: AgentRun) -> Iterator[str]:
     The turn runs in its own thread and finishes and saves even if the browser
     goes away; this generator only forwards its events.
     """
+    # ponytail: this sync generator blocks a FastAPI pool thread (40, shared by
+    # every route) for the whole reply, and nothing caps live replies. Fine for
+    # now; past ~40 concurrent chats the whole API slows. Fix: async stream plus
+    # a global cap. See docs/architecture/agent.md §13.
     events: queue.Queue[runtime.Event | None] = queue.Queue()
     kwargs = {
         "user_id": run.user_id,

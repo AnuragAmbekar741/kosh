@@ -69,6 +69,9 @@ apps/worker/               background jobs over Postgres claims
     extraction/            job → handler → drafts/validation/attempts
     items/                 job → handler → matching (saved answer → string match → ai.classify_items)
 
+evals/                     dev-only uv member; never deployed
+  src/evals/agent/         agent evals: make evals (cases/{golden,safety}/*.yaml, synthetic ledger, throwaway SQLite)
+
 apps/web/                  React + Vite + shadcn (not a uv member)
   src/app/                 entry, App, global CSS, typeset
   src/api/client.ts        axios + interceptors (`VITE_API_URL`, credentials)

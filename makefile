@@ -1,4 +1,4 @@
-.PHONY: help db-up db-down migrate migrate-new catalog test api web worker dev setup git-config
+.PHONY: help db-up db-down migrate migrate-new catalog test evals api web worker dev setup git-config
 
 help:
 	@grep -E '^[a-zA-Z_-]+:' Makefile | cut -d: -f1 | sort
@@ -20,7 +20,11 @@ migrate-new:
 	uv run --directory apps/api alembic revision --autogenerate -m "$(MSG)"
 
 test:
-	uv run --group dev pytest apps/api/tests apps/worker/tests packages/storage/tests packages/ai/tests -q
+	uv run --group dev pytest apps/api/tests apps/worker/tests packages/storage/tests packages/ai/tests evals/tests -q
+
+# Agent evals against the real model; costs money. ARGS="--repeat 1 --only dates"
+evals:
+	uv run --package evals python -m evals.agent $(ARGS)
 
 worker:
 	uv run --package worker python -m worker.main

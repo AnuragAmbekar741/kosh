@@ -1,5 +1,7 @@
 """Document tools: the user's bills and the draft lines waiting for review."""
 
+from collections import defaultdict
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -42,6 +44,11 @@ def _get_document(ctx: ToolContext, args: DocumentArgs) -> dict[str, Any]:
     data["drafts"] = [
         draft.model_dump(mode="json", include=LINE_FIELDS) for draft in detail.drafts
     ]
+    # The model quotes the total instead of adding the lines up itself.
+    totals: dict[str, Decimal] = defaultdict(Decimal)
+    for draft in detail.drafts:
+        totals[draft.currency] += draft.amount
+    data["drafts_total"] = {currency: str(t) for currency, t in totals.items()}
     return data
 
 
@@ -53,7 +60,8 @@ TOOLS: dict[str, Tool] = {
         _list_documents,
     ),
     "get_document": Tool(
-        "One bill by id: its status and the draft lines waiting for review.",
+        "One bill by id: its status, the draft lines waiting for review and "
+        "their total per currency.",
         DocumentArgs,
         _get_document,
     ),
