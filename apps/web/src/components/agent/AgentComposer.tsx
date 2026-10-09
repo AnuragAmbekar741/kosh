@@ -5,7 +5,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupText,
   InputGroupTextarea,
 } from "@/components/ui/input-group"
 import { useAgentPanel } from "@/hooks/agent/use-agent-panel"
@@ -59,13 +58,9 @@ export function AgentComposer({ inputRef }: AgentComposerProps) {
           rows={1}
           value={text}
         />
-        <InputGroupAddon align="block-end">
-          <InputGroupText className="font-normal">
-            Enter to send · Shift+Enter for a new line
-          </InputGroupText>
+        <InputGroupAddon align="inline-end" className="self-end">
           <InputGroupButton
             aria-label="Send"
-            className="ml-auto"
             disabled={!canSend}
             size="icon-sm"
             type="submit"

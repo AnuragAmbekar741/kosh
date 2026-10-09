@@ -7,8 +7,8 @@ controls are the ones in [global.md](./global.md); behaviour behind it is in
 
 ## Placement
 
-- **Launcher:** a primary `Button` (`size="icon-lg"`, Sparkles icon; X while
-  open) fixed bottom-right, 16px from the edges on phones and 24px from `sm`.
+- **Launcher:** a primary `Button` (`size="icon-lg"`, MessageCircle icon; X
+  while open) fixed bottom-right, 16px from the edges on phones and 24px from `sm`.
   Mounted once in `AppShell`, so it exists on every signed-in page and never on
   login. Square like every icon button; never a pill.
 - **Panel:** a non-modal floating `section` (`role="dialog"`) above the
@@ -27,7 +27,7 @@ origin, 220ms exponential ease-out. Reduced motion keeps only a 120ms fade.
 
 ```
 ┌ header 48px ─────────────────────────────┐
-│ ✦ Assistant          [history] [new] [✕] │  ghost icon-sm buttons with tooltips
+│ 💬 Assistant         [history] [new] [✕] │  ghost icon-sm buttons with tooltips
 ├──────────────────────────────────────────┤
 │ thread (MessageScroller)                  │
 │                     ┌ user: Bubble ─────┐ │  secondary bubble, right
@@ -35,7 +35,7 @@ origin, 220ms exponential ease-out. Reduced motion keeps only a 120ms fade.
 │ reply: Bubble ghost, markdown, left       │
 │ Marker + shimmer: "Adding up your spending…"
 ├──────────────────────────────────────────┤
-│ InputGroup: Textarea + hint + Send        │  Enter sends · Shift+Enter new line
+│ InputGroup: Textarea + Send (inline end)  │  Enter sends · Shift+Enter new line
 └──────────────────────────────────────────┘
 ```
 
@@ -48,9 +48,13 @@ origin, 220ms exponential ease-out. Reduced motion keeps only a 120ms fade.
   `react-markdown` limited to paragraphs, bold, italics, lists, links and code.
   Raw HTML is never rendered; headings, tables and images collapse to text.
   Numbers use `tabular-nums`; links use `brand-ink`.
-- **Composer:** `InputGroup` + `InputGroupTextarea` (grows to 128px, 4000
-  characters) and a primary `icon-sm` send button, disabled while a reply is
-  streaming or the text is blank.
+- **Composer:** `InputGroup` + `InputGroupTextarea` (one line, grows to
+  128px, 4000 characters) with only the placeholder "Ask about your spending…",
+  no hint text. A primary `icon-sm` send button sits at the inline end, pinned
+  to the bottom as the text grows, and is disabled while a reply is streaming or
+  the text is blank. Enter sends; Shift+Enter adds a line.
+- **Icon:** `MessageCircle` marks the assistant everywhere (launcher, panel
+  header, new-chat empty state).
 
 ## States
 

@@ -1,4 +1,4 @@
-import { SparklesIcon, XIcon } from "lucide-react"
+import { MessageCircleIcon, XIcon } from "lucide-react"
 import type { Ref } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -30,7 +30,7 @@ export function AgentLauncher({
       ref={buttonRef}
       size="icon-lg"
     >
-      {open ? <XIcon /> : <SparklesIcon />}
+      {open ? <XIcon /> : <MessageCircleIcon />}
     </Button>
   )
 }

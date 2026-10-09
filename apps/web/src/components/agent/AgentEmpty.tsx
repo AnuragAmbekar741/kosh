@@ -1,4 +1,4 @@
-import { SparklesIcon } from "lucide-react"
+import { MessageCircleIcon } from "lucide-react"
 
 import { SUGGESTIONS } from "@/components/agent/agent-copy"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,7 @@ export function AgentEmpty() {
     <Empty className="flex-1 justify-center border-0 px-6">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <SparklesIcon />
+          <MessageCircleIcon />
         </EmptyMedia>
         <EmptyTitle>Ask about your spending</EmptyTitle>
         <EmptyDescription>

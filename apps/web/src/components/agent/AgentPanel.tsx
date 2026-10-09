@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import {
   ArrowLeftIcon,
   HistoryIcon,
-  SparklesIcon,
+  MessageCircleIcon,
   SquarePenIcon,
   XIcon,
   type LucideIcon,
@@ -101,7 +101,7 @@ export function AgentPanel({ onClose }: AgentPanelProps) {
           />
         ) : (
           <span className="flex size-8 items-center justify-center text-muted-foreground">
-            <SparklesIcon className="size-4" />
+            <MessageCircleIcon className="size-4" />
           </span>
         )}
         <h2 className="flex-1 truncate font-medium" id="agent-panel-title">
