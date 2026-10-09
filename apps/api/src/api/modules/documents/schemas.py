@@ -32,6 +32,7 @@ class DocumentSummary(BaseModel):
     error: str | None
     created_at: datetime
     processed_at: datetime | None
+    needs_review: bool = False
 
 
 class DocumentDetail(DocumentSummary):

@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 from sqlmodel import Session, col, select
 
 from storage.models.document import Document, DocumentStatus, ExtractionAttempt
-from storage.models.spend import SpendItem
+from storage.models.spend import SpendItem, SpendStatus
 
 __all__ = [
     "claim_next",
@@ -24,6 +24,7 @@ __all__ = [
     "mark_ready",
     "mark_retry",
     "next_attempt_no",
+    "pending_review_document_ids",
     "reclaim_stuck",
 ]
 
@@ -117,6 +118,19 @@ def list_documents(session: Session, *, user_id: UUID) -> list[Document]:
         .order_by(col(Document.created_at).desc())
     )
     return list(session.exec(statement).all())
+
+
+def pending_review_document_ids(session: Session, *, user_id: UUID) -> set[UUID]:
+    statement = (
+        select(SpendItem.document_id)
+        .where(
+            SpendItem.user_id == user_id,
+            SpendItem.status == SpendStatus.PENDING_REVIEW,
+            col(SpendItem.document_id).is_not(None),
+        )
+        .distinct()
+    )
+    return {document_id for document_id in session.exec(statement) if document_id}
 
 
 def claim_next(session: Session) -> Document | None:

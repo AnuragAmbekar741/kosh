@@ -348,6 +348,48 @@ def test_extract_failure_marks_failed(client, monkeypatch) -> None:
     assert "invalid model output" in detail["error"]
 
 
+def test_list_flags_documents_that_need_review(client, monkeypatch) -> None:
+    headers = _auth(client)
+    other = _auth(client)
+
+    def flags(auth: dict[str, str]) -> dict[str, bool]:
+        listed = client.get("/documents", headers=auth).json()
+        return {item["id"]: item["needs_review"] for item in listed}
+
+    def detail_flag(document_id: str) -> bool:
+        return client.get(f"/documents/{document_id}", headers=headers).json()[
+            "needs_review"
+        ]
+
+    ready = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
+    assert flags(headers) == {ready: True}
+    assert detail_flag(ready) is True
+
+    _stub_extract(monkeypatch, _receipt())
+    JOB.run(_claim(ready))
+    assert flags(headers) == {ready: True}
+    assert detail_flag(ready) is True
+    assert flags(other) == {}
+
+    failed = _upload(client, headers, _JPEG, "blurry.jpg").json()["id"]
+    monkeypatch.setattr(
+        "ai.extract",
+        lambda data, mime, **_: (_ for _ in ()).throw(ExtractError("unreadable")),
+    )
+    JOB.run(_claim(failed))
+    manual = client.post(
+        "/documents/manual", json={"title": "Cash lunch"}, headers=headers
+    ).json()
+    assert manual["needs_review"] is False
+
+    assert (
+        client.post(f"/documents/{ready}/confirm", headers=headers).status_code == 200
+    )
+    assert flags(headers) == {ready: False, failed: False, manual["id"]: False}
+    assert detail_flag(ready) is False
+    assert detail_flag(failed) is False
+
+
 def test_transient_extract_failure_is_retried(client, monkeypatch) -> None:
     headers = _auth(client)
     document_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
