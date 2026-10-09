@@ -27,7 +27,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 
 @router.post("", status_code=status.HTTP_202_ACCEPTED)
-async def upload(
+def upload(
     user: CurrentUserDep,
     session: SessionDep,
     file: Annotated[UploadFile, File()],
@@ -36,7 +36,7 @@ async def upload(
     ] = None,
 ) -> DocumentUploadResponse:
     max_bytes = get_storage_settings().max_upload_mb * 1024 * 1024
-    data = await file.read(max_bytes + 1)
+    data = file.file.read(max_bytes + 1)
     key = idempotency_key.strip() if idempotency_key else None
     if key == "":
         key = None
