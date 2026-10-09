@@ -16,6 +16,10 @@ Empty frame, centered in the panel and hugging its copy, with a single CTA
 to Spending. Spending contains the document intake,
 extraction review, and confirmed ledger described in [spending.md](./spending.md).
 
+Every signed-in page also carries the assistant: a launcher bottom-right that
+opens a floating chat panel (see [agent.md](./agent.md)). Toasts sit
+bottom-center so they never cover it.
+
 While `useGetMe` is pending, the shell renders `DashboardSkeleton` — the same
 inset Sidebar chrome with Skeleton placeholders — so the first paint matches
 the loaded layout. The status is announced as “Opening your workspace.”

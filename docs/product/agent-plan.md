@@ -23,8 +23,8 @@ Each PR merges on its own and leaves `main` working; the API is not reachable un
 | **3. Tools + prompt** | read tools over spend and documents services, system prompt with `PROMPT_VERSION` (now `core/tools/`, `core/prompts/`) | Every tool scoped to `ctx.user`; no schema has `user_id`; bad arguments rejected; `limit` ≤ 50 | merged (#40) |
 | **4. Runtime** | `core/runtime.py`: the loop, step cap, saving messages and the run, event stream | Fake model: tool round trip, 6-step cap, failed run saved, no DB session open during the model call | merged (#41) |
 | **5. Endpoints** | `router.py`: create / list conversations, transcript, `POST …/messages` as SSE; `AGENT_DAILY_RUNS` → 429 | Auth 401, owner 404, busy 409, budget 429, unconfigured 503, SSE event order, reply finishes after disconnect | merged (#42) |
-| **6. Evals** | `evals/` workspace package (`evals.agent`), 20 golden + 6 safety cases, `make evals` | The runner itself, on a scripted model; ledger totals vs the real summary tool | this PR |
-| **7. Web chat** | `src/api/agent/`, `src/hooks/agent/`, chat page with `fetch` streaming; `docs/design/agent.md` | Manual run against the local API | |
+| **6. Evals** | `evals/` workspace package (`evals.agent`), 20 golden + 6 safety cases, `make evals` | The runner itself, on a scripted model; ledger totals vs the real summary tool | merged (#43) |
+| **7. Web chat** | `src/api/agent/`, `src/hooks/agent/`, floating chat widget with `fetch` streaming; `docs/design/agent.md` | Manual run against a throwaway local API: desktop, phone, light and dark | this PR |
 
 `DocumentSource.AGENT` moves to phase 2 with attachments.
 

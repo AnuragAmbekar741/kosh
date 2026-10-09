@@ -28,7 +28,7 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 
 | Done | Next |
 |---|---|
-| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | Agent — [product/agent-plan.md](./product/agent-plan.md) |
+| uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | Agent phase 2: attachments and pending actions — [product/agent-plan.md](./product/agent-plan.md) |
 | Web auth plus document upload, extraction review, and Payments | Item analytics (recurring items) |
 | Manual spend entry (name-only bill + line items) | |
 | Postgres + Alembic; User, AuthIdentity, RefreshSession | |
@@ -36,6 +36,7 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 | SpendItem CRUD | |
 | Spending analytics (`/spending/analytics`) | |
 | Documents upload + worker extraction via OpenRouter | |
+| Agent phase 1: read-only chat (tools, SSE endpoints, evals, chat widget) | |
 
 
 When a planning decision changes, update `architecture/decisions.md` first, then `architecture/overview.md` and `product/scope.md`.
