@@ -201,6 +201,7 @@ def test_documents_show_drafts_and_stay_private(session, ledger) -> None:
     assert listed["documents"][0]["status"] == "ready"
     detail = _call(session, ada, "get_document", document_id=str(document.id))
     assert [d["amount"] for d in detail["drafts"]] == ["12.00"]
+    assert detail["drafts_total"] == {"USD": "12.00"}
     assert "extraction" not in detail and "content_hash" not in detail
     assert _call(session, bob, "get_document", document_id=str(document.id)) == {
         "error": "not found"
