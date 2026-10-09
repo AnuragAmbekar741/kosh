@@ -1,0 +1,103 @@
+# Totals and comparisons. Ledger and its totals: evals/ledger.py. Today is 2026-10-07.
+
+- id: groceries-last-month
+  tags: [totals, dates]
+  messages: ["How much did I spend on groceries last month?"]
+  expect:
+    tools:
+      - name: get_spending_summary
+        args: {date_from: 2026-09-01, date_to: 2026-09-30, categories: [Groceries]}
+    answer_has: ["1240"]
+    max_steps: 3
+
+- id: total-last-month
+  tags: [totals, dates]
+  messages: ["What was my total spending in September?"]
+  expect:
+    tools:
+      - name: get_spending_summary
+        args: {date_from: 2026-09-01, date_to: 2026-09-30}
+    answer_has: ["1511.74"]
+
+- id: this-month-so-far
+  tags: [totals, dates]
+  messages: ["How much have I spent this month so far?"]
+  expect:
+    tools:
+      - name: get_spending_summary
+        args: {date_from: 2026-10-01}
+    answer_has: ["101.25"]
+
+- id: compare-months
+  tags: [totals, comparison]
+  messages: ["How did my spending in September compare with August?"]
+  expect:
+    tools: [{name: get_spending_summary}]
+    answer_has: ["1511.74", "371.10"]
+
+- id: all-time
+  tags: [totals]
+  messages: ["How much have I spent in total, ever?"]
+  expect:
+    tools: [{name: get_spending_summary}]
+    answer_has: ["1984.09"]
+
+- id: by-category
+  tags: [totals]
+  messages: ["Break down my September spending by category."]
+  expect:
+    tools:
+      - name: get_spending_summary
+        args: {date_from: 2026-09-01, date_to: 2026-09-30}
+    answer_has: ["1240", "129.99", "85", "42", "14.75"]
+
+- id: dining-in-august
+  tags: [totals, dates]
+  messages: ["How much did I spend eating out in August?"]
+  expect:
+    tools:
+      - name: get_spending_summary
+        args: {date_from: 2026-08-01, date_to: 2026-08-31, categories: [Dining out]}
+    answer_has: ["71.10"]
+
+- id: last-week
+  tags: [totals, dates]
+  messages: ["What did I spend last week?"]
+  expect:
+    tools:
+      - name: get_spending_summary|list_spend_items
+        args: {date_from: 2026-09-28, date_to: 2026-10-04}
+    answer_has: ["107.50"]
+
+- id: average-per-bill
+  tags: [totals]
+  messages: ["What was my average bill in September?"]
+  expect:
+    tools:
+      - name: get_spending_summary
+        args: {date_from: 2026-09-01, date_to: 2026-09-30}
+    answer_has: ["188.97"]
+
+- id: biggest-purchase
+  tags: [totals]
+  messages: ["What was my biggest purchase last month?"]
+  expect:
+    tools: [{name: get_spending_summary|list_spend_items}]
+    answer_has: ["DMart", "1000"]
+
+- id: two-currencies-not-added
+  tags: [totals, currency]
+  seed:
+    - {merchant: Café Paris, amount: "40.00", date: 2026-09-10, category: Dining out, currency: EUR}
+  messages: ["How much did I spend in September?"]
+  expect:
+    tools: [{name: get_spending_summary}]
+    answer_has: ["1511.74", "EUR"]
+    answer_not_has: ["1551.74"]
+
+- id: nothing-matches
+  tags: [totals, empty]
+  messages: ["How much did I spend on travel last month?"]
+  expect:
+    tools: [{name: get_spending_summary|list_spend_items}]
+    answer_not_has: ["1511.74", "1240"]

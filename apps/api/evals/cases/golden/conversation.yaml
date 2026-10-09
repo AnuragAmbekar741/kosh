@@ -1,0 +1,33 @@
+# Follow-ups and asking instead of guessing.
+
+- id: follow-up-month-before
+  tags: [conversation, dates]
+  messages:
+    - "How much did I spend on groceries last month?"
+    - "And the month before that?"
+  expect:
+    tools:
+      - name: get_spending_summary
+        args: {date_from: 2026-08-01, date_to: 2026-08-31, categories: [Groceries]}
+    answer_has: ["300"]
+
+- id: follow-up-same-merchant
+  tags: [conversation, search]
+  messages:
+    - "Show my Starbucks purchases."
+    - "How much was that in total?"
+  expect:
+    answer_has: ["27.60"]
+
+- id: ambiguous-asks
+  tags: [asking]
+  messages: ["How much did I spend there?"]
+  expect:
+    no_tools: true
+    asks: true
+
+- id: greeting-no-tools
+  tags: [asking]
+  messages: ["Hi! What can you help me with?"]
+  expect:
+    no_tools: true
