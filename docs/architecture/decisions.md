@@ -79,6 +79,7 @@ Revisit when: ...
 | 63 | Agent module layout | **HTTP files at `modules/agent/` top level** (router, schemas, service, presenter, settings) like every module; **the agent in `core/`** (runtime, `prompts/`, `tools/` split by domain). Not in `packages/ai`: tools call API services and `ai` cannot import `api` |
 | 64 | Prompt storage | **In git as Markdown** (`core/prompts/*.md`) with `PROMPT_VERSION` recorded on every run; not in the database |
 | 65 | Evals placement | **Top-level `evals/` uv workspace package** depending on `api`, `ai`, `storage`; one subpackage per suite (`evals.agent` now; extraction later); dev only, never in an app image |
+| 66 | Assistant UI | **A floating widget, not a route**: launcher bottom-right on every signed-in page, non-modal panel built from shadcn `MessageScroller` / `Message` / `Bubble` / `Marker`; replies in limited markdown (`react-markdown`, no raw HTML); toasts move to bottom-center |
 
 ### Locked detail rows
 

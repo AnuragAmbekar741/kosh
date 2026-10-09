@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from "react-router"
 
+import { AgentWidget } from "@/components/agent/AgentWidget"
 import { AppHeader } from "@/components/layout/AppHeader"
 import { AppSidebar } from "@/components/layout/AppSidebar"
 import { DashboardSkeleton } from "@/components/layout/DashboardSkeleton"
@@ -33,7 +34,9 @@ export function AppShell() {
           </div>
         </SidebarInset>
       </SidebarProvider>
-      <Toaster position="bottom-right" />
+      <AgentWidget />
+      {/* Bottom-right belongs to the assistant launcher. */}
+      <Toaster position="bottom-center" />
     </TooltipProvider>
   )
 }
