@@ -21,11 +21,14 @@ markers = [
     "llm: live OpenRouter calls (extraction fixture, agent chat)",
 ]
 addopts = "-m 'not llm'"
+# apps/api/evals is a dev tool, not part of the api package; its tests import it.
+pythonpath = ["apps/api"]
 
 [dependency-groups]
 dev = [
     "coverage>=7.16.0",
     "mypy>=2.3.1",
     "pytest>=9.1.1",
+    "pyyaml>=6.0.3",
     "ruff>=0.16.5",
 ]
