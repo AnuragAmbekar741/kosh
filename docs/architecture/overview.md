@@ -28,7 +28,8 @@ apps/api/src/api/          FastAPI app factory + feature modules
   modules/spend/           SpendItem CRUD + summary + item corrections + presenter
   modules/documents/       upload, manual create, list, detail, confirm, line items
   modules/catalog/         GET /catalog/search for the item picker
-  modules/agent/           tools.py (TOOLS, run_tool), prompt.py (PROMPT_VERSION), runtime.py (run_turn → events); no routes yet
+  modules/agent/           router/schemas/service/presenter/settings: /agent conversations + SSE messages
+    core/                  runtime.py (run_turn → events), prompts/system.md, tools/{base,spend,documents}.py
 
 packages/storage/src/storage/
   models/user.py           User, AuthIdentity, RefreshSession

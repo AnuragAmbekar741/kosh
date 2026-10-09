@@ -23,6 +23,7 @@ from storage.models.agent import (
 from storage.pagination import paginate
 
 __all__ = [
+    "active_run",
     "append_messages",
     "chat_message",
     "count_runs_since",
@@ -32,6 +33,7 @@ __all__ = [
     "history",
     "list_conversations_page",
     "list_messages",
+    "list_runs",
     "start_turn",
 ]
 
@@ -84,8 +86,11 @@ def start_turn(
         model=model,
         prompt_version=prompt_version,
     )
+    session.add(run)
+    session.flush()  # the message points at the run, so insert the run first
     message = AgentMessage(
         conversation_id=conversation.id,
+        run_id=run.id,
         seq=_next_seq(session, conversation.id),
         role=MessageRole.USER,
         content=content,
@@ -94,7 +99,7 @@ def start_turn(
     if conversation.title is None:
         conversation.title = " ".join(content.split())[:_TITLE_CHARS] or None
     conversation.updated_at = message.created_at
-    session.add_all([run, message, conversation])
+    session.add_all([message, conversation])
     session.commit()
     session.refresh(message)
     session.refresh(run)
@@ -160,6 +165,27 @@ def history(
     if start is not None:
         statement = statement.where(AgentMessage.seq >= start)
     return list(session.exec(statement.order_by(col(AgentMessage.seq))).all())
+
+
+def active_run(
+    session: Session, *, conversation_id: UUID, started_after: datetime
+) -> AgentRun | None:
+    """A reply still running in this conversation; older ones count as dead."""
+    return session.exec(
+        select(AgentRun).where(
+            AgentRun.conversation_id == conversation_id,
+            AgentRun.status == RunStatus.RUNNING,
+            AgentRun.started_at > started_after,
+        )
+    ).first()
+
+
+def list_runs(session: Session, *, conversation_id: UUID) -> list[AgentRun]:
+    return list(
+        session.exec(
+            select(AgentRun).where(AgentRun.conversation_id == conversation_id)
+        ).all()
+    )
 
 
 def list_messages(session: Session, *, conversation_id: UUID) -> list[AgentMessage]:

@@ -17,12 +17,13 @@ It never runs SQL, never sees `user_id`, has no tools that reach outside Kosh, a
 ```
 apps/web  ── chat page ── fetch + ReadableStream (SSE) ──┐
                                                          ▼
-apps/api
-  modules/agent/
-    router.py     conversations, messages (SSE), actions confirm/cancel
-    runtime.py    the tool loop: model ⇄ tools, ≤ 6 steps per turn
-    tools.py      TOOLS: name → (args model, risk, handler)
-    prompt.py     system prompt + PROMPT_VERSION
+apps/api/src/api/modules/agent/
+  router.py  schemas.py  service.py  presenter.py  settings.py    HTTP, like every module
+  core/                                                           the agent; no HTTP
+    runtime.py          run_turn: model ⇄ tools, ≤ 6 steps, yields events
+    prompts/            system.md (the text) + PROMPT_VERSION
+    tools/              base.py (ToolContext, Tool, Args) · spend.py · documents.py
+                        __init__.py joins each domain's TOOLS; run_tool, tool_schemas
   modules/spend, modules/documents      services the tools call
 packages/ai      agent/chat.py: chat_with_tools → ChatTurn; function_tool(name, description, ArgsModel)
 packages/storage models/agent.py + crud/agent.py
@@ -49,13 +50,18 @@ If the agent ever moves to its own process, it would get short-lived scoped serv
 ## 4. Serving a message
 
 ```
-POST /agent/conversations/{id}/messages   {text, document_ids?}
+POST /agent/conversations            create          GET /agent/conversations         list, paged
+GET  /agent/conversations/{id}       transcript      POST /agent/conversations/{id}/messages  {text} → SSE
 ```
 
-1. `CurrentUserDep` → user. Any 401 happens before the stream opens.
-2. Conversation owner check → 404 otherwise.
-3. Daily budget check on `agent_runs` → 429 when over.
-4. Short DB session: insert the user message and a `running` run; commit; close.
+`modules/agent/router.py` → `service.py` → `core/runtime.py`. Every refusal happens before the stream opens, so the browser gets a normal HTTP error:
+
+1. `CurrentUserDep` → user, else 401.
+2. Conversation owner check, else 404.
+3. A run still `running` in this conversation and younger than 5 minutes, else 409. Older ones count as dead (server restart); 5 minutes covers six 45-second model calls.
+4. Runs started since midnight UTC < `AGENT_DAILY_RUNS` (50), else 429. Failed runs count.
+5. OpenRouter key set, else 503.
+6. `start_turn` saves the user message (pointing at its run) and a `running` run in one commit; two sends that race for the same `seq` get 409. The router then **closes the request's session**: FastAPI keeps dependency sessions open until a streamed response ends, so without this the login's connection would be held for the whole reply.
 5. Open `text/event-stream` and loop, at most 6 steps:
    1. Load the last 10 user turns (`crud.agent.history`); build `[system, …history]`.
    2. Call OpenRouter with the tool schemas. **No DB connection is held during the call** (Neon connection limits; a call can take seconds).
@@ -84,11 +90,12 @@ How a turn ends:
 
 - **Web client:** `fetch` with a ReadableStream, because `EventSource` cannot send `Authorization`. Before streaming it reuses the axios refresh path, so one 401 refreshes and retries. The token is checked only when the stream opens; a reply that outlives the 15-minute token still finishes.
 - **Threads:** a sync generator inside `StreamingResponse` holds one worker thread per live turn (default pool 40). Move to async when concurrent chats approach that.
-- **Disconnects:** if the browser drops, the loop must still finish and save, so the reply is there on reload. Closing the response closes the generator, so the router runs `run_turn` to completion on its own and only forwards events to the stream (PR 5).
+- **Disconnects:** `service.stream` runs `run_turn` in its own daemon thread that puts events on a queue; the response only reads the queue. If the browser drops, reading stops but the thread finishes and saves, so the reply is there on reload. The thread runs in a copy of the request's context, so its log lines keep the `request_id`.
+- **Transcript:** `GET /agent/conversations/{id}` shows user messages and assistant text replies, not tool steps. Each user message carries its run's status; a failed one with no reply after it is what the UI offers to retry.
 
 ## 5. Tools
 
-Each entry in `TOOLS` (`modules/agent/tools.py`): description, Pydantic argument model, `risk` (`read | write | destructive`), handler `(ctx, args) -> dict`. A dict, not a registry class. `run_tool(ctx, name, arguments)` returns the JSON text for the `tool` message.
+Each entry in `TOOLS` (`core/tools/`, one file per domain): description, Pydantic argument model, `risk` (`read | write | destructive`), handler `(ctx, args) -> dict`. A dict, not a registry class. `run_tool(ctx, name, arguments)` returns the JSON text for the `tool` message.
 
 | Tool | Risk | Calls | Arguments | Phase |
 |---|---|---|---|---|
@@ -107,7 +114,7 @@ Each entry in `TOOLS` (`modules/agent/tools.py`): description, Pydantic argument
 - **Only reads run.** `run_tool` raises for any tool whose risk is not `read`; writes will go through pending actions (§6).
 - **Trimmed results.** Results are compact JSON from the existing presenters: spend lines keep id, merchant, description, amount, currency, date, category, item and bill; the summary drops weekdays and empty trend points; documents drop the raw extraction and hash. Totals come from the analytics code; the model quotes them and does not add them up.
 
-The system prompt (`prompt.py`) starts with today's date and weekday, and covers: numbers only from tools, relative dates, asking when unclear, tool results as data, no advice, short plain replies. `PROMPT_VERSION` is recorded on every run.
+The system prompt (`core/prompts/system.md`, rendered by `core/prompts/__init__.py`) starts with today's date and weekday, and covers: numbers only from tools, relative dates, asking when unclear, tool results as data, no advice, short plain replies. `PROMPT_VERSION` is recorded on every run.
 
 ## 6. Pending actions (writes)
 
@@ -173,7 +180,7 @@ agent_conversations
 agent_messages                         OpenAI chat shape: history replay is one SELECT
   id              uuid pk
   conversation_id uuid fk              unique (conversation_id, seq)
-  run_id          uuid fk null         null on the user's own message
+  run_id          uuid fk null         the run that answers it (user) or wrote it
   seq             int                  order inside the conversation
   role            str                  user | assistant | tool
   content         text null

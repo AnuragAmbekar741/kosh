@@ -75,6 +75,7 @@ def test_text_reply(monkeypatch, fake_openai) -> None:
     assert (turn.model, turn.provider) == ("fake/served", "fake")
     assert seen["model"] == "base/model"
     assert seen["max_tokens"] == 800
+    assert seen["timeout"] == 45
     assert "tools" not in seen
     assert seen["extra_body"]["provider"] == {"require_parameters": True}
     assert seen["extra_body"]["usage"] == {"include": True}

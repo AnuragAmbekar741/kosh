@@ -17,6 +17,7 @@ __all__ = [
     "ChatTurn",
     "RetryableChatError",
     "ToolCall",
+    "agent_model",
     "chat_with_tools",
     "function_tool",
 ]
@@ -64,6 +65,12 @@ class RetryableChatError(ChatError):
     pass
 
 
+def agent_model() -> str:
+    """The model agent turns use: OPENROUTER_AGENT_MODEL, else OPENROUTER_MODEL."""
+    settings = get_settings()
+    return settings.openrouter_agent_model or settings.openrouter_model
+
+
 def function_tool(name: str, description: str, args: type[BaseModel]) -> dict[str, Any]:
     """A tool definition in the OpenAI format, parameters from a Pydantic model."""
     return {
@@ -82,20 +89,21 @@ def chat_with_tools(
     *,
     model: str | None = None,
     max_tokens: int = 800,
+    timeout: float = 45,
 ) -> ChatTurn:
     """One model step: reply text, tool calls, or both.
 
     Rate limits, timeouts and 5xx raise RetryableChatError; other API errors
     and an empty answer raise ChatError.
     """
-    settings = get_settings()
-    model = model or settings.openrouter_agent_model or settings.openrouter_model
+    model = model or agent_model()
     optional: dict[str, Any] = {"tools": list(tools)} if tools else {}
     try:
         response = openrouter.client().chat.completions.create(
             model=model,
             messages=cast(Any, list(messages)),
             max_tokens=max_tokens,
+            timeout=timeout,
             **optional,
             extra_body={
                 # Only route to providers that honour `tools`; ask for the cost.

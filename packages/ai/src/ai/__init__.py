@@ -4,6 +4,7 @@ from ai.agent.chat import (
     ChatTurn,
     RetryableChatError,
     ToolCall,
+    agent_model,
     chat_with_tools,
     function_tool,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "StatementExtraction",
     "ToolCall",
     "Transaction",
+    "agent_model",
     "chat_with_tools",
     "classify_items",
     "extract",

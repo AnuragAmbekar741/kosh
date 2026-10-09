@@ -79,7 +79,7 @@ def test_start_turn_saves_message_run_and_title(session: Session) -> None:
     )
     assert message.seq == 1
     assert message.role == MessageRole.USER
-    assert message.run_id is None
+    assert message.run_id == run.id
     assert message.document_ids == [str(doc)]
     assert run.status == RunStatus.RUNNING
     assert run.user_id == user.id
@@ -179,3 +179,31 @@ def test_finish_run_and_daily_count(session: Session) -> None:
     assert agent.count_runs_since(session, user_id=user.id, since=today) == 2
     tomorrow = today + timedelta(days=1)
     assert agent.count_runs_since(session, user_id=user.id, since=tomorrow) == 0
+
+
+def test_active_run_ignores_finished_and_stale_runs(session: Session) -> None:
+    user = _user(session)
+    conversation = agent.create_conversation(session, user_id=user.id)
+    _, run = _turn(session, conversation)
+    now = datetime.now(UTC)
+
+    def active(after):
+        return agent.active_run(
+            session, conversation_id=conversation.id, started_after=after
+        )
+
+    assert active(now - timedelta(minutes=5)).id == run.id
+    assert active(now + timedelta(minutes=1)) is None  # older than the cutoff
+    agent.finish_run(
+        session,
+        run,
+        status=RunStatus.COMPLETED,
+        steps=1,
+        prompt_tokens=1,
+        completion_tokens=1,
+        cost_usd=None,
+    )
+    assert active(now - timedelta(minutes=5)) is None
+    assert [
+        r.id for r in agent.list_runs(session, conversation_id=conversation.id)
+    ] == [run.id]

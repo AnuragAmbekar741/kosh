@@ -108,3 +108,18 @@ class NotACatalogFamilyError(DomainError):
 class LineNotMatchableError(DomainError):
     status_code = 409
     detail = "this line is not matched to catalog items"
+
+
+class AgentBusyError(DomainError):
+    status_code = 409
+    detail = "a reply is still being written in this conversation"
+
+
+class AgentDailyLimitError(DomainError):
+    status_code = 429
+    detail = "daily message limit reached"
+
+
+class AgentUnavailableError(DomainError):
+    status_code = 503
+    detail = "the assistant is not configured"
