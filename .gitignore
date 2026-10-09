@@ -47,4 +47,4 @@ skills-lock.json
 /PRODUCT.md
 
 # Agent eval runs (make evals)
-apps/api/evals/results/
+evals/results/
