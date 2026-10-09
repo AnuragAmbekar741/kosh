@@ -6,11 +6,12 @@ from storage.crud.spend import list_document_spend_items
 from storage.models.document import Document
 from storage.models.spend import SpendStatus
 
+from api.modules.documents import service
 from api.modules.documents.schemas import DocumentDetail, DocumentSummary
 from api.modules.spend.presenter import to_public
 
 
-def to_summary(document: Document) -> DocumentSummary:
+def to_summary(document: Document, *, needs_review: bool = False) -> DocumentSummary:
     return DocumentSummary(
         id=document.id,
         filename=document.filename,
@@ -21,6 +22,7 @@ def to_summary(document: Document) -> DocumentSummary:
         error=document.error,
         created_at=document.created_at,
         processed_at=document.processed_at,
+        needs_review=needs_review,
     )
 
 
@@ -33,7 +35,10 @@ def to_detail(session: Session, user_id: UUID, document: Document) -> DocumentDe
         status=SpendStatus.PENDING_REVIEW,
     )
     return DocumentDetail(
-        **to_summary(document).model_dump(),
+        **to_summary(
+            document,
+            needs_review=service.needs_review(document, has_pending=bool(drafts)),
+        ).model_dump(),
         content_hash=document.content_hash,
         hash_matches_existing=hash_matches_other(
             session,
