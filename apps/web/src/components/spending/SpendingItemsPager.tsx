@@ -7,6 +7,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 
 type SpendingItemsPagerProps = {
   page: number
@@ -14,6 +16,9 @@ type SpendingItemsPagerProps = {
   total: number
   onPageChange: (page: number) => void
 }
+
+// Phones get icon-only arrows around "Page X of N" instead of numbered links.
+const compactArrow = { size: "icon", text: "", className: "pl-0!" } as const
 
 function pageWindow(page: number, pageCount: number) {
   if (pageCount <= 7) {
@@ -31,6 +36,7 @@ export function SpendingItemsPager({
   total,
   onPageChange,
 }: SpendingItemsPagerProps) {
+  const isMobile = useIsMobile()
   if (total <= pageSize) return null
   const pageCount = Math.ceil(total / pageSize)
   const start = (page - 1) * pageSize + 1
@@ -43,7 +49,14 @@ export function SpendingItemsPager({
   }
 
   return (
-    <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+    // Keep clear of the assistant launcher fixed at the bottom right: room
+    // below the pager on phones, beside it on wider screens.
+    <div
+      className={cn(
+        "flex shrink-0 flex-wrap items-center justify-between gap-3",
+        isMobile ? "pb-12" : "pr-12"
+      )}
+    >
       <p className="text-xs text-muted-foreground">
         Showing {start}–{end} of {total}
       </p>
@@ -54,16 +67,25 @@ export function SpendingItemsPager({
               href="#"
               text="Previous"
               aria-disabled={page <= 1}
-              className={
-                page <= 1 ? "pointer-events-none opacity-50" : undefined
-              }
+              {...(isMobile ? compactArrow : {})}
+              className={cn(
+                isMobile && compactArrow.className,
+                page <= 1 && "pointer-events-none opacity-50"
+              )}
               onClick={(event) => {
                 event.preventDefault()
                 go(page - 1)
               }}
             />
           </PaginationItem>
-          {pages.map((value, index) => {
+          {isMobile ? (
+            <PaginationItem>
+              <span className="px-3 text-sm text-muted-foreground tabular-nums">
+                Page {page} of {pageCount}
+              </span>
+            </PaginationItem>
+          ) : null}
+          {(isMobile ? [] : pages).map((value, index) => {
             const previous = pages[index - 1]
             const gap = previous != null && value - previous > 1
             return (
@@ -87,9 +109,11 @@ export function SpendingItemsPager({
               href="#"
               text="Next"
               aria-disabled={page >= pageCount}
-              className={
-                page >= pageCount ? "pointer-events-none opacity-50" : undefined
-              }
+              {...(isMobile ? compactArrow : {})}
+              className={cn(
+                isMobile && compactArrow.className,
+                page >= pageCount && "pointer-events-none opacity-50"
+              )}
               onClick={(event) => {
                 event.preventDefault()
                 go(page + 1)
