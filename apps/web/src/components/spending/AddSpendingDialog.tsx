@@ -1,11 +1,8 @@
 import { useState } from "react"
 import { FileUpIcon, PenLineIcon, PlusIcon } from "lucide-react"
-import { toast } from "sonner"
 
 import { apiDetail } from "@/api/client"
 import { AddDocumentFlow } from "@/components/spending/AddDocumentDialog"
-import type { ConfirmedBill } from "@/components/spending/DocumentReview"
-import { formatDate } from "@/components/spending/spending-formatters"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -26,7 +23,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useCreateManualDocument } from "@/hooks/documents/use-documents"
-import { useSpendFilters } from "@/hooks/spend-items/use-spend-filters"
 
 type Step = "choose" | "upload" | "manual"
 
@@ -41,11 +37,9 @@ function DialogBackButton({ onClick }: { onClick: () => void }) {
 export function AddSpendingDialog() {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>("choose")
-  const [uploadStarted, setUploadStarted] = useState(false)
   const [title, setTitle] = useState("")
   const [validationError, setValidationError] = useState("")
   const createManual = useCreateManualDocument()
-  const filters = useSpendFilters()
   const error = validationError || apiDetail(createManual.error)
 
   function goToChooser() {
@@ -60,18 +54,6 @@ export function AddSpendingDialog() {
       setValidationError("")
       createManual.reset()
     }
-  }
-
-  function finishUpload({ merchant, spentAt }: ConfirmedBill) {
-    // Never change the date filter on its own: other bills would seem to vanish.
-    if (spentAt && !filters.isInView(spentAt)) {
-      toast(`Saved ${merchant}`, {
-        description: `Dated ${formatDate(spentAt)}, outside your date filter.`,
-        action: { label: "Show", onClick: filters.revealDate },
-      })
-    }
-    setUploadStarted(false)
-    handleOpenChange(false)
   }
 
   async function saveManual() {
@@ -91,10 +73,7 @@ export function AddSpendingDialog() {
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogTrigger
-        data-slot="add-spending-trigger"
-        render={<Button />}
-      >
+      <DialogTrigger data-slot="add-spending-trigger" render={<Button />}>
         <PlusIcon data-icon="inline-start" />
         Add spending
       </DialogTrigger>
@@ -110,10 +89,7 @@ export function AddSpendingDialog() {
             <div className="flex flex-col gap-3 px-5 py-5 sm:px-6">
               <button
                 className="flex cursor-pointer items-start gap-3 rounded-lg border bg-background px-4 py-3 text-left transition-colors hover:bg-muted/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                onClick={() => {
-                  setUploadStarted(true)
-                  setStep("upload")
-                }}
+                onClick={() => setStep("upload")}
                 type="button"
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent [&_svg]:size-4">
@@ -145,15 +121,12 @@ export function AddSpendingDialog() {
           </>
         ) : null}
 
-        {uploadStarted ? (
-          <div
-            className={
-              step === "upload"
-                ? "flex max-h-[calc(100svh-1rem)] min-h-0 flex-col"
-                : "hidden"
-            }
-          >
-            <AddDocumentFlow onBack={goToChooser} onConfirmed={finishUpload} />
+        {step === "upload" ? (
+          <div className="flex max-h-[calc(100svh-1rem)] min-h-0 flex-col">
+            <AddDocumentFlow
+              onBack={goToChooser}
+              onStarted={() => handleOpenChange(false)}
+            />
           </div>
         ) : null}
 

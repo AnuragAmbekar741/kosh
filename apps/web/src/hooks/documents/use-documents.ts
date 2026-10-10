@@ -76,16 +76,6 @@ export function useUploadDocument() {
   })
 }
 
-export function useUploadDocuments() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (files: File[]) => Promise.all(files.map(uploadDocument)),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: documentQueryKeys.all })
-    },
-  })
-}
-
 export function useConfirmDocument() {
   const queryClient = useQueryClient()
   return useMutation({
