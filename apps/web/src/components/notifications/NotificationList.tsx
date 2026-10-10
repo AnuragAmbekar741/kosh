@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { BellIcon, RotateCwIcon, Trash2Icon, XIcon } from "lucide-react"
+import { CheckCheckIcon, RotateCwIcon, Trash2Icon, XIcon } from "lucide-react"
 
 import type {
   NotificationGroups,
@@ -197,14 +197,15 @@ export function NotificationList({
 }: NotificationListProps) {
   if (groups.needsYou.length === 0 && groups.inProgress.length === 0) {
     return (
-      <Empty className="py-8">
+      <Empty variant="plain">
         <EmptyHeader>
           <EmptyMedia variant="icon">
-            <BellIcon />
+            <CheckCheckIcon />
           </EmptyMedia>
-          <EmptyTitle>Nothing here yet</EmptyTitle>
+          <EmptyTitle>You’re all caught up</EmptyTitle>
           <EmptyDescription>
-            Uploads and extractions show up here.
+            Bills you upload show up here while they’re read, and again when
+            they need your review.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
