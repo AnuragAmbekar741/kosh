@@ -79,10 +79,22 @@ three groups as toggle chips. There is no chip row.
 `GET /spend-items` and `GET /spend-items/summary` share the same query;
 summary also receives `period` (`month` for this / last month, `custom`
 for other ranges, omitted for all time). The list is a `{data, total}` page.
-Items view sends `skip`/`limit` of 50 and shows a numbered pager footer
-(`Showing X–Y of N`) when `total` exceeds 50. Changing any filter resets
-`page`. Bills view requests `limit=200` and is not paged — grouping and
-bill totals are computed client-side from the returned rows.
+Items view sends `skip`/`limit` of **15 rows, or 20 from the `2xl` breakpoint
+(1536px)** (`usePageSize`, which follows window resizes), and shows a pager
+footer (`Showing X–Y of N`) when `total` exceeds the page size: numbered links
+on wider screens, `‹ Page X of N ›` on phones. Changing any filter resets
+`page`; a page past the last (after a resize or a deletion) steps back to the
+last real one. The pager keeps clear of the assistant launcher: room beside it
+on wider screens, below it on phones. Bills view requests `limit=200` and is
+not paged — grouping and bill totals are computed client-side from the
+returned rows.
+
+The Bills list, the Items table and an open bill's line list (capped at
+`max-h-72`) scroll without a visible scrollbar (`no-scrollbar`). A soft fade at
+the top and bottom edge (`scroll-fade-y`) shows when there is more, and
+disappears at the ends. Scrolling by wheel, trackpad, keyboard and touch is
+unchanged. The bills list is one bordered box; only the dividers *between* bills
+are drawn, so the last bill adds no second line.
 
 Bills and Items render only the filter toolbar above the ledger; charts
 live on `/spending/analytics` (see Analytics below). The summary payload remains an
