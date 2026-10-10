@@ -432,3 +432,17 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Client-side N× `DELETE /spend-items/{id}`; DB-only delete that orphans the file; blob-first delete that can lose the file while rows remain.
 - Why: FKs have no `ON DELETE`; the ledger and document metadata stay consistent if storage fails; a later retry can finish blob cleanup.
 - Revisit when: object storage and Postgres share a transaction or CASCADE is added to the schema
+
+**The notification center is a view of documents, not a table**
+
+- Chosen: The web bell reads `GET /documents?inbox=true`, which derives every stage from `documents.status` plus pending drafts. The badge counts what needs the user (ready, failed); it clears when a bill is confirmed or a failed upload is deleted, so there is no read state. Progress is stage-based (queued, extracting, ready, failed), not a percentage.
+- Rejected: A `notifications` table written in the same commit as each status change (a second source of truth that must stay in sync); SSE (each open stream holds one of FastAPI's 40 threads, and the worker's finish is only visible by polling the database).
+- Why: Every stage the user sees already exists on the document, so a table would duplicate state and add a migration for nothing new.
+- Revisit when: Notifications need history, per-item read or dismiss without touching the document, a source other than documents (agent, recurring items, budgets), or push and email.
+
+**Uploads are capped by work in flight, not by request size**
+
+- Chosen: `store_upload` refuses with 429 while the user already has `MAX_IN_FLIGHT_DOCUMENTS` (default 5) documents `uploaded` or `processing`. The check runs after the idempotency lookup and before the blob write. Failed, ready and manual documents do not count. Because it sits in `store_upload`, the agent and WhatsApp get it too.
+- Rejected: A frontend-only limit on files per selection (anyone calling the API is uncapped); counting every unconfirmed document (blocks users until they review).
+- Why: One worker extracts one document at a time and each extraction costs a model call, so queued work per user is what to bound; a slot frees as soon as extraction ends.
+- Revisit when: Per-user daily budgets or fair queueing across users are added. The check is check-then-insert, so parallel uploads can overshoot by a few; an exact cap needs a per-user advisory lock.
