@@ -44,8 +44,9 @@ the row's text. The header shows "{n} need(s) you" next to the title.
 Popover, `align="end"`, `w-[calc(100vw-2rem)] sm:w-96`, a header, then a list
 that scrolls inside `max-h-[min(28rem,70svh)]`. Two groups, each with a muted
 label: **Needs you** first, then **In progress**. Browser uploads come first,
-then the inbox newest first. Empty: "Nothing here yet · Uploads and
-extractions show up here."
+then the inbox newest first. Empty: the `plain` Empty state (no frame inside the popover), a check
+tile, "You’re all caught up · Bills you upload show up here while they’re
+read, and again when they need your review."
 
 Rows are fixed height: an icon well (`bg-accent`, `size-9`; file or PDF
 glyph, or a destructive alert glyph on failure), the filename (truncated, full

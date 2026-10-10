@@ -11,8 +11,8 @@ The signed-in product is Operate-mode: scan, move, come back. Brand lives in
 precise details — monochrome primary, Geist, flat 1px hairlines — not in
 marketing chrome.
 
-Overview is an empty destination until analytics exist: a compact dashed
-Empty frame, centered in the panel and hugging its copy, with a single CTA
+Overview is an empty destination until analytics exist: the `card` Empty
+state from [global.md](./global.md#empty-states), centered in the panel, with a single CTA
 to Spending. Spending contains the document intake,
 extraction review, and confirmed ledger described in [spending.md](./spending.md).
 

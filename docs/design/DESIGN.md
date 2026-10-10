@@ -106,7 +106,7 @@ Keep task screens compact, predictable, and easy to scan. Page-specific layouts 
 
 ## Elevation & Depth
 
-Use surface tones and 1px hairlines for hierarchy. Both themes stay flat; no drop shadows or glass.
+Use surface tones and 1px hairlines for hierarchy. Both themes stay flat; no drop shadows or glass. Exceptions: floating surfaces (popovers, the assistant panel) and page-level empty-state cards carry a soft `shadow-sm`/`shadow-md` so they read as lifted; see global.md › Empty states.
 
 ## Shapes
 

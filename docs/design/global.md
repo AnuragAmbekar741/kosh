@@ -46,6 +46,20 @@ dark it aliases `fg`).
 Use shadcn primitives in `apps/web/src/components/ui/`.
 [auth.md](./auth.md) describes the implemented login and signup screens.
 
+### Empty states
+
+One `Empty` component, two variants:
+
+| Variant | Where | Look |
+|---|---|---|
+| `card` (default) | A page with nothing to show (Overview, Spending first use or no matches, Analytics) | `max-w-md`, `rounded-xl`, solid 1px `border`, `bg-muted/40`, `shadow-sm`, 40px vertical padding; centred in the panel |
+| `plain` | Inside something that already frames it (a popover, the assistant panel) | No border, background or shadow; never a box inside a box |
+
+The icon sits in a raised 44px tile (`bg-background`, `ring-1 ring-border`,
+`shadow-sm`, `rounded-xl`, muted 20px glyph). Title is `text-base` medium;
+the description is muted, `max-w-xs`, balanced. One primary or outline action
+at most. Never the dashed frame.
+
 ### Buttons
 
 Selected `Toggle` / `ToggleGroup` items use `--primary` / `--primary-foreground`
