@@ -5,10 +5,16 @@ from dataclasses import dataclass
 from typing import NamedTuple
 from uuid import UUID
 
+from sqlalchemy.exc import InterfaceError, OperationalError
 from sqlmodel import Session
 from storage import database
 
 logger = logging.getLogger(__name__)
+
+# Connection-level failures (Neon restart, network drop, laptop sleep). SQL or
+# programming errors are not in this list: they should still stop the worker.
+_DISCONNECTS = (OperationalError, InterfaceError)
+_MAX_BACKOFF_SECONDS = 60.0
 
 
 class Claim(NamedTuple):
@@ -49,6 +55,24 @@ def run_once(jobs: Sequence[Job]) -> bool:
 
 
 def run(jobs: Sequence[Job], *, poll_seconds: float) -> None:
+    """Poll forever. A lost database connection waits and retries, doubling the
+    wait up to a minute; SQLAlchemy drops the dead connection from the pool."""
+    failures = 0
     while True:
-        if not run_once(jobs):
+        try:
+            worked = run_once(jobs)
+        except _DISCONNECTS:
+            failures += 1
+            delay = min(poll_seconds * 2**failures, _MAX_BACKOFF_SECONDS)
+            logger.warning(
+                "database unavailable, retrying",
+                extra={"attempt": failures, "retry_in_s": delay},
+                exc_info=failures == 1,
+            )
+            time.sleep(delay)
+            continue
+        if failures:
+            logger.info("database reachable again", extra={"attempts": failures})
+            failures = 0
+        if not worked:
             time.sleep(poll_seconds)
