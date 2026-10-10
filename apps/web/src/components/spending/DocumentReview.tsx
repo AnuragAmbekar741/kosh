@@ -3,6 +3,8 @@ import {
   AlertCircleIcon,
   AlertTriangleIcon,
   CheckIcon,
+  FileImageIcon,
+  FileTextIcon,
   Trash2Icon,
 } from "lucide-react"
 
@@ -408,52 +410,71 @@ function ReadyDocument({
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-5 py-4 sm:px-6">
-        <div className="flex flex-col gap-2 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-2">
-              <p className="truncate text-lg font-medium">{merchant}</p>
-              {document.hash_matches_existing ? (
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <button
-                        aria-label="Possible duplicate"
-                        className="inline-flex shrink-0 text-muted-foreground hover:text-foreground"
-                        type="button"
-                      />
-                    }
-                  >
-                    <AlertTriangleIcon className="size-4" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Possible duplicate. A matching document was uploaded before.
-                    Confirm only if this is a separate expense.
-                  </TooltipContent>
-                </Tooltip>
-              ) : null}
-            </div>
-            {isReceipt ? (
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <DatePicker
-                  aria-label="Receipt date"
-                  invalid={unlikelyDate}
-                  onChange={(next) => {
-                    setReceiptDate(next)
-                    setValidationError("")
-                  }}
-                  value={receiptDate}
-                />
-                <span className="truncate">{document.filename}</span>
-              </div>
-            ) : (
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {documentDate ? formatDate(documentDate) : "Date not found"} ·{" "}
-                {document.filename}
-              </p>
-            )}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 border-b pb-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="truncate text-lg font-medium" title={merchant}>
+              {merchant}
+            </p>
+            {document.hash_matches_existing ? (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      aria-label="Possible duplicate"
+                      className="inline-flex shrink-0 text-muted-foreground hover:text-foreground"
+                      type="button"
+                    />
+                  }
+                >
+                  <AlertTriangleIcon className="size-4" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Possible duplicate. A matching document was uploaded before.
+                  Confirm only if this is a separate expense.
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
           </div>
-          <p className="shrink-0 text-xl font-medium tabular-nums">
+          <p className="text-right text-xl font-medium tabular-nums">
             {formatMoney(total, extraction.currency)}
+          </p>
+          <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+            {isReceipt ? (
+              <DatePicker
+                aria-label="Receipt date"
+                invalid={unlikelyDate}
+                onChange={(next) => {
+                  setReceiptDate(next)
+                  setValidationError("")
+                }}
+                size="sm"
+                value={receiptDate}
+              />
+            ) : (
+              <span className="shrink-0">
+                {documentDate ? formatDate(documentDate) : "Date not found"}
+              </span>
+            )}
+            <span aria-hidden="true">·</span>
+            <span className="flex min-w-0 items-center gap-1.5">
+              {document.mime_type === "application/pdf" ? (
+                <FileTextIcon
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0"
+                />
+              ) : (
+                <FileImageIcon
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0"
+                />
+              )}
+              <span className="truncate" title={document.filename}>
+                {document.filename}
+              </span>
+            </span>
+          </div>
+          <p className="text-right text-sm text-muted-foreground tabular-nums">
+            {lineDrafts.length} {lineDrafts.length === 1 ? "item" : "items"}
           </p>
         </div>
 
@@ -528,11 +549,11 @@ function ReadyDocument({
         ) : null}
       </div>
 
-      <DialogFooter className="m-0 shrink-0 rounded-none bg-popover sm:items-center sm:justify-between">
+      <DialogFooter className="m-0 shrink-0 rounded-none bg-popover sm:items-center">
         {confirmingDiscard ? (
           <>
-            <p className="text-sm text-muted-foreground">
-              Discard this bill? Nothing from it is saved.
+            <p className="text-center text-sm text-muted-foreground max-sm:order-1 sm:mr-1 sm:text-left">
+              Discard this bill?
             </p>
             <div className="flex flex-col-reverse gap-2 sm:flex-row">
               <Button

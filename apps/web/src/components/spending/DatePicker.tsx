@@ -15,6 +15,7 @@ import { formatDate } from "./spending-formatters"
 type DatePickerProps = {
   "aria-label": string
   invalid?: boolean
+  size?: "default" | "sm"
   onChange: (isoDate: string) => void
   /** ISO date (`YYYY-MM-DD`) or empty. */
   value: string
@@ -25,6 +26,7 @@ export function DatePicker({
   "aria-label": ariaLabel,
   invalid = false,
   onChange,
+  size = "default",
   value,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false)
@@ -39,6 +41,7 @@ export function DatePicker({
             aria-label={ariaLabel}
             className="justify-start font-normal data-[empty=true]:text-muted-foreground"
             data-empty={!value}
+            size={size}
             variant="outline"
           >
             <CalendarIcon data-icon="inline-start" />

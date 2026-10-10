@@ -23,8 +23,10 @@ the global monochrome visual system.
    show a warning icon with a tooltip. Duplicate hashes appear as a tooltip on the
    merchant title. Mismatched totals still produce a review warning. The list caps
    at `max-h-72` and scrolls so the header and footer stay reachable. The
-   footer is **Discard** and **Save**: Discard asks once in place, then
-   deletes the bill and its drafts; Save confirms them (below).
+   summary is two aligned rows: merchant and total, then the date picker
+   (`sm`), the file (icon and name) and the item count. The footer keeps
+   **Discard** and **Save** together at the bottom right: Discard asks once in
+   place, then deletes the bill and its drafts; Save confirms them (below).
 5. `POST /documents/{id}/confirm` adds all reviewed drafts to Spending and
    refreshes the ledger. The date filter never changes on its own: if the
    bill's date falls outside it, a sonner toast ("Saved <merchant>", the date,
