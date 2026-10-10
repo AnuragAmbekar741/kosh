@@ -1,7 +1,10 @@
 import type { SpendItem } from "@/api/spend-items/spend-items.types"
 import { CategoryBadge } from "@/components/spending/CategoryBadge"
 import { ItemBadge } from "@/components/spending/ItemBadge"
-import { formatDate, formatMoney } from "@/components/spending/spending-formatters"
+import {
+  formatDate,
+  formatMoney,
+} from "@/components/spending/spending-formatters"
 import {
   Table,
   TableBody,
@@ -10,19 +13,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { PAGE_SIZE } from "@/hooks/spend-items/use-spend-filters"
 
 type SpendingItemsTableProps = {
   items: SpendItem[]
   page: number
+  pageSize: number
 }
 
 function itemName(item: SpendItem) {
   return item.description || item.merchant
 }
 
-export function SpendingItemsTable({ items, page }: SpendingItemsTableProps) {
-  const offset = (page - 1) * PAGE_SIZE
+export function SpendingItemsTable({
+  items,
+  page,
+  pageSize,
+}: SpendingItemsTableProps) {
+  const offset = (page - 1) * pageSize
 
   return (
     <div className="min-h-0 shrink overflow-auto rounded-xl border [&>[data-slot=table-container]]:overflow-visible">

@@ -7,10 +7,10 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-import { PAGE_SIZE } from "@/hooks/spend-items/use-spend-filters"
 
 type SpendingItemsPagerProps = {
   page: number
+  pageSize: number
   total: number
   onPageChange: (page: number) => void
 }
@@ -20,20 +20,21 @@ function pageWindow(page: number, pageCount: number) {
     return Array.from({ length: pageCount }, (_, index) => index + 1)
   }
   const pages = new Set([1, pageCount, page - 1, page, page + 1])
-  return [...pages].filter((value) => value >= 1 && value <= pageCount).sort(
-    (left, right) => left - right
-  )
+  return [...pages]
+    .filter((value) => value >= 1 && value <= pageCount)
+    .sort((left, right) => left - right)
 }
 
 export function SpendingItemsPager({
   page,
+  pageSize,
   total,
   onPageChange,
 }: SpendingItemsPagerProps) {
-  if (total <= PAGE_SIZE) return null
-  const pageCount = Math.ceil(total / PAGE_SIZE)
-  const start = (page - 1) * PAGE_SIZE + 1
-  const end = Math.min(page * PAGE_SIZE, total)
+  if (total <= pageSize) return null
+  const pageCount = Math.ceil(total / pageSize)
+  const start = (page - 1) * pageSize + 1
+  const end = Math.min(page * pageSize, total)
   const pages = pageWindow(page, pageCount)
 
   function go(next: number) {
@@ -53,7 +54,9 @@ export function SpendingItemsPager({
               href="#"
               text="Previous"
               aria-disabled={page <= 1}
-              className={page <= 1 ? "pointer-events-none opacity-50" : undefined}
+              className={
+                page <= 1 ? "pointer-events-none opacity-50" : undefined
+              }
               onClick={(event) => {
                 event.preventDefault()
                 go(page - 1)
