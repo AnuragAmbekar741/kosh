@@ -60,11 +60,17 @@ def create_manual_document(
 
 
 @router.get("")
-def list_docs(user: CurrentUserDep, session: SessionDep) -> list[DocumentSummary]:
-    return [
-        to_summary(document, needs_review=flag)
-        for document, flag in service.list_with_review(session, user.id)
-    ]
+def list_docs(
+    user: CurrentUserDep,
+    session: SessionDep,
+    inbox: bool = False,
+) -> list[DocumentSummary]:
+    rows = (
+        service.list_inbox(session, user.id)
+        if inbox
+        else service.list_with_review(session, user.id)
+    )
+    return [to_summary(document, needs_review=flag) for document, flag in rows]
 
 
 @router.get("/{document_id}")
