@@ -4,6 +4,7 @@ from sqlmodel import Session
 from storage.crud.document import (
     get_document,
     list_documents,
+    list_inbox_documents,
     pending_review_document_ids,
 )
 from storage.models.document import Document, DocumentStatus
@@ -34,4 +35,12 @@ def list_with_review(session: Session, user_id: UUID) -> list[tuple[Document, bo
     return [
         (document, needs_review(document, has_pending=document.id in pending))
         for document in list_documents(session, user_id=user_id)
+    ]
+
+
+def list_inbox(session: Session, user_id: UUID) -> list[tuple[Document, bool]]:
+    pending = pending_review_document_ids(session, user_id=user_id)
+    return [
+        (document, needs_review(document, has_pending=document.id in pending))
+        for document in list_inbox_documents(session, user_id=user_id)
     ]

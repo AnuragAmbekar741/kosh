@@ -348,6 +348,105 @@ def test_extract_failure_marks_failed(client, monkeypatch) -> None:
     assert "invalid model output" in detail["error"]
 
 
+def test_upload_cap_counts_only_documents_still_in_flight(client, monkeypatch) -> None:
+    headers = _auth(client)
+    other = _auth(client)
+    ids = [
+        _upload(client, headers, _JPEG + bytes([i]), f"r{i}.jpg").json()["id"]
+        for i in range(5)
+    ]
+
+    blocked = _upload(client, headers, _JPEG + b"x", "sixth.jpg")
+    assert blocked.status_code == 429
+    assert "try again" in blocked.json()["detail"]
+    assert _upload(client, other, _JPEG + b"y", "theirs.jpg").status_code == 202
+
+    # Finishing one extraction frees a slot.
+    _stub_extract(monkeypatch, _receipt())
+    JOB.run(_claim(ids[0]))
+    assert _upload(client, headers, _JPEG + b"x", "sixth.jpg").status_code == 202
+    assert _upload(client, headers, _JPEG + b"w", "seventh.jpg").status_code == 429
+
+    # Failed and manual documents never count.
+    monkeypatch.setattr(
+        "ai.extract",
+        lambda data, mime, **_: (_ for _ in ()).throw(ExtractError("unreadable")),
+    )
+    JOB.run(_claim(ids[1]))
+    client.post("/documents/manual", json={"title": "Cash"}, headers=headers)
+    assert _upload(client, headers, _JPEG + b"w", "seventh.jpg").status_code == 202
+
+
+def test_idempotent_retry_at_the_cap_returns_the_existing_document(client) -> None:
+    headers = {**_auth(client), "Idempotency-Key": "first"}
+    first = _upload(client, headers, _JPEG, "r0.jpg").json()["id"]
+    plain = {"Authorization": headers["Authorization"]}
+    for i in range(1, 5):
+        assert (
+            _upload(client, plain, _JPEG + bytes([i]), f"r{i}.jpg").status_code == 202
+        )
+    assert _upload(client, plain, _JPEG + b"x", "over.jpg").status_code == 429
+
+    again = _upload(client, headers, _JPEG, "r0.jpg")
+    assert again.status_code == 202
+    assert again.json()["id"] == first
+
+
+def test_inbox_lists_only_documents_the_user_still_has_to_act_on(
+    client, monkeypatch
+) -> None:
+    headers = _auth(client)
+    other = _auth(client)
+
+    def inbox(auth: dict[str, str]) -> list[dict]:
+        response = client.get("/documents?inbox=true", headers=auth)
+        assert response.status_code == 200
+        return response.json()
+
+    assert inbox(headers) == []
+
+    confirmed = _upload(client, headers, _JPEG + b"1", "done.jpg").json()["id"]
+    failed = _upload(client, headers, _JPEG + b"2", "blurry.jpg").json()["id"]
+    ready = _upload(client, headers, _JPEG + b"3", "ready.jpg").json()["id"]
+    queued = _upload(client, headers, _JPEG + b"4", "queued.jpg").json()["id"]
+    manual = client.post(
+        "/documents/manual", json={"title": "Cash"}, headers=headers
+    ).json()["id"]
+
+    _stub_extract(monkeypatch, _receipt())
+    JOB.run(_claim(confirmed))
+    assert (
+        client.post(f"/documents/{confirmed}/confirm", headers=headers).status_code
+        == 200
+    )
+    monkeypatch.setattr(
+        "ai.extract",
+        lambda data, mime, **_: (_ for _ in ()).throw(ExtractError("unreadable")),
+    )
+    JOB.run(_claim(failed))
+    _stub_extract(monkeypatch, _receipt())
+    JOB.run(_claim(ready))
+
+    rows = inbox(headers)
+    assert [row["id"] for row in rows] == [queued, ready, failed]
+    by_id = {row["id"]: row for row in rows}
+    assert by_id[queued]["status"] == "uploaded"
+    assert by_id[ready]["status"] == "ready"
+    assert [by_id[i]["needs_review"] for i in (queued, ready, failed)] == [
+        True,
+        True,
+        False,
+    ]
+    assert confirmed not in by_id
+    assert manual not in by_id
+    assert inbox(other) == []
+
+    client.delete(f"/documents/{failed}", headers=headers)
+    assert [row["id"] for row in inbox(headers)] == [queued, ready]
+    all_documents = client.get("/documents", headers=headers).json()
+    assert len(all_documents) == 4
+
+
 def test_list_flags_documents_that_need_review(client, monkeypatch) -> None:
     headers = _auth(client)
     other = _auth(client)

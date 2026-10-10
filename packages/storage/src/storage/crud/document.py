@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
+from sqlalchemy import func, or_
 from sqlmodel import Session, col, select
 
 from storage.models.document import Document, DocumentStatus, ExtractionAttempt
@@ -8,6 +9,7 @@ from storage.models.spend import SpendItem, SpendStatus
 
 __all__ = [
     "claim_next",
+    "count_in_flight",
     "create_document",
     "create_extraction_attempt",
     "delete_document_tree",
@@ -20,6 +22,7 @@ __all__ = [
     "latest_attempt",
     "list_documents",
     "list_extraction_attempts",
+    "list_inbox_documents",
     "mark_failed",
     "mark_ready",
     "mark_retry",
@@ -118,6 +121,51 @@ def list_documents(session: Session, *, user_id: UUID) -> list[Document]:
         .order_by(col(Document.created_at).desc())
     )
     return list(session.exec(statement).all())
+
+
+_INBOX_LIMIT = 50
+
+
+def list_inbox_documents(session: Session, *, user_id: UUID) -> list[Document]:
+    """Documents the user still has to act on or wait for, newest first."""
+    pending = select(SpendItem.document_id).where(
+        SpendItem.user_id == user_id,
+        SpendItem.status == SpendStatus.PENDING_REVIEW,
+        col(SpendItem.document_id).is_not(None),
+    )
+    statement = (
+        select(Document)
+        .where(
+            Document.user_id == user_id,
+            or_(
+                col(Document.status).in_(
+                    [
+                        DocumentStatus.UPLOADED,
+                        DocumentStatus.PROCESSING,
+                        DocumentStatus.FAILED,
+                    ]
+                ),
+                col(Document.id).in_(pending),
+            ),
+        )
+        .order_by(col(Document.created_at).desc())
+        .limit(_INBOX_LIMIT)
+    )
+    return list(session.exec(statement).all())
+
+
+def count_in_flight(session: Session, *, user_id: UUID) -> int:
+    statement = (
+        select(func.count())
+        .select_from(Document)
+        .where(
+            Document.user_id == user_id,
+            col(Document.status).in_(
+                [DocumentStatus.UPLOADED, DocumentStatus.PROCESSING]
+            ),
+        )
+    )
+    return session.exec(statement).one()
 
 
 def pending_review_document_ids(session: Session, *, user_id: UUID) -> set[UUID]:

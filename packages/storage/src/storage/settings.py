@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     aws_access_key_id: str | None = None
     aws_secret_access_key: str | None = None
     max_upload_mb: int = 15
+    max_in_flight_documents: int = 5
 
 
 @lru_cache

@@ -55,6 +55,11 @@ class DuplicateUploadError(DomainError):
     detail = "duplicate upload"
 
 
+class TooManyUploadsError(DomainError):
+    status_code = 429
+    detail = "too many documents are still being processed; try again in a moment"
+
+
 class StorageWriteError(DomainError):
     status_code = 502
     detail = "storage write failed"
