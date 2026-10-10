@@ -14,9 +14,14 @@ the browser is still sending; there is no notifications table
    queue and the inbox shows it.
 3. The worker extracts. The bell shows progress; when a document is ready, a
    toast "walmart.jpg is ready to review" offers **Review**.
-4. **Review** opens the existing `DocumentReview` in its own Dialog. Confirming
-   toasts "Saved {merchant}" (with the out-of-filter **Show** action on
-   Spending) and the row leaves the bell.
+4. **Review** opens the existing `DocumentReview` in its own Dialog. Its
+   footer is **Discard** (left, outline) and **Save** (right, primary); there is
+   no Back, since closing the dialog already returns. **Save** confirms every
+   line and toasts "Saved {merchant}" (with the out-of-filter **Show** action on
+   Spending). **Discard** asks once in the footer ("Discard this bill? Nothing
+   from it is saved." · Keep reviewing · Discard), deletes the document, its
+   drafts and file (`DELETE /documents/{id}`), and toasts "Discarded
+   {merchant}". Either way the row leaves the bell.
 
 ## Bell
 
@@ -46,7 +51,7 @@ name in `title`), a muted status line, and the action.
 | Upload failed | browser queue (413, 415, 429, network) | destructive reason | Retry (same key), Remove |
 | Waiting to extract | `uploaded` | clock + text | none |
 | Extracting | `processing` | Spinner + text | none |
-| Ready to review | `ready` and `needs_review` | text | **Review** (`sm`, primary) |
+| Ready to review | `ready` and `needs_review` | text | Discard (`icon-sm` ghost trash; asks in place: Cancel · Discard destructive), **Review** (`sm`, primary) |
 | Couldn’t read this document | `failed` | destructive text | Remove (`sm`, outline; deletes the document) |
 
 ## Polling
