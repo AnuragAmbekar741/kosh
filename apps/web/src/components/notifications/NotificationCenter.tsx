@@ -93,8 +93,13 @@ export function NotificationCenter() {
           align="end"
           className="w-[calc(100vw-2rem)] gap-0 p-0 sm:w-96"
         >
-          <div className="border-b px-4 py-3">
+          <div className="flex items-baseline justify-between gap-3 border-b px-4 py-3">
             <h2 className="text-sm font-medium">Notifications</h2>
+            {needsYou ? (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {needsYou} need{needsYou === 1 ? "s" : ""} you
+              </span>
+            ) : null}
           </div>
           <div className="max-h-[min(28rem,70svh)] overflow-y-auto overscroll-contain p-2">
             <NotificationList

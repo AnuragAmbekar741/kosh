@@ -15,15 +15,21 @@ the browser is still sending; there is no notifications table
 3. The worker extracts. The bell shows progress; when a document is ready, a
    toast "walmart.jpg is ready to review" offers **Review**.
 4. **Review** opens the existing `DocumentReview` in its own Dialog. Its
-   footer is **Discard** (left, outline) and **Save** (right, primary); there is
-   no Back, since closing the dialog already returns. **Save** confirms every
+   footer keeps both actions together at the bottom right, **Discard**
+   (outline) then **Save** (primary); there is no Back, since closing the
+   dialog already returns. **Save** confirms every
    line and toasts "Saved {merchant}" (with the out-of-filter **Show** action on
-   Spending). **Discard** asks once in the footer ("Discard this bill? Nothing
-   from it is saved." · Keep reviewing · Discard), deletes the document, its
+   Spending). **Discard** asks once in the footer ("Discard this bill?" ·
+   Keep reviewing · Discard; on phones the question sits above its buttons), deletes the document, its
    drafts and file (`DELETE /documents/{id}`), and toasts "Discarded
    {merchant}". Either way the row leaves the bell.
 
 ## Bell
+
+Rows tint on hover and keyboard focus with `foreground/6` (a clear lift on the
+dark popover, a soft grey on light), and their icon well switches to the canvas
+colour for contrast. Actions in a row are `xs` controls so they never outweigh
+the row's text. The header shows "{n} need(s) you" next to the title.
 
 - Ghost `icon` Button with an `aria-label` such as "Notifications, 2 need you,
   uploads in progress".
@@ -51,8 +57,8 @@ name in `title`), a muted status line, and the action.
 | Upload failed | browser queue (413, 415, 429, network) | destructive reason | Retry (same key), Remove |
 | Waiting to extract | `uploaded` | clock + text | none |
 | Extracting | `processing` | Spinner + text | none |
-| Ready to review | `ready` and `needs_review` | text | Discard (`icon-sm` ghost trash; asks in place: Cancel · Discard destructive), **Review** (`sm`, primary) |
-| Couldn’t read this document | `failed` | destructive text | Remove (`sm`, outline; deletes the document) |
+| Ready to review | `ready` and `needs_review` | text | The whole row opens the review. Discard (`icon-xs` ghost trash with a tooltip, shown on hover or focus, always on touch) and **Review** (`xs`, secondary). Discard asks in the row: it tints `destructive/5`, the status reads "Discard this bill?", actions become Cancel · Discard (`xs`) |
+| Couldn’t read this document | `failed` | destructive text | Remove (`xs`, secondary; deletes the document) |
 
 ## Polling
 
