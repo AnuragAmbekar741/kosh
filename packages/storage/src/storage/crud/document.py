@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
+from sqlalchemy import func
 from sqlmodel import Session, col, select
 
 from storage.models.document import Document, DocumentStatus, ExtractionAttempt
@@ -8,6 +9,7 @@ from storage.models.spend import SpendItem, SpendStatus
 
 __all__ = [
     "claim_next",
+    "count_in_flight",
     "create_document",
     "create_extraction_attempt",
     "delete_document_tree",
@@ -118,6 +120,20 @@ def list_documents(session: Session, *, user_id: UUID) -> list[Document]:
         .order_by(col(Document.created_at).desc())
     )
     return list(session.exec(statement).all())
+
+
+def count_in_flight(session: Session, *, user_id: UUID) -> int:
+    statement = (
+        select(func.count())
+        .select_from(Document)
+        .where(
+            Document.user_id == user_id,
+            col(Document.status).in_(
+                [DocumentStatus.UPLOADED, DocumentStatus.PROCESSING]
+            ),
+        )
+    )
+    return session.exec(statement).one()
 
 
 def pending_review_document_ids(session: Session, *, user_id: UUID) -> set[UUID]:
