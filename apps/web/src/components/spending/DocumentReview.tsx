@@ -1,5 +1,10 @@
 import { useState } from "react"
-import { AlertCircleIcon, AlertTriangleIcon, CheckIcon } from "lucide-react"
+import {
+  AlertCircleIcon,
+  AlertTriangleIcon,
+  CheckIcon,
+  Trash2Icon,
+} from "lucide-react"
 
 import { apiDetail } from "@/api/client"
 import type { DocumentDetail } from "@/api/documents/documents.types"
@@ -17,6 +22,7 @@ import {
 } from "@/components/ui/tooltip"
 import {
   useConfirmDocument,
+  useDeleteDocument,
   useDocument,
 } from "@/hooks/documents/use-documents"
 import { useUpdateSpendItem } from "@/hooks/spend-items/use-spend-items"
@@ -33,7 +39,8 @@ export type ConfirmedBill = {
 
 type DocumentReviewProps = {
   documentId: string
-  onBack: () => void
+  /** The bill and its draft lines were deleted. */
+  onDiscarded: (merchant: string) => void
   onConfirmed: (bill: ConfirmedBill) => void
   onTryAnother: () => void
 }
@@ -282,11 +289,11 @@ function DocumentReviewLineRow({
 
 function ReadyDocument({
   document,
-  onBack,
+  onDiscarded,
   onConfirmed,
 }: {
   document: DocumentDetail
-  onBack: () => void
+  onDiscarded: (merchant: string) => void
   onConfirmed: (bill: ConfirmedBill) => void
 }) {
   const extraction = document.extraction!
@@ -312,6 +319,9 @@ function ReadyDocument({
   const unlikelyDate = dateOffset < -365 || dateOffset > 1
   const confirm = useConfirmDocument()
   const updateItem = useUpdateSpendItem()
+  const discard = useDeleteDocument()
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false)
+  const busy = confirm.isPending || updateItem.isPending || discard.isPending
 
   const merchant =
     extraction.document_kind === "receipt"
@@ -495,6 +505,16 @@ function ReadyDocument({
           </Alert>
         ) : null}
 
+        {discard.isError ? (
+          <Alert variant="destructive">
+            <AlertCircleIcon />
+            <AlertTitle>Couldn’t discard this bill</AlertTitle>
+            <AlertDescription>
+              {apiDetail(discard.error) || "Please try again."}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         {confirm.isError || updateItem.isError ? (
           <Alert variant="destructive">
             <AlertCircleIcon />
@@ -508,23 +528,67 @@ function ReadyDocument({
         ) : null}
       </div>
 
-      <DialogFooter className="m-0 shrink-0 rounded-none bg-popover sm:justify-between">
-        <Button onClick={onBack} type="button" variant="outline">
-          Back
-        </Button>
-        <Button
-          disabled={
-            confirm.isPending || updateItem.isPending || lineDrafts.length === 0
-          }
-          onClick={() => void save()}
-        >
-          {confirm.isPending ? (
-            <Spinner data-icon="inline-start" />
-          ) : (
-            <CheckIcon data-icon="inline-start" />
-          )}
-          Add all to spending
-        </Button>
+      <DialogFooter className="m-0 shrink-0 rounded-none bg-popover sm:items-center sm:justify-between">
+        {confirmingDiscard ? (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Discard this bill? Nothing from it is saved.
+            </p>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button
+                disabled={discard.isPending}
+                onClick={() => setConfirmingDiscard(false)}
+                type="button"
+                variant="outline"
+              >
+                Keep reviewing
+              </Button>
+              <Button
+                disabled={discard.isPending}
+                onClick={() =>
+                  discard.mutate(document.id, {
+                    onSuccess: () => onDiscarded(merchant),
+                  })
+                }
+                type="button"
+                variant="destructive"
+              >
+                {discard.isPending ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <Trash2Icon data-icon="inline-start" />
+                )}
+                Discard
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <Button
+              disabled={busy}
+              onClick={() => {
+                discard.reset()
+                setConfirmingDiscard(true)
+              }}
+              type="button"
+              variant="outline"
+            >
+              <Trash2Icon data-icon="inline-start" />
+              Discard
+            </Button>
+            <Button
+              disabled={busy || lineDrafts.length === 0}
+              onClick={() => void save()}
+            >
+              {confirm.isPending ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <CheckIcon data-icon="inline-start" />
+              )}
+              Save
+            </Button>
+          </>
+        )}
       </DialogFooter>
     </>
   )
@@ -532,7 +596,7 @@ function ReadyDocument({
 
 export function DocumentReview({
   documentId,
-  onBack,
+  onDiscarded,
   onConfirmed,
   onTryAnother,
 }: DocumentReviewProps) {
@@ -577,8 +641,8 @@ export function DocumentReview({
     <ReadyDocument
       document={document.data}
       key={document.data.id}
-      onBack={onBack}
       onConfirmed={onConfirmed}
+      onDiscarded={onDiscarded}
     />
   )
 }

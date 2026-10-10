@@ -64,8 +64,11 @@ export function ReviewDocumentDialog({
             <DocumentReview
               documentId={documentId}
               key={documentId}
-              onBack={onClose}
               onConfirmed={confirmed}
+              onDiscarded={(merchant) => {
+                toast(`Discarded ${merchant}`)
+                onClose()
+              }}
               onTryAnother={onClose}
             />
           ) : null}
