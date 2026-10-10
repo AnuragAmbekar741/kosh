@@ -3,7 +3,10 @@ import { BellIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { apiDetail } from "@/api/client"
-import { groupNotifications } from "@/components/notifications/notification-items"
+import {
+  groupNotifications,
+  type NotificationItem,
+} from "@/components/notifications/notification-items"
 import { NotificationList } from "@/components/notifications/NotificationList"
 import { ReviewDocumentDialog } from "@/components/notifications/ReviewDocumentDialog"
 import { Badge } from "@/components/ui/badge"
@@ -44,6 +47,14 @@ export function NotificationCenter() {
   }
 
   useReadyToasts(inbox.data, review)
+
+  function discardDocument(item: NotificationItem) {
+    deleteDocument.mutate(item.id, {
+      onSuccess: () => toast(`Discarded ${item.title}`),
+      onError: (error) =>
+        toast.error(apiDetail(error) ?? "Couldn’t discard this bill."),
+    })
+  }
 
   function removeDocument(documentId: string) {
     deleteDocument.mutate(documentId, {
@@ -88,6 +99,7 @@ export function NotificationCenter() {
           <div className="max-h-[min(28rem,70svh)] overflow-y-auto overscroll-contain p-2">
             <NotificationList
               groups={groups}
+              onDiscard={discardDocument}
               onRemoveDocument={removeDocument}
               onRemoveUpload={uploads.remove}
               onRetryUpload={uploads.retry}

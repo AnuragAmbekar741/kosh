@@ -1,4 +1,5 @@
-import { BellIcon, RotateCwIcon, XIcon } from "lucide-react"
+import { useState } from "react"
+import { BellIcon, RotateCwIcon, Trash2Icon, XIcon } from "lucide-react"
 
 import type {
   NotificationGroups,
@@ -17,6 +18,7 @@ import { Spinner } from "@/components/ui/spinner"
 
 type NotificationActions = {
   onReview: (documentId: string) => void
+  onDiscard: (item: NotificationItem) => void
   onRemoveDocument: (documentId: string) => void
   onRetryUpload: (key: string) => void
   onRemoveUpload: (key: string) => void
@@ -27,9 +29,67 @@ type NotificationListProps = NotificationActions & {
   groups: NotificationGroups
 }
 
+type ReadyActionsProps = {
+  item: NotificationItem
+  onReview: (documentId: string) => void
+  onDiscard: (item: NotificationItem) => void
+  removing: boolean
+}
+
+/** Review or discard a bill waiting for review; discarding asks once, in place. */
+function ReadyActions({
+  item,
+  onReview,
+  onDiscard,
+  removing,
+}: ReadyActionsProps) {
+  const [confirming, setConfirming] = useState(false)
+
+  if (confirming || removing) {
+    return (
+      <>
+        <Button
+          disabled={removing}
+          onClick={() => setConfirming(false)}
+          size="sm"
+          variant="ghost"
+        >
+          Cancel
+        </Button>
+        <Button
+          aria-label={`Discard ${item.title}`}
+          disabled={removing}
+          onClick={() => onDiscard(item)}
+          size="sm"
+          variant="destructive"
+        >
+          {removing ? <Spinner data-icon="inline-start" /> : null}
+          Discard
+        </Button>
+      </>
+    )
+  }
+  return (
+    <>
+      <Button
+        aria-label={`Discard ${item.title}`}
+        onClick={() => setConfirming(true)}
+        size="icon-sm"
+        variant="ghost"
+      >
+        <Trash2Icon />
+      </Button>
+      <Button onClick={() => onReview(item.id)} size="sm">
+        Review
+      </Button>
+    </>
+  )
+}
+
 function NotificationActionsFor({
   item,
   onReview,
+  onDiscard,
   onRemoveDocument,
   onRetryUpload,
   onRemoveUpload,
@@ -37,9 +97,12 @@ function NotificationActionsFor({
 }: NotificationActions & { item: NotificationItem }) {
   if (item.stage === "ready") {
     return (
-      <Button onClick={() => onReview(item.id)} size="sm">
-        Review
-      </Button>
+      <ReadyActions
+        item={item}
+        onDiscard={onDiscard}
+        onReview={onReview}
+        removing={removingId === item.id}
+      />
     )
   }
   if (item.stage === "upload-failed") {
