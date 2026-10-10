@@ -16,7 +16,7 @@ export function AgentEmpty() {
   const { chat } = useAgentPanel()
 
   return (
-    <Empty className="flex-1 justify-center border-0 px-6">
+    <Empty className="flex-1 justify-center" variant="plain">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <MessageCircleIcon />

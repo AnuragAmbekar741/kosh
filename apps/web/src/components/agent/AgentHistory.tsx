@@ -64,7 +64,7 @@ export function AgentHistory() {
   const rows = conversations.data?.data ?? []
   if (rows.length === 0) {
     return (
-      <Empty className="flex-1 justify-center border-0 px-6">
+      <Empty className="flex-1 justify-center" variant="plain">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <MessagesSquareIcon />
