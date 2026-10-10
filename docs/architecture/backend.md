@@ -91,7 +91,7 @@ apps/worker/src/worker/
       matching.py            CatalogIndex: normalized keys, longest-ending match, family category
 ```
 
-**The runtime** gives one unit of work per round to the first job in `JOBS` that has any, and sleeps only when every job is idle. A crash is logged with the job name and never stops the loop.
+**The runtime** gives one unit of work per round to the first job in `JOBS` that has any, and sleeps only when every job is idle. A crash is logged with the job name and never stops the loop. A lost database connection (Neon restart, network drop, laptop sleep) is logged and retried with backoff (2× the poll interval, doubling, capped at 60 s); SQL and programming errors still stop the worker.
 
 **A job** exposes `reclaim(session) -> int`, `claim(session) -> Claim | None` and `run(Claim)`. Claims use `FOR UPDATE SKIP LOCKED` plus a claim token through `storage` crud; `run` re-checks the token before and after the handler, and the status write commits the attempt and drafts in the same transaction.
 
