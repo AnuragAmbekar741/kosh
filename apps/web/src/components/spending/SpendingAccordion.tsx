@@ -392,7 +392,7 @@ function SpendingBillRow({
         </span>
       </AccordionTrigger>
       <AccordionContent className="border-t bg-muted/40 pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
-        <div className="max-h-72 overflow-y-auto">
+        <div className="no-scrollbar scroll-fade-y max-h-72 overflow-y-auto">
           {group.items.map((item, index) => (
             <SpendingLineRow
               isEditing={editingItemId === item.id}

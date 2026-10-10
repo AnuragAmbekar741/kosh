@@ -32,7 +32,7 @@ export function SpendingItemsTable({
   const offset = (page - 1) * pageSize
 
   return (
-    <div className="min-h-0 shrink overflow-auto rounded-xl border [&>[data-slot=table-container]]:overflow-visible">
+    <div className="no-scrollbar min-h-0 shrink scroll-fade-y overflow-auto rounded-xl border [&>[data-slot=table-container]]:overflow-visible">
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-background">
           <TableRow>
