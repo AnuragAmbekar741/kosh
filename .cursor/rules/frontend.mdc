@@ -12,7 +12,7 @@ Tokens: [docs/design/global.md](docs/design/global.md). Deps: `pnpm add` inside 
 
 - Folders: `kebab-case` (`src/components/spend-list/`)
 - Component files: `PascalCase` (`SpendRow.tsx`)
-- Hooks: `useXyz.ts` in the resource folder (`src/hooks/health/use-health.ts`)
+- Hook files: `kebab-case` with a `use-` prefix in the resource folder (`src/hooks/documents/use-documents.ts`); the exported hook is `camelCase` (`useDocuments`)
 - Types/interfaces: `PascalCase`; props `FooProps`
 - Functions/variables: `camelCase`
 

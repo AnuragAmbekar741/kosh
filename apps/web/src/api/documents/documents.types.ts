@@ -12,6 +12,7 @@ export type DocumentSummary = {
   error: string | null
   created_at: string
   processed_at: string | null
+  needs_review: boolean
 }
 
 export type ReceiptLineItem = {

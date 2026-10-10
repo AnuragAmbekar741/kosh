@@ -60,14 +60,14 @@ origin, 220ms exponential ease-out. Reduced motion keeps only a 120ms fade.
 
 | State | Shows |
 |---|---|
-| New chat | `Empty` without its frame: "Ask about your spending", that answers come from confirmed bills and nothing changes from chat, and three example questions as outline buttons that send on click |
+| New chat | `Empty variant="plain"`: "Ask about your spending", that answers come from confirmed bills and nothing changes from chat, and three example questions as outline buttons that send on click |
 | Loading a saved chat | Two `Skeleton` rows |
 | Sending | The question at once, then a shimmering `Marker`: "Thinking…" until a tool runs, then its label ("Adding up your spending…", "Looking through your purchases…", "Checking your bills…") |
 | Reply | Replaces the marker; the saved transcript takes over when the stream ends |
 | Refused before streaming | Under the question: 409 "Still answering your last message", 429 daily limit, 503 not set up, 404 chat gone; offline: "Couldn't reach Kosh"; each with Retry |
 | Reply failed | Under the saved question: "Couldn't answer this one." with Retry (resends the text) |
 | Past chats | Header history button switches the panel to a list of chats (title, relative time, current one highlighted); ← returns |
-| No chats yet | `Empty` without its frame: "No chats yet" |
+| No chats yet | `Empty variant="plain"`: "No chats yet" |
 
 Tool names, ids and JSON never appear; `agent-copy.ts` owns every label and
 message.

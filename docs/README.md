@@ -37,6 +37,7 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 | Spending analytics (`/spending/analytics`) | |
 | Documents upload + worker extraction via OpenRouter | |
 | Agent phase 1: read-only chat (tools, SSE endpoints, evals, chat widget) | |
+| Multi-file upload (up to 5) and a notification center for extraction progress | |
 
 
 When a planning decision changes, update `architecture/decisions.md` first, then `architecture/overview.md` and `product/scope.md`.

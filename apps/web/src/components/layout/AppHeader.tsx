@@ -7,6 +7,7 @@ import {
   navChildTarget,
   type NavItem,
 } from "@/components/layout/navigation/navigation"
+import { NotificationCenter } from "@/components/notifications/NotificationCenter"
 import { AddSpendingDialog } from "@/components/spending/AddSpendingDialog"
 import { Button } from "@/components/ui/button"
 import {
@@ -87,11 +88,10 @@ export function AppHeader() {
       ) : (
         <h1 className="text-sm font-medium">{current?.label ?? "Kosh"}</h1>
       )}
-      {pathname.startsWith("/spending/") ? (
-        <div className="ml-auto">
-          <AddSpendingDialog />
-        </div>
-      ) : null}
+      <div className="ml-auto flex items-center gap-2">
+        {pathname.startsWith("/spending/") ? <AddSpendingDialog /> : null}
+        <NotificationCenter />
+      </div>
     </header>
   )
 }

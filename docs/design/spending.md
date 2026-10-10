@@ -10,17 +10,23 @@ the global monochrome visual system.
 2. The action opens a shadcn Dialog with two choices: upload a file, or add
    manually. All three steps use the global dialog width. Upload and Add
    manually include Back next to the primary action.
-3. Upload continues the existing document flow. The browser file picker and
-   drag-and-drop accept PDF, HEIC/HEIF, PNG, JPG, GIF, or WebP up to 15 MB.
-   There is no camera or scan action. `POST /documents` starts extraction. The
-   same Dialog polls `GET /documents/{id}` and shows processing, failure, and
-   ready states.
-4. A ready document shows every extracted spend item as a numbered flat
+3. Upload takes several files at once. The browser file picker and
+   drag-and-drop accept PDF, HEIC/HEIF, PNG, JPG, GIF, or WebP up to 15 MB,
+   up to 5 minus whatever is already uploading or extracting; rejected files
+   are listed with their reason. There is no camera or scan action. **Upload
+   and extract** hands the files to the app-level upload queue, toasts, and
+   closes the Dialog. From there, progress and review live in the
+   [notification center](./notifications.md).
+4. Review opens from a notification. A ready document shows every extracted spend item as a numbered flat
    list, each with its text exactly as printed on the bill. Double-click a name or amount to edit it inline; the extracted
    category uses the same tinted badge picker as the ledger. Flagged lines
    show a warning icon with a tooltip. Duplicate hashes appear as a tooltip on the
    merchant title. Mismatched totals still produce a review warning. The list caps
-   at `max-h-72` and scrolls so the header and confirm action stay reachable.
+   at `max-h-72` and scrolls so the header and footer stay reachable. The
+   summary is two aligned rows: merchant and total, then the date picker
+   (`sm`), the file (icon and name) and the item count. The footer keeps
+   **Discard** and **Save** together at the bottom right: Discard asks once in
+   place, then deletes the bill and its drafts; Save confirms them (below).
 5. `POST /documents/{id}/confirm` adds all reviewed drafts to Spending and
    refreshes the ledger. The date filter never changes on its own: if the
    bill's date falls outside it, a sonner toast ("Saved <merchant>", the date,
@@ -34,9 +40,8 @@ the global monochrome visual system.
    fileless ready document. The bill appears in the ledger immediately, even
    with zero lines, and opens so the add-row is visible.
 
-Closing the Dialog during extraction does not discard its local progress;
-reopening the top-bar action returns to the current document while the shell
-remains mounted.
+Uploads belong to the shell, not the Dialog: closing it or changing page
+never stops an upload or an extraction.
 
 ## Filters
 
@@ -223,7 +228,7 @@ src/components/spending-analytics/
 src/hooks/spend-items/use-spend-filters.ts
 src/components/spending/
   AddSpendingDialog.tsx
-  AddDocumentDialog.tsx
+  AddDocumentDialog.tsx      pick and hand off; no review inside
   CategoryBadge.tsx
   ItemBadge.tsx
   ItemPicker.tsx

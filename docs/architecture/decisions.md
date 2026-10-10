@@ -80,6 +80,7 @@ Revisit when: ...
 | 64 | Prompt storage | **In git as Markdown** (`core/prompts/*.md`) with `PROMPT_VERSION` recorded on every run; not in the database |
 | 65 | Evals placement | **Top-level `evals/` uv workspace package** depending on `api`, `ai`, `storage`; one subpackage per suite (`evals.agent` now; extraction later); dev only, never in an app image |
 | 66 | Assistant UI | **A floating widget, not a route**: launcher bottom-right on every signed-in page, non-modal panel built from shadcn `MessageScroller` / `Message` / `Bubble` / `Marker`; replies in limited markdown (`react-markdown`, no raw HTML); toasts move to bottom-center |
+| 67 | Empty states | **No dashed frames.** `Empty` has `card` (solid hairline, `bg-muted/40`, soft `shadow-sm`) for pages and `plain` (no frame) inside popovers and panels; the icon is a raised tile. A deliberate exception to "flat, no shadows" |
 
 ### Locked detail rows
 

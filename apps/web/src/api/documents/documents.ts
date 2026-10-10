@@ -9,14 +9,26 @@ import type {
 } from "@/api/documents/documents.types"
 
 export async function uploadDocument(
-  file: File
+  file: File,
+  idempotencyKey?: string
 ): Promise<{ id: string; status: string }> {
   const body = new FormData()
   body.append("file", file)
   const { data } = await client.post<{ id: string; status: string }>(
     "/documents",
-    body
+    body,
+    idempotencyKey ? { headers: { "Idempotency-Key": idempotencyKey } } : {}
   )
+  return data
+}
+
+export async function getDocumentInbox(
+  signal?: AbortSignal
+): Promise<DocumentSummary[]> {
+  const { data } = await client.get<DocumentSummary[]>("/documents", {
+    params: { inbox: true },
+    signal,
+  })
   return data
 }
 
