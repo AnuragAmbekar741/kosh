@@ -331,7 +331,7 @@ function SpendingBillRow({
   const categories = uniqueCategories(group.items)
 
   return (
-    <AccordionItem className="group/bill border-b" value={group.id}>
+    <AccordionItem className="group/bill" value={group.id}>
       <AccordionTrigger
         actions={
           <span className="flex shrink-0 items-center gap-3">
