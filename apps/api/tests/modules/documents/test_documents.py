@@ -348,6 +348,50 @@ def test_extract_failure_marks_failed(client, monkeypatch) -> None:
     assert "invalid model output" in detail["error"]
 
 
+def test_upload_cap_counts_only_documents_still_in_flight(client, monkeypatch) -> None:
+    headers = _auth(client)
+    other = _auth(client)
+    ids = [
+        _upload(client, headers, _JPEG + bytes([i]), f"r{i}.jpg").json()["id"]
+        for i in range(5)
+    ]
+
+    blocked = _upload(client, headers, _JPEG + b"x", "sixth.jpg")
+    assert blocked.status_code == 429
+    assert "try again" in blocked.json()["detail"]
+    assert _upload(client, other, _JPEG + b"y", "theirs.jpg").status_code == 202
+
+    # Finishing one extraction frees a slot.
+    _stub_extract(monkeypatch, _receipt())
+    JOB.run(_claim(ids[0]))
+    assert _upload(client, headers, _JPEG + b"x", "sixth.jpg").status_code == 202
+    assert _upload(client, headers, _JPEG + b"w", "seventh.jpg").status_code == 429
+
+    # Failed and manual documents never count.
+    monkeypatch.setattr(
+        "ai.extract",
+        lambda data, mime, **_: (_ for _ in ()).throw(ExtractError("unreadable")),
+    )
+    JOB.run(_claim(ids[1]))
+    client.post("/documents/manual", json={"title": "Cash"}, headers=headers)
+    assert _upload(client, headers, _JPEG + b"w", "seventh.jpg").status_code == 202
+
+
+def test_idempotent_retry_at_the_cap_returns_the_existing_document(client) -> None:
+    headers = {**_auth(client), "Idempotency-Key": "first"}
+    first = _upload(client, headers, _JPEG, "r0.jpg").json()["id"]
+    plain = {"Authorization": headers["Authorization"]}
+    for i in range(1, 5):
+        assert (
+            _upload(client, plain, _JPEG + bytes([i]), f"r{i}.jpg").status_code == 202
+        )
+    assert _upload(client, plain, _JPEG + b"x", "over.jpg").status_code == 429
+
+    again = _upload(client, headers, _JPEG, "r0.jpg")
+    assert again.status_code == 202
+    assert again.json()["id"] == first
+
+
 def test_list_flags_documents_that_need_review(client, monkeypatch) -> None:
     headers = _auth(client)
     other = _auth(client)
