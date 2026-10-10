@@ -19,9 +19,9 @@ import {
   type DateFilter,
   type DateRange,
 } from "@/components/spending/spend-period"
+import { usePageSize } from "@/hooks/spend-items/use-page-size"
 
 const SOURCES = ["manual", "document"] as const
-export const PAGE_SIZE = 50
 const BILLS_LIMIT = 200
 
 type FilterPatch = {
@@ -69,13 +69,14 @@ export function useSpendFilters() {
   const source = parseSource(searchParams.get("source"))
   const q = searchParams.get("q")?.trim() || undefined
   const view = parseView(pathname)
+  const pageSize = usePageSize()
   const parsedPage = Number.parseInt(searchParams.get("page") ?? "1", 10)
   const page = Number.isFinite(parsedPage) && parsedPage > 1 ? parsedPage : 1
   const pageParams: PageParams =
     view === "bills"
       ? // ponytail: bills groups client-side; a row page would split a bill total
         { skip: 0, limit: BILLS_LIMIT }
-      : { skip: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE }
+      : { skip: (page - 1) * pageSize, limit: pageSize }
 
   const query: SpendQuery = {
     ...(range ? { spent_from: range.from, spent_to: range.to } : {}),
@@ -188,6 +189,7 @@ export function useSpendFilters() {
     q,
     view,
     page,
+    pageSize,
     pageParams,
     query,
     summaryQuery,

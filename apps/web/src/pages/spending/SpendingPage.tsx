@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { AlertCircleIcon, ReceiptTextIcon } from "lucide-react"
 
 import { SpendingAccordion } from "@/components/spending/SpendingAccordion"
@@ -36,6 +37,18 @@ export function SpendingPage() {
   const summary = useSpendSummary(filters.summaryQuery)
   const documents = useDocuments()
   const items = spendItems.data?.data ?? []
+  const total = spendItems.data?.total ?? 0
+  const { page, pageSize, setPage, view } = filters
+  const lastPage = Math.max(1, Math.ceil(total / pageSize))
+
+  // A wider window (or a deleted row) can leave the URL on a page that no
+  // longer exists; step back to the last real one.
+  useEffect(() => {
+    if (view === "items" && spendItems.data && page > lastPage) {
+      setPage(lastPage)
+    }
+  }, [view, spendItems.data, page, lastPage, setPage])
+
   const hasContentFilters = Boolean(
     filters.query.category?.length || filters.query.source || filters.query.q
   )
@@ -135,15 +148,20 @@ export function SpendingPage() {
           ) : hasLedger ? (
             filters.view === "items" ? (
               <div className="flex min-h-0 flex-1 flex-col gap-3">
-                <SpendingItemsTable items={items} page={filters.page} />
+                <SpendingItemsTable
+                  items={items}
+                  page={filters.page}
+                  pageSize={filters.pageSize}
+                />
                 <SpendingItemsPager
                   onPageChange={filters.setPage}
                   page={filters.page}
-                  total={spendItems.data?.total ?? 0}
+                  pageSize={filters.pageSize}
+                  total={total}
                 />
               </div>
             ) : (
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="no-scrollbar min-h-0 flex-1 scroll-fade-y overflow-y-auto">
                 <SpendingAccordion emptyManual={emptyManual} items={items} />
               </div>
             )
