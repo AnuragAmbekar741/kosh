@@ -9,6 +9,7 @@ UX and UI docs for `apps/web`. Product scope and API contracts live in [../produ
 | [dashboard.md](./dashboard.md) | Signed-in sidebar shell (Overview, Spending) |
 | [spending.md](./spending.md) | Document upload, extraction review, and confirmed ledger |
 | [agent.md](./agent.md) | Assistant widget: launcher, floating chat panel, states, copy |
+| [notifications.md](./notifications.md) | Header bell: upload and extraction progress, review entry, polling |
 
 Root `PRODUCT.md` / `DESIGN.md` are gitignored Impeccable copies of this folder. Do not invent a second system.
 
