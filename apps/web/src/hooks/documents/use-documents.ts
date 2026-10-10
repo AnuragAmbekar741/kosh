@@ -6,12 +6,18 @@ import {
   createManualDocument,
   deleteDocument,
   getDocument,
+  getDocumentInbox,
   getDocuments,
   uploadDocument,
 } from "@/api/documents/documents"
-import type { DocumentDetail } from "@/api/documents/documents.types"
+import type {
+  DocumentDetail,
+  DocumentSummary,
+} from "@/api/documents/documents.types"
 import { documentQueryKeys } from "@/hooks/documents/query-keys"
 import { spendItemQueryKeys } from "@/hooks/spend-items/query-keys"
+
+type UploadInput = { file: File; idempotencyKey: string }
 
 export function useDocuments() {
   return useQuery({
@@ -28,6 +34,44 @@ export function useDocument(documentId: string | null) {
     refetchInterval: (query) => {
       const status = query.state.data?.status
       return status === "uploaded" || status === "processing" ? 2_000 : false
+    },
+  })
+}
+
+const INBOX_POLL_MS = 3_000
+const INBOX_SLOW_POLL_MS = 15_000
+const INBOX_SLOW_AFTER_MS = 120_000
+
+export function isInFlight(document: DocumentSummary) {
+  return document.status === "uploaded" || document.status === "processing"
+}
+
+/** Polls only while the worker still owns a document; idle tabs make no calls. */
+export function useDocumentInbox() {
+  return useQuery({
+    queryKey: documentQueryKeys.inbox,
+    queryFn: ({ signal }) => getDocumentInbox(signal),
+    refetchInterval: (query) => {
+      const active = (query.state.data ?? []).filter(isInFlight)
+      if (active.length === 0) return false
+      const oldest = Math.min(
+        ...active.map((document) => Date.parse(document.created_at))
+      )
+      // A stuck worker must not keep a tab polling fast forever.
+      return Date.now() - oldest > INBOX_SLOW_AFTER_MS
+        ? INBOX_SLOW_POLL_MS
+        : INBOX_POLL_MS
+    },
+  })
+}
+
+export function useUploadDocument() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ file, idempotencyKey }: UploadInput) =>
+      uploadDocument(file, idempotencyKey),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: documentQueryKeys.all })
     },
   })
 }
