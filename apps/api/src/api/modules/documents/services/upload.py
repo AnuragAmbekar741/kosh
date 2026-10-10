@@ -4,7 +4,11 @@ from uuid import UUID, uuid4
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from storage.blobs import BlobError, delete_bytes, put_bytes
-from storage.crud.document import create_document, get_document_by_idempotency
+from storage.crud.document import (
+    count_in_flight,
+    create_document,
+    get_document_by_idempotency,
+)
 from storage.models.document import Document, DocumentSource, DocumentStatus
 from storage.settings import get_settings
 
@@ -13,6 +17,7 @@ from api.common.errors import (
     FileTooLargeError,
     IdempotencyConflictError,
     StorageWriteError,
+    TooManyUploadsError,
     UnsupportedFileError,
 )
 
@@ -73,6 +78,10 @@ def store_upload(
                     "idempotency key was already used for different content"
                 )
             return existing
+    # ponytail: check-then-insert, so parallel uploads can overshoot by a few;
+    # an exact cap needs a per-user advisory lock.
+    if count_in_flight(session, user_id=user_id) >= settings.max_in_flight_documents:
+        raise TooManyUploadsError
     document_id = uuid4()
     storage_key = f"users/{user_id}/{document_id}"
     try:
