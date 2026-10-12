@@ -454,3 +454,10 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Blocking or auto-deleting duplicates; a `duplicate_of_id` state; decoding barcode images (the model reads the printed number; PDFs have no barcode image); matching statement rows against receipts.
 - Why: Two identical coffees on the same day are real, so the user decides. The bill number makes a re-photographed receipt certain without a new state, and the fallback covers bills with no number and bills added before the column existed.
 - Revisit when: Statement rows should reconcile against receipts, or false positives show up in practice.
+
+**A bill's date lives on its lines; the document holds it only while a manual bill is empty**
+
+- Chosen: Nullable `Document.spent_at`, set by `POST /documents/manual` and by `PATCH /documents/{id}`. The first line added to an empty manual bill takes that date; `PATCH` also rewrites `spent_at` on every line of the bill in one commit. The ledger keeps reading the date from lines and falls back to `spent_at`, then `created_at`, for empty manual bills.
+- Rejected: Reading the bill date only from `Document` (every query and analytic is already line-based); patching each line from the browser (empty bills have no lines, and N requests can half-apply).
+- Why: An empty manual bill needs somewhere to keep the chosen date, and one endpoint keeps a bill's lines on a single date.
+- Revisit when: Bills get other bill-level fields (merchant, currency, notes) that should also live on the document.

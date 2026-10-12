@@ -12,6 +12,7 @@ from api.modules.documents.schemas import (
     AddDocumentLineItemRequest,
     DocumentDetail,
     DocumentSummary,
+    DocumentUpdate,
     DocumentUploadResponse,
     ManualDocumentCreate,
 )
@@ -19,6 +20,7 @@ from api.modules.documents.services.add_line_item import add_line_item
 from api.modules.documents.services.confirm import confirm as confirm_document
 from api.modules.documents.services.create_manual import create_manual
 from api.modules.documents.services.delete import delete_document
+from api.modules.documents.services.update import update_document
 from api.modules.documents.services.upload import store_upload
 from api.modules.spend.presenter import to_public
 from api.modules.spend.schemas import SpendItemPublic
@@ -78,6 +80,18 @@ def get_doc(
     document_id: UUID, user: CurrentUserDep, session: SessionDep
 ) -> DocumentDetail:
     return to_detail(session, user.id, service.get(session, user.id, document_id))
+
+
+@router.patch("/{document_id}")
+def update_doc(
+    document_id: UUID,
+    body: DocumentUpdate,
+    user: CurrentUserDep,
+    session: SessionDep,
+) -> DocumentSummary:
+    return to_summary(
+        update_document(session, user_id=user.id, document_id=document_id, body=body)
+    )
 
 
 @router.post("/{document_id}/confirm")

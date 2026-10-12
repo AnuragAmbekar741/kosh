@@ -30,7 +30,7 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 |---|---|
 | uv workspace + `apps/web` (Vite, shadcn, typeset CSS) | Agent phase 2: attachments and pending actions — [product/agent-plan.md](./product/agent-plan.md) |
 | Web auth plus document upload, extraction review, and Payments | Item analytics (recurring items) |
-| Manual spend entry (name-only bill + line items) | |
+| Manual spend entry (named, dated bill + line items); change any bill's date | |
 | Postgres + Alembic; User, AuthIdentity, RefreshSession | |
 | Local auth + Google (`POST /auth/google`) + `GET /users/me` | |
 | SpendItem CRUD | |

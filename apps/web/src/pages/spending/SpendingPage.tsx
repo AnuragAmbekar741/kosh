@@ -60,7 +60,7 @@ export function SpendingPage() {
             !items.some((item) => item.document_id === document.id) &&
             !hasContentFilters &&
             dateInRange(
-              document.created_at,
+              document.spent_at ?? document.created_at,
               filters.query.spent_from,
               filters.query.spent_to
             )

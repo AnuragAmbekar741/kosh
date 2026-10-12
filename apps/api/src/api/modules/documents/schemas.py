@@ -12,6 +12,7 @@ __all__ = [
     "AddDocumentLineItemRequest",
     "DocumentDetail",
     "DocumentSummary",
+    "DocumentUpdate",
     "DocumentUploadResponse",
     "DuplicateBill",
     "ManualDocumentCreate",
@@ -33,6 +34,7 @@ class DocumentSummary(BaseModel):
     error: str | None
     created_at: datetime
     processed_at: datetime | None
+    spent_at: date | None = None
     needs_review: bool = False
 
 
@@ -61,8 +63,13 @@ class AddDocumentLineItemRequest(BaseModel):
     category: Category
 
 
+class DocumentUpdate(BaseModel):
+    spent_at: date
+
+
 class ManualDocumentCreate(BaseModel):
     title: str = Field(min_length=1)
+    spent_at: date | None = None
 
     @field_validator("title")
     @classmethod

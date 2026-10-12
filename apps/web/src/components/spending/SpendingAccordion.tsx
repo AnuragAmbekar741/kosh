@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import {
+  CalendarIcon,
   EllipsisVerticalIcon,
   FileTextIcon,
   PencilIcon,
@@ -41,6 +42,7 @@ import {
   useUpdateSpendItem,
 } from "@/hooks/spend-items/use-spend-items"
 
+import { BillDatePopover } from "./BillDatePopover"
 import { CategoryBadge } from "./CategoryBadge"
 import { ItemPicker } from "./ItemPicker"
 import { SpendingAddLineRow } from "./SpendingAddLineRow"
@@ -99,10 +101,11 @@ function canAddLine(group: SpendingGroup) {
   return group.items.some((item) => item.line_index != null)
 }
 
-function groupSpendItems(
-  items: SpendItem[],
-  emptyManual: DocumentSummary[]
-) {
+function billDocumentId(group: SpendingGroup) {
+  return group.items[0]?.document_id ?? (canAddLine(group) ? group.id : null)
+}
+
+function groupSpendItems(items: SpendItem[], emptyManual: DocumentSummary[]) {
   const groups = new Map<string, SpendingGroup>()
 
   for (const item of items) {
@@ -126,7 +129,7 @@ function groupSpendItems(
     groups.set(document.id, {
       id: document.id,
       title: document.filename,
-      spentAt: document.created_at,
+      spentAt: document.spent_at ?? document.created_at,
       currency: "USD",
       source: "manual",
       items: [],
@@ -221,7 +224,7 @@ function SpendingLineRow({
   )
 
   return (
-    <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto_2.75rem] sm:grid-cols-[2.25rem_minmax(0,1fr)_auto_2.25rem] items-center gap-x-3 px-4 py-2.5 not-first:border-t sm:px-5">
+    <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto_2.75rem] items-center gap-x-3 px-4 py-2.5 not-first:border-t sm:grid-cols-[2.25rem_minmax(0,1fr)_auto_2.25rem] sm:px-5">
       <span className="text-center text-xs text-muted-foreground tabular-nums">
         {position}
       </span>
@@ -329,12 +332,14 @@ function SpendingBillRow({
   const itemLabel = group.items.length === 1 ? "item" : "items"
   const showAddRow = canAddLine(group)
   const categories = uniqueCategories(group.items)
+  const actionsRef = useRef<HTMLSpanElement>(null)
+  const [dateOpen, setDateOpen] = useState(false)
 
   return (
     <AccordionItem className="group/bill" value={group.id}>
       <AccordionTrigger
         actions={
-          <span className="flex shrink-0 items-center gap-3">
+          <span className="flex shrink-0 items-center gap-3" ref={actionsRef}>
             <span className="font-medium tabular-nums">
               {formatMoney(total, group.currency)}
             </span>
@@ -351,10 +356,14 @@ function SpendingBillRow({
               >
                 <EllipsisVerticalIcon />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="min-w-40">
                 <DropdownMenuItem onClick={() => onEditBill(group)}>
                   <PencilIcon />
                   Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDateOpen(true)}>
+                  <CalendarIcon />
+                  Change date
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDeleteBill(group)}
@@ -392,7 +401,7 @@ function SpendingBillRow({
         </span>
       </AccordionTrigger>
       <AccordionContent className="border-t bg-muted/40 pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
-        <div className="no-scrollbar scroll-fade-y max-h-72 overflow-y-auto">
+        <div className="no-scrollbar max-h-72 scroll-fade-y overflow-y-auto">
           {group.items.map((item, index) => (
             <SpendingLineRow
               isEditing={editingItemId === item.id}
@@ -412,6 +421,15 @@ function SpendingBillRow({
           ) : null}
         </div>
       </AccordionContent>
+      <BillDatePopover
+        anchor={actionsRef}
+        documentId={billDocumentId(group)}
+        itemId={group.items[0]?.id}
+        onOpenChange={setDateOpen}
+        open={dateOpen}
+        spentAt={group.spentAt}
+        title={group.title}
+      />
     </AccordionItem>
   )
 }
@@ -421,7 +439,8 @@ export function SpendingAccordion({
   items,
 }: SpendingAccordionProps) {
   const groups = groupSpendItems(items, emptyManual)
-  const newestEmptyId = groups.find((group) => group.items.length === 0)?.id ?? ""
+  const newestEmptyId =
+    groups.find((group) => group.items.length === 0)?.id ?? ""
   const [openBill, setOpenBill] = useState(newestEmptyId)
   const [openedEmptyId, setOpenedEmptyId] = useState(newestEmptyId)
   const [editingItemId, setEditingItemId] = useState("")
@@ -461,10 +480,6 @@ export function SpendingAccordion({
   function editBill(group: SpendingGroup) {
     setOpenBill(group.id)
     if (group.items[0]) setEditingItemId(group.items[0].id)
-  }
-
-  function billDocumentId(group: SpendingGroup) {
-    return group.items[0]?.document_id ?? (canAddLine(group) ? group.id : null)
   }
 
   function closeDeleteDialog() {

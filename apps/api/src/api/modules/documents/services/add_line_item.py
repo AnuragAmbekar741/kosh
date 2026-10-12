@@ -70,7 +70,7 @@ def _add_manual_line(
     else:
         merchant = document.filename
         currency = "USD"
-        spent_at = datetime.now(UTC).date()
+        spent_at = document.spent_at or datetime.now(UTC).date()
         next_index = 0
     return create_spend_item(
         session,

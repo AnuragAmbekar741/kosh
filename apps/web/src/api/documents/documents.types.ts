@@ -12,6 +12,8 @@ export type DocumentSummary = {
   error: string | null
   created_at: string
   processed_at: string | null
+  /** The bill date (`YYYY-MM-DD`); set for manual bills and edited dates. */
+  spent_at: string | null
   needs_review: boolean
 }
 
@@ -86,6 +88,12 @@ export type ConfirmDocumentInput = {
 
 export type ManualDocumentCreate = {
   title: string
+  spent_at: string
+}
+
+export type UpdateDocumentInput = {
+  documentId: string
+  spent_at: string
 }
 
 export type AddDocumentLineItemInput = {

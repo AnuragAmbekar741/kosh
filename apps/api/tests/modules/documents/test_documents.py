@@ -866,6 +866,78 @@ def test_add_line_item_to_empty_manual_document(client) -> None:
     assert {item["description"] for item in ledger} == {"Bananas", "Milk"}
 
 
+def test_manual_document_keeps_its_date_for_lines(client) -> None:
+    headers = _auth(client)
+    created = client.post(
+        "/documents/manual",
+        json={"title": "Market", "spent_at": "2026-03-04"},
+        headers=headers,
+    )
+    assert created.status_code == 201
+    assert created.json()["spent_at"] == "2026-03-04"
+    added = client.post(
+        f"/documents/{created.json()['id']}/line-items",
+        json={"description": "Bread", "amount": "3.00", "category": "Groceries"},
+        headers=headers,
+    )
+    assert added.json()["spent_at"] == "2026-03-04"
+    undated = client.post("/documents/manual", json={"title": "Cash"}, headers=headers)
+    assert undated.json()["spent_at"] is not None
+
+
+def test_update_date_moves_every_line(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(client, monkeypatch, headers, _receipt_two_lines())
+    client.post(f"/documents/{document_id}/confirm", headers=headers)
+    response = client.patch(
+        f"/documents/{document_id}", json={"spent_at": "2024-11-02"}, headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json()["spent_at"] == "2024-11-02"
+    assert {line.spent_at for line in _lines(document_id)} == {date(2024, 11, 2)}
+
+
+def test_update_date_of_empty_manual_document(client) -> None:
+    headers = _auth(client)
+    document_id = client.post(
+        "/documents/manual", json={"title": "Cash"}, headers=headers
+    ).json()["id"]
+    client.patch(
+        f"/documents/{document_id}", json={"spent_at": "2025-01-15"}, headers=headers
+    )
+    listed = client.get("/documents", headers=headers).json()
+    assert listed[0]["spent_at"] == "2025-01-15"
+    added = client.post(
+        f"/documents/{document_id}/line-items",
+        json={"description": "Tea", "amount": "2.00", "category": "Dining out"},
+        headers=headers,
+    )
+    assert added.json()["spent_at"] == "2025-01-15"
+
+
+def test_update_date_rejects_bad_requests(client) -> None:
+    headers = _auth(client)
+    document_id = client.post(
+        "/documents/manual", json={"title": "Cash"}, headers=headers
+    ).json()["id"]
+    invalid = client.patch(
+        f"/documents/{document_id}", json={"spent_at": "soon"}, headers=headers
+    )
+    assert invalid.status_code == 422
+    other = client.patch(
+        f"/documents/{document_id}",
+        json={"spent_at": "2025-01-15"},
+        headers=_auth(client),
+    )
+    assert other.status_code == 404
+    processing_id = _upload(client, headers, _JPEG, "receipt.jpg").json()["id"]
+    _claim(processing_id)
+    busy = client.patch(
+        f"/documents/{processing_id}", json={"spent_at": "2025-01-15"}, headers=headers
+    )
+    assert busy.status_code == 409
+
+
 def test_delete_manual_document_skips_blob(client, monkeypatch, blob_store) -> None:
     headers = _auth(client)
     created = client.post(

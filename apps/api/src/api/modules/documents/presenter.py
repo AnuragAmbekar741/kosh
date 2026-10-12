@@ -23,6 +23,7 @@ def to_summary(document: Document, *, needs_review: bool = False) -> DocumentSum
         error=document.error,
         created_at=document.created_at,
         processed_at=document.processed_at,
+        spent_at=document.spent_at,
         needs_review=needs_review,
     )
 

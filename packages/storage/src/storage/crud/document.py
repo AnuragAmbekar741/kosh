@@ -31,6 +31,7 @@ __all__ = [
     "next_attempt_no",
     "pending_review_document_ids",
     "reclaim_stuck",
+    "set_document_spent_at",
 ]
 
 _STUCK_AFTER = timedelta(minutes=5)
@@ -86,6 +87,25 @@ def delete_document_tree(session: Session, document: Document) -> str:
     session.delete(document)
     session.flush()
     return storage_key
+
+
+def set_document_spent_at(
+    session: Session, document: Document, spent_at: date
+) -> Document:
+    """Move a bill and every one of its lines to a new date."""
+    now = datetime.now(UTC)
+    items = session.exec(
+        select(SpendItem).where(SpendItem.document_id == document.id)
+    ).all()
+    for item in items:
+        item.spent_at = spent_at
+        item.updated_at = now
+        session.add(item)
+    document.spent_at = spent_at
+    session.add(document)
+    session.commit()
+    session.refresh(document)
+    return document
 
 
 def get_document_by_id(session: Session, document_id: UUID) -> Document | None:

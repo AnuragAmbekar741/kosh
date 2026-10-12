@@ -23,6 +23,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useCreateManualDocument } from "@/hooks/documents/use-documents"
+import { useBillSavedToast } from "@/hooks/spend-items/use-bill-saved-toast"
+
+import { DatePicker } from "./DatePicker"
+import { toIsoDate } from "./spend-period"
 
 type Step = "choose" | "upload" | "manual"
 
@@ -38,8 +42,10 @@ export function AddSpendingDialog() {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>("choose")
   const [title, setTitle] = useState("")
+  const [spentAt, setSpentAt] = useState(() => toIsoDate(new Date()))
   const [validationError, setValidationError] = useState("")
   const createManual = useCreateManualDocument()
+  const billSaved = useBillSavedToast()
   const error = validationError || apiDetail(createManual.error)
 
   function goToChooser() {
@@ -51,6 +57,7 @@ export function AddSpendingDialog() {
     if (!next) {
       setStep("choose")
       setTitle("")
+      setSpentAt(toIsoDate(new Date()))
       setValidationError("")
       createManual.reset()
     }
@@ -64,7 +71,8 @@ export function AddSpendingDialog() {
     }
     setValidationError("")
     try {
-      await createManual.mutateAsync({ title: trimmed })
+      await createManual.mutateAsync({ title: trimmed, spent_at: spentAt })
+      billSaved(`Added ${trimmed}`, spentAt)
       handleOpenChange(false)
     } catch {
       // Mutation state renders the API error beside the field.
@@ -113,7 +121,7 @@ export function AddSpendingDialog() {
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span className="font-medium">Add manually</span>
                   <span className="text-sm text-muted-foreground">
-                    Name a bill, then add items in the ledger.
+                    Name and date a bill, then add items in the ledger.
                   </span>
                 </span>
               </button>
@@ -135,8 +143,8 @@ export function AddSpendingDialog() {
             <DialogHeader className="border-b px-5 py-5 pr-12 sm:px-6">
               <DialogTitle className="text-lg">Add spending</DialogTitle>
               <DialogDescription>
-                Give this bill a name. You can add items after it appears in
-                Spending.
+                Give this bill a name and date. You can add items after it
+                appears in Spending.
               </DialogDescription>
             </DialogHeader>
             <form
@@ -163,6 +171,15 @@ export function AddSpendingDialog() {
                     value={title}
                   />
                   {error ? <FieldError>{error}</FieldError> : null}
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="manual-spend-date">Date</FieldLabel>
+                  <DatePicker
+                    aria-label="Bill date"
+                    id="manual-spend-date"
+                    onChange={setSpentAt}
+                    value={spentAt}
+                  />
                 </Field>
               </FieldGroup>
               {createManual.isError && !apiDetail(createManual.error) ? (
