@@ -6,6 +6,7 @@ import type {
   DocumentDetail,
   DocumentSummary,
   ManualDocumentCreate,
+  UpdateDocumentInput,
 } from "@/api/documents/documents.types"
 
 export async function uploadDocument(
@@ -59,6 +60,18 @@ export async function confirmDocument({
     `/documents/${documentId}/confirm`,
     // Keep rolling deployments compatible with the previous required body.
     { mode: "line_items" }
+  )
+  return data
+}
+
+/** Moves the bill and every one of its lines to a new date. */
+export async function updateDocument({
+  documentId,
+  ...body
+}: UpdateDocumentInput): Promise<DocumentSummary> {
+  const { data } = await client.patch<DocumentSummary>(
+    `/documents/${documentId}`,
+    body
   )
   return data
 }

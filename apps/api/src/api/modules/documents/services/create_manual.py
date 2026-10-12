@@ -28,5 +28,6 @@ def create_manual(
             source=DocumentSource.MANUAL,
             status=DocumentStatus.READY,
             processed_at=now,
+            spent_at=body.spent_at or now.date(),
         ),
     )

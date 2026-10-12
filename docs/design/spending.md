@@ -39,8 +39,10 @@ the global monochrome visual system.
    (outline button + Calendar popover with month/year dropdowns);
    a "Check the date" alert appears when it is more than a year ago or in the
    future, and a changed date is saved on every line.
-6. Add manually asks only for a bill name. `POST /documents/manual` creates a
-   fileless ready document. The bill appears in the ledger immediately, even
+6. Add manually asks for a bill name and a date (the shared date picker,
+   defaulting to today). `POST /documents/manual` creates a fileless ready
+   document; a date outside the date filter gets the same Show toast as a
+   review. The bill appears in the ledger immediately, even
    with zero lines, and opens so the add-row is visible.
 
 Uploads belong to the shell, not the Dialog: closing it or changing page
@@ -113,7 +115,7 @@ manual bills use the same `document_id` grouping; leftover ungrouped
 `POST /spend-items` rows remain individual entries. Empty manual documents
 from `GET /documents` (`source=manual` with no spend items) render as bills
 with a zero total when no category, source, or search filter is set and
-`created_at` falls in the date filter. They stay hidden in Items view.
+their date (`spent_at`, else `created_at`) falls in the date filter. They stay hidden in Items view.
 Each group is a shadcn Accordion item. The trigger is one
 row: merchant title, then outline pill Badges for date, source (`Document` or
 `Manual entry` from spend `source`, or the empty manual document), item
@@ -121,7 +123,13 @@ count (`1 item` / `N items`), and a read-only category badge per distinct
 line category. The merchant tile is a pencil for manual bills and a document
 icon otherwise. The group total stays on the right, followed by
 an accent three-dot tile that matches the merchant icon. That control does not
-toggle the accordion. It opens a dropdown: Edit expands the bill; Delete opens
+toggle the accordion. It opens a dropdown: Edit expands the bill; Change date
+closes the menu and opens a Bill date popover (single-month Calendar with
+month/year dropdowns) anchored under the bill's total and menu. Picking a day
+saves at once through `PATCH /documents/{id}` (legacy ungrouped rows use
+`PATCH /spend-items/{id}`), moves every line, toasts "Updated <bill>" with a
+Show action when the new date is outside the filter, and closes; errors stay
+under the calendar. Delete opens
 a confirmation Dialog and, on confirm, removes the whole bill. Uploaded
 document groups call `DELETE /documents/{id}` and remove the source file with
 every line. Manual document groups call the same delete and skip blob cleanup.
@@ -244,6 +252,7 @@ src/hooks/spend-items/use-spend-filters.ts
 src/components/spending/
   AddSpendingDialog.tsx
   AddDocumentDialog.tsx      pick and hand off; no review inside
+  BillDatePopover.tsx        Change date from the bill menu
   CategoryBadge.tsx
   ItemBadge.tsx
   ItemPicker.tsx

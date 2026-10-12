@@ -1,11 +1,9 @@
-import { useLocation } from "react-router"
 import { toast } from "sonner"
 
 import {
   type ConfirmedBill,
   DocumentReview,
 } from "@/components/spending/DocumentReview"
-import { formatDate } from "@/components/spending/spending-formatters"
 import {
   Dialog,
   DialogContent,
@@ -13,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useSpendFilters } from "@/hooks/spend-items/use-spend-filters"
+import { useBillSavedToast } from "@/hooks/spend-items/use-bill-saved-toast"
 
 type ReviewDocumentDialogProps = {
   documentId: string | null
@@ -25,23 +23,10 @@ export function ReviewDocumentDialog({
   documentId,
   onClose,
 }: ReviewDocumentDialogProps) {
-  const { pathname } = useLocation()
-  const filters = useSpendFilters()
+  const billSaved = useBillSavedToast()
 
   function confirmed({ merchant, spentAt }: ConfirmedBill) {
-    // Never change the date filter on its own: other bills would seem to vanish.
-    if (
-      pathname.startsWith("/spending/") &&
-      spentAt &&
-      !filters.isInView(spentAt)
-    ) {
-      toast.success(`Saved ${merchant}`, {
-        description: `Dated ${formatDate(spentAt)}, outside your date filter.`,
-        action: { label: "Show", onClick: filters.revealDate },
-      })
-    } else {
-      toast.success(`Saved ${merchant}`)
-    }
+    billSaved(`Saved ${merchant}`, spentAt)
     onClose()
   }
 

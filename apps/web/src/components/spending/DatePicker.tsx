@@ -14,6 +14,7 @@ import { formatDate } from "./spending-formatters"
 
 type DatePickerProps = {
   "aria-label": string
+  id?: string
   invalid?: boolean
   size?: "default" | "sm"
   onChange: (isoDate: string) => void
@@ -24,6 +25,7 @@ type DatePickerProps = {
 /** shadcn date picker: an outline button that opens a Calendar popover. */
 export function DatePicker({
   "aria-label": ariaLabel,
+  id,
   invalid = false,
   onChange,
   size = "default",
@@ -41,6 +43,7 @@ export function DatePicker({
             aria-label={ariaLabel}
             className="justify-start font-normal data-[empty=true]:text-muted-foreground"
             data-empty={!value}
+            id={id}
             size={size}
             variant="outline"
           >

@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
@@ -36,6 +36,8 @@ class Document(SQLModel, table=True):
     storage_key: str
     content_hash: str = Field(index=True)
     bill_number: str | None = Field(default=None, index=True)
+    # The bill date while a manual bill has no lines; lines carry their own.
+    spent_at: date | None = None
     idempotency_key: str | None = None
     source: str = DocumentSource.DASHBOARD
     status: str = DocumentStatus.UPLOADED

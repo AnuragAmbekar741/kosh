@@ -8,6 +8,7 @@ import {
   getDocument,
   getDocumentInbox,
   getDocuments,
+  updateDocument,
   uploadDocument,
 } from "@/api/documents/documents"
 import type {
@@ -109,6 +110,22 @@ export function useAddDocumentLineItem() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: addDocumentLineItem,
+    onSuccess: (_data, input) => {
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: documentQueryKeys.all }),
+        queryClient.invalidateQueries({
+          queryKey: documentQueryKeys.detail(input.documentId),
+        }),
+        queryClient.invalidateQueries({ queryKey: spendItemQueryKeys.all }),
+      ])
+    },
+  })
+}
+
+export function useUpdateDocument() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: updateDocument,
     onSuccess: (_data, input) => {
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: documentQueryKeys.all }),
