@@ -70,24 +70,28 @@ export function NotificationCenter() {
           render={
             <Button
               aria-label={bellLabel(needsYou, busy)}
-              className="relative"
               size="icon"
               variant="ghost"
             />
           }
         >
-          <BellIcon />
-          {needsYou ? (
-            <Badge className="absolute -top-0.5 -right-0.5 h-5 min-w-5 px-1 tabular-nums">
-              {needsYou}
-            </Badge>
-          ) : busy ? (
-            <Spinner
-              aria-hidden
-              className="absolute top-1 right-1 size-3"
-              role={undefined}
-            />
-          ) : null}
+          <span className="relative inline-flex">
+            <BellIcon />
+            {needsYou ? (
+              <Badge className="absolute -top-1.5 -right-2 h-4 min-w-4 px-1 text-[10px] leading-none tabular-nums ring-2 ring-background">
+                {needsYou > 9 ? "9+" : needsYou}
+              </Badge>
+            ) : busy ? (
+              <span className="absolute -top-1 -right-1 inline-flex rounded-full bg-background p-px">
+                <Spinner
+                  aria-hidden
+                  className="size-2.5 text-muted-foreground"
+                  role={undefined}
+                  strokeWidth={3}
+                />
+              </span>
+            ) : null}
+          </span>
         </PopoverTrigger>
         <PopoverContent
           align="end"
