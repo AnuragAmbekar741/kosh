@@ -9,9 +9,17 @@ import {
 } from "lucide-react"
 
 import { apiDetail } from "@/api/client"
-import type { DocumentDetail } from "@/api/documents/documents.types"
+import type {
+  DocumentDetail,
+  DuplicateBill,
+} from "@/api/documents/documents.types"
 import type { Category, SpendItem } from "@/api/spend-items/spend-items.types"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
@@ -68,6 +76,54 @@ type DocumentReviewLineRowProps = {
   onUpdate: (updates: Partial<DraftEdit>) => void
   requiresReview: boolean
   spendItemId: string
+}
+
+type DuplicateBillAlertProps = {
+  duplicates: DuplicateBill[]
+  disabled: boolean
+  onDiscard: () => void
+}
+
+function DuplicateBillAlert({
+  duplicates,
+  disabled,
+  onDiscard,
+}: DuplicateBillAlertProps) {
+  const certain = duplicates.some((bill) => bill.certain)
+  return (
+    <Alert>
+      <AlertTriangleIcon />
+      <AlertTitle>
+        {certain
+          ? "You already have this bill"
+          : "Looks like a bill you already added"}
+      </AlertTitle>
+      <AlertDescription>
+        <ul>
+          {duplicates.map((bill) => (
+            <li className="tabular-nums" key={bill.document_id}>
+              {bill.merchant} · {formatDate(bill.spent_at)} ·{" "}
+              {formatMoney(bill.total, bill.currency)}
+              {bill.bill_number ? ` · Bill #${bill.bill_number}` : null}
+            </li>
+          ))}
+        </ul>
+        <p>Discard this upload, or save it only if it is a separate expense.</p>
+      </AlertDescription>
+      <AlertAction>
+        <Button
+          disabled={disabled}
+          onClick={onDiscard}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          <Trash2Icon data-icon="inline-start" />
+          Discard
+        </Button>
+      </AlertAction>
+    </Alert>
+  )
 }
 
 function ExtractionStatus({ filename }: { filename?: string }) {
@@ -324,6 +380,7 @@ function ReadyDocument({
   const discard = useDeleteDocument()
   const [confirmingDiscard, setConfirmingDiscard] = useState(false)
   const busy = confirm.isPending || updateItem.isPending || discard.isPending
+  const hasDuplicates = document.possible_duplicates.length > 0
 
   const merchant =
     extraction.document_kind === "receipt"
@@ -415,7 +472,7 @@ function ReadyDocument({
             <p className="truncate text-lg font-medium" title={merchant}>
               {merchant}
             </p>
-            {document.hash_matches_existing ? (
+            {document.hash_matches_existing && !hasDuplicates ? (
               <Tooltip>
                 <TooltipTrigger
                   render={
@@ -477,6 +534,17 @@ function ReadyDocument({
             {lineDrafts.length} {lineDrafts.length === 1 ? "item" : "items"}
           </p>
         </div>
+
+        {hasDuplicates ? (
+          <DuplicateBillAlert
+            disabled={busy}
+            duplicates={document.possible_duplicates}
+            onDiscard={() => {
+              discard.reset()
+              setConfirmingDiscard(true)
+            }}
+          />
+        ) : null}
 
         <div className="max-h-72 overflow-y-auto">
           {lineDrafts.map((draft, index) => {
@@ -606,7 +674,7 @@ function ReadyDocument({
               ) : (
                 <CheckIcon data-icon="inline-start" />
               )}
-              Save
+              {hasDuplicates ? "Save anyway" : "Save"}
             </Button>
           </>
         )}

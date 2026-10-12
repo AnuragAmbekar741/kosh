@@ -60,9 +60,22 @@ export type StatementExtraction = {
 
 export type DocumentExtraction = ReceiptExtraction | StatementExtraction
 
+export type DuplicateBill = {
+  document_id: string
+  merchant: string
+  spent_at: string
+  total: string
+  currency: string
+  bill_number: string | null
+  /** Same merchant and bill number; otherwise merchant, date, and total match. */
+  certain: boolean
+}
+
 export type DocumentDetail = DocumentSummary & {
   content_hash: string
+  bill_number: string | null
   hash_matches_existing: boolean
+  possible_duplicates: DuplicateBill[]
   extraction: DocumentExtraction | null
   drafts: SpendItem[]
 }
