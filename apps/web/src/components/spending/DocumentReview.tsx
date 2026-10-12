@@ -103,7 +103,10 @@ function DuplicateBillAlert({
       <AlertDescription>
         <ul className="flex flex-col gap-0.5 text-foreground">
           {duplicates.map((bill) => (
-            <li className="truncate tabular-nums" key={bill.document_id}>
+            <li
+              className="[overflow-wrap:anywhere] tabular-nums"
+              key={bill.document_id}
+            >
               {bill.merchant} · {formatDate(bill.spent_at)} ·{" "}
               {formatMoney(bill.total, bill.currency)}
               {bill.bill_number ? ` · Bill #${bill.bill_number}` : null}
