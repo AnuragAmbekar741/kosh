@@ -39,7 +39,7 @@ export function AppShell() {
         </SidebarProvider>
         <AgentWidget />
         {/* Bottom-right belongs to the assistant launcher. */}
-        <Toaster position="bottom-center" />
+        <Toaster position="top-center" />
       </TooltipProvider>
     </UploadsContext.Provider>
   )

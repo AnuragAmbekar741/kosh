@@ -2,7 +2,9 @@ import { useState } from "react"
 import {
   AlertCircleIcon,
   AlertTriangleIcon,
+  CalendarClockIcon,
   CheckIcon,
+  CopyIcon,
   FileImageIcon,
   FileTextIcon,
   Trash2Icon,
@@ -91,24 +93,27 @@ function DuplicateBillAlert({
 }: DuplicateBillAlertProps) {
   const certain = duplicates.some((bill) => bill.certain)
   return (
-    <Alert>
-      <AlertTriangleIcon />
+    <Alert variant="warning">
+      <CopyIcon />
       <AlertTitle>
         {certain
           ? "You already have this bill"
           : "Looks like a bill you already added"}
       </AlertTitle>
       <AlertDescription>
-        <ul>
+        <ul className="flex flex-col gap-0.5 text-foreground">
           {duplicates.map((bill) => (
-            <li className="tabular-nums" key={bill.document_id}>
+            <li
+              className="[overflow-wrap:anywhere] tabular-nums"
+              key={bill.document_id}
+            >
               {bill.merchant} · {formatDate(bill.spent_at)} ·{" "}
               {formatMoney(bill.total, bill.currency)}
               {bill.bill_number ? ` · Bill #${bill.bill_number}` : null}
             </li>
           ))}
         </ul>
-        <p>Discard this upload, or save it only if it is a separate expense.</p>
+        <p>Save it only if it is a separate expense.</p>
       </AlertDescription>
       <AlertAction>
         <Button
@@ -381,6 +386,11 @@ function ReadyDocument({
   const [confirmingDiscard, setConfirmingDiscard] = useState(false)
   const busy = confirm.isPending || updateItem.isPending || discard.isPending
   const hasDuplicates = document.possible_duplicates.length > 0
+  const hasNotices =
+    hasDuplicates ||
+    document.hash_matches_existing ||
+    unlikelyDate ||
+    Boolean(document.error)
 
   const merchant =
     extraction.document_kind === "receipt"
@@ -472,25 +482,6 @@ function ReadyDocument({
             <p className="truncate text-lg font-medium" title={merchant}>
               {merchant}
             </p>
-            {document.hash_matches_existing && !hasDuplicates ? (
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <button
-                      aria-label="Possible duplicate"
-                      className="inline-flex shrink-0 text-muted-foreground hover:text-foreground"
-                      type="button"
-                    />
-                  }
-                >
-                  <AlertTriangleIcon className="size-4" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  Possible duplicate. A matching document was uploaded before.
-                  Confirm only if this is a separate expense.
-                </TooltipContent>
-              </Tooltip>
-            ) : null}
           </div>
           <p className="text-right text-xl font-medium tabular-nums">
             {formatMoney(total, extraction.currency)}
@@ -535,15 +526,47 @@ function ReadyDocument({
           </p>
         </div>
 
-        {hasDuplicates ? (
-          <DuplicateBillAlert
-            disabled={busy}
-            duplicates={document.possible_duplicates}
-            onDiscard={() => {
-              discard.reset()
-              setConfirmingDiscard(true)
-            }}
-          />
+        {hasNotices ? (
+          <div className="flex flex-col gap-2" data-slot="review-notices">
+            {hasDuplicates ? (
+              <DuplicateBillAlert
+                disabled={busy}
+                duplicates={document.possible_duplicates}
+                onDiscard={() => {
+                  discard.reset()
+                  setConfirmingDiscard(true)
+                }}
+              />
+            ) : document.hash_matches_existing ? (
+              <Alert variant="warning">
+                <CopyIcon />
+                <AlertTitle>This file was uploaded before</AlertTitle>
+                <AlertDescription>
+                  Save it only if it is a separate expense.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            {unlikelyDate ? (
+              <Alert variant="warning">
+                <CalendarClockIcon />
+                <AlertTitle>Check the date</AlertTitle>
+                <AlertDescription>
+                  Dated {formatDate(receiptDate)},{" "}
+                  {dateOffset > 0 ? "in the future" : "over a year ago"}. Fix it
+                  above if the year was misread.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            {document.error ? (
+              <Alert variant="warning">
+                <AlertTriangleIcon />
+                <AlertTitle>Check the extracted totals</AlertTitle>
+                <AlertDescription>
+                  Item amounts may not add up to the document total.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+          </div>
         ) : null}
 
         <div className="max-h-72 overflow-y-auto">
@@ -570,29 +593,6 @@ function ReadyDocument({
         </div>
 
         {validationError ? <FieldError>{validationError}</FieldError> : null}
-
-        {unlikelyDate ? (
-          <Alert>
-            <AlertTriangleIcon />
-            <AlertTitle>Check the date</AlertTitle>
-            <AlertDescription>
-              This receipt is dated {formatDate(receiptDate)},{" "}
-              {dateOffset > 0 ? "in the future" : "more than a year ago"}. If
-              the year was misread, fix the date above before adding it.
-            </AlertDescription>
-          </Alert>
-        ) : null}
-
-        {document.error ? (
-          <Alert>
-            <AlertTriangleIcon />
-            <AlertTitle>Check the extracted totals</AlertTitle>
-            <AlertDescription>
-              The itemized amounts may not match the document total. Review the
-              entries before adding them.
-            </AlertDescription>
-          </Alert>
-        ) : null}
 
         {discard.isError ? (
           <Alert variant="destructive">

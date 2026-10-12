@@ -79,6 +79,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -125,6 +126,7 @@
   --accent: #eef2f7;
   --accent-foreground: #0b1220;
   --destructive: #dc2626;
+  --warning: #b45309;
   --border: #e3e8ef;
   --input: #dde3eb;
   --ring: #94a3b8;
@@ -211,6 +213,7 @@
   --accent: #141516;
   --accent-foreground: #f7f8f8;
   --destructive: #f87171;
+  --warning: #e0b15a;
   --border: #23252a;
   --input: #23252a;
   --ring: #8a8f98;
@@ -281,6 +284,10 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
   }
   body {
     @apply bg-background text-foreground;
