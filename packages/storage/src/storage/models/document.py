@@ -35,6 +35,7 @@ class Document(SQLModel, table=True):
     size_bytes: int
     storage_key: str
     content_hash: str = Field(index=True)
+    bill_number: str | None = Field(default=None, index=True)
     idempotency_key: str | None = None
     source: str = DocumentSource.DASHBOARD
     status: str = DocumentStatus.UPLOADED

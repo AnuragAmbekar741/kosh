@@ -8,6 +8,7 @@ from storage.models.spend import SpendStatus
 
 from api.modules.documents import service
 from api.modules.documents.schemas import DocumentDetail, DocumentSummary
+from api.modules.documents.services.duplicates import find_duplicates
 from api.modules.spend.presenter import to_public
 
 
@@ -40,6 +41,7 @@ def to_detail(session: Session, user_id: UUID, document: Document) -> DocumentDe
             needs_review=service.needs_review(document, has_pending=bool(drafts)),
         ).model_dump(),
         content_hash=document.content_hash,
+        bill_number=document.bill_number,
         hash_matches_existing=hash_matches_other(
             session,
             user_id=user_id,
@@ -47,5 +49,8 @@ def to_detail(session: Session, user_id: UUID, document: Document) -> DocumentDe
             document_id=document.id,
         ),
         extraction=attempt.payload if attempt is not None else None,
+        possible_duplicates=find_duplicates(
+            session, user_id=user_id, document=document, drafts=drafts
+        ),
         drafts=[to_public(item) for item in drafts],
     )

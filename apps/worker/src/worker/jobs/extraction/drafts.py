@@ -67,6 +67,9 @@ def save(
     extraction: ReceiptExtraction | StatementExtraction,
 ) -> None:
     """Upsert the drafts without committing; the job commits with the status."""
+    if isinstance(extraction, ReceiptExtraction):
+        document.bill_number = (extraction.bill_number or "").strip() or None
+        session.add(document)
     upsert_drafts(
         session,
         user_id=document.user_id,
@@ -75,3 +78,4 @@ def save(
         drafts=to_spend_items(document.user_id, extraction),
         commit=False,
     )
+    session.flush()

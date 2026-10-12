@@ -38,6 +38,7 @@ Course notes (external): [Python for Professionals](https://python-pros.netlify.
 | Documents upload + worker extraction via OpenRouter | |
 | Agent phase 1: read-only chat (tools, SSE endpoints, evals, chat widget) | |
 | Multi-file upload (up to 5) and a notification center for extraction progress | |
+| Duplicate bill warning (bill number, then merchant, date, and total) | |
 
 
 When a planning decision changes, update `architecture/decisions.md` first, then `architecture/overview.md` and `product/scope.md`.

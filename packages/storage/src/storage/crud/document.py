@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, or_
@@ -9,6 +9,7 @@ from storage.models.spend import SpendItem, SpendStatus
 
 __all__ = [
     "claim_next",
+    "confirmed_bill_lines",
     "count_in_flight",
     "create_document",
     "create_extraction_attempt",
@@ -20,6 +21,7 @@ __all__ = [
     "get_document_for_update",
     "hash_matches_other",
     "latest_attempt",
+    "list_bill_number_matches",
     "list_documents",
     "list_extraction_attempts",
     "list_inbox_documents",
@@ -112,6 +114,32 @@ def hash_matches_other(
         )
     ).first()
     return other is not None
+
+
+def confirmed_bill_lines(
+    session: Session, *, user_id: UUID, start: date, end: date, exclude_id: UUID
+) -> list[SpendItem]:
+    """Confirmed lines of the user's other bills spent between start and end."""
+    statement = select(SpendItem).where(
+        SpendItem.user_id == user_id,
+        SpendItem.status == SpendStatus.CONFIRMED,
+        col(SpendItem.document_id).is_not(None),
+        SpendItem.document_id != exclude_id,
+        col(SpendItem.spent_at) >= start,
+        col(SpendItem.spent_at) <= end,
+    )
+    return list(session.exec(statement).all())
+
+
+def list_bill_number_matches(
+    session: Session, *, user_id: UUID, bill_number: str, exclude_id: UUID
+) -> list[Document]:
+    statement = select(Document).where(
+        Document.user_id == user_id,
+        Document.bill_number == bill_number,
+        Document.id != exclude_id,
+    )
+    return list(session.exec(statement).all())
 
 
 def list_documents(session: Session, *, user_id: UUID) -> list[Document]:

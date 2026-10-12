@@ -256,7 +256,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     line = next(item for item in drafts if item["line_index"] == 0)
     with Session(database.engine) as session:
         attempts = list_extraction_attempts(session, UUID(document_id))
-        assert attempts[0].schema_version == 4
+        assert attempts[0].schema_version == 5
     assert client.get("/spend-items", headers=headers).json()["data"] == []
     patched = client.patch(
         f"/spend-items/{line['id']}",
@@ -1147,3 +1147,127 @@ def test_item_corrections_are_validated(client, monkeypatch) -> None:
             ).status_code
             == 422
         )
+
+
+def _process_unique(client, monkeypatch, headers, extraction) -> str:
+    """Like _process, but with distinct bytes so the file hash never matches."""
+    data = _JPEG + uuid4().bytes
+    document_id = _upload(client, headers, data, "receipt.jpg").json()["id"]
+    _stub_extract(monkeypatch, extraction)
+    JOB.run(_claim(document_id))
+    return document_id
+
+
+def _confirmed(client, monkeypatch, headers, extraction) -> str:
+    document_id = _process_unique(client, monkeypatch, headers, extraction)
+    response = client.post(f"/documents/{document_id}/confirm", headers=headers)
+    assert response.status_code == 200
+    return document_id
+
+
+def _duplicates(client, headers, document_id: str) -> list[dict]:
+    return client.get(f"/documents/{document_id}", headers=headers).json()[
+        "possible_duplicates"
+    ]
+
+
+def test_duplicate_by_bill_number_is_certain(client, monkeypatch) -> None:
+    headers = _auth(client)
+    first = _confirmed(
+        client,
+        monkeypatch,
+        headers,
+        _receipt().model_copy(update={"bill_number": "4471"}),
+    )
+    rescan = _receipt(total="12.00", line_total="12.00").model_copy(
+        update={"bill_number": " 4471 ", "purchased_at": date(2024, 11, 2)}
+    )
+    second = _process_unique(client, monkeypatch, headers, rescan)
+    detail = client.get(f"/documents/{second}", headers=headers).json()
+    assert detail["bill_number"] == "4471"
+    [match] = detail["possible_duplicates"]
+    assert match["document_id"] == first
+    assert match["certain"] is True
+    assert match["bill_number"] == "4471"
+    assert Decimal(match["total"]) == Decimal("56.71")
+
+
+def test_duplicate_by_merchant_date_total_is_likely(client, monkeypatch) -> None:
+    headers = _auth(client)
+    first = _confirmed(client, monkeypatch, headers, _receipt())
+    rescan = _receipt().model_copy(
+        update={
+            "merchant": "WALMART NEIGHBORHOOD MARKET #2187",
+            "purchased_at": date(2024, 10, 20),
+        }
+    )
+    second = _process_unique(client, monkeypatch, headers, rescan)
+    [match] = _duplicates(client, headers, second)
+    assert match["document_id"] == first
+    assert match["certain"] is False
+
+
+def test_no_duplicate_for_other_total_date_drafts_or_user(client, monkeypatch) -> None:
+    headers = _auth(client)
+    _confirmed(
+        client, monkeypatch, headers, _receipt(total="10.00", line_total="10.00")
+    )
+    _confirmed(
+        client,
+        monkeypatch,
+        headers,
+        _receipt().model_copy(update={"purchased_at": date(2024, 10, 22)}),
+    )
+    _process_unique(client, monkeypatch, headers, _receipt())  # draft only
+    _confirmed(client, monkeypatch, _auth(client), _receipt())  # another user
+    second = _process_unique(client, monkeypatch, headers, _receipt())
+    assert _duplicates(client, headers, second) == []
+
+
+def test_duplicate_matches_manual_bill_not_statement(client, monkeypatch) -> None:
+    headers = _auth(client)
+    manual = client.post(
+        "/documents/manual",
+        json={"title": "Walmart Neighborhood Market"},
+        headers=headers,
+    ).json()["id"]
+    added = client.post(
+        f"/documents/{manual}/line-items",
+        json={"description": "Groceries", "amount": "56.71", "category": "Groceries"},
+        headers=headers,
+    )
+    assert added.status_code == 201
+    _confirmed(
+        client,
+        monkeypatch,
+        headers,
+        _statement().model_copy(
+            update={
+                "transactions": [
+                    _statement()
+                    .transactions[0]
+                    .model_copy(
+                        update={
+                            "merchant": "Walmart Neighborhood Market",
+                            "amount": "56.71",
+                            "spent_at": date.fromisoformat(added.json()["spent_at"]),
+                        }
+                    )
+                ]
+            }
+        ),
+    )
+    receipt = _receipt().model_copy(
+        update={"purchased_at": date.fromisoformat(added.json()["spent_at"])}
+    )
+    second = _process_unique(client, monkeypatch, headers, receipt)
+    [match] = _duplicates(client, headers, second)
+    assert match["document_id"] == manual
+
+
+def test_merchant_key() -> None:
+    from api.modules.documents.services.duplicates import merchant_key
+
+    assert merchant_key("TRADER JOE'S #552") == "trader joes 552"
+    assert merchant_key("  Trader Joes ") == "trader joes"
+    assert merchant_key("***") == ""

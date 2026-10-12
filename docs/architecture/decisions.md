@@ -447,3 +447,10 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: A frontend-only limit on files per selection (anyone calling the API is uncapped); counting every unconfirmed document (blocks users until they review).
 - Why: One worker extracts one document at a time and each extraction costs a model call, so queued work per user is what to bound; a slot frees as soon as extraction ends.
 - Revisit when: Per-user daily budgets or fair queueing across users are added. The check is check-then-insert, so parallel uploads can overshoot by a few; an exact cap needs a per-user advisory lock.
+
+**Duplicate bills are a warning matched on bill number, then merchant, date, and total**
+
+- Chosen: Extraction reads a receipt's printed bill or transaction number into `Document.bill_number`. `GET /documents/{id}` lists up to 3 `possible_duplicates` for a receipt with pending drafts: confirmed bills from the same merchant with the same bill number (`certain`), else confirmed bills from the same merchant with the same total to the cent and a date within a day. Merchants match after casefolding and stripping punctuation, or when one name contains the other. Statement documents are never candidates; manual bills are. The review shows a banner with Discard and **Save anyway**.
+- Rejected: Blocking or auto-deleting duplicates; a `duplicate_of_id` state; decoding barcode images (the model reads the printed number; PDFs have no barcode image); matching statement rows against receipts.
+- Why: Two identical coffees on the same day are real, so the user decides. The bill number makes a re-photographed receipt certain without a new state, and the fallback covers bills with no number and bills added before the column existed.
+- Revisit when: Statement rows should reconcile against receipts, or false positives show up in practice.

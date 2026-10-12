@@ -20,8 +20,11 @@ the global monochrome visual system.
 4. Review opens from a notification. A ready document shows every extracted spend item as a numbered flat
    list, each with its text exactly as printed on the bill. Double-click a name or amount to edit it inline; the extracted
    category uses the same tinted badge picker as the ledger. Flagged lines
-   show a warning icon with a tooltip. Duplicate hashes appear as a tooltip on the
-   merchant title. Mismatched totals still produce a review warning. The list caps
+   show a warning icon with a tooltip. A receipt that matches a confirmed bill
+   (same bill number, or same merchant, total, and date within a day) shows an
+   alert above the lines listing the matches, with its own **Discard**, and
+   **Save** reads **Save anyway**. Otherwise a duplicate file hash appears as a
+   tooltip on the merchant title. Mismatched totals still produce a review warning. The list caps
    at `max-h-72` and scrolls so the header and footer stay reachable. The
    summary is two aligned rows: merchant and total, then the date picker
    (`sm`), the file (icon and name) and the item count. The footer keeps
