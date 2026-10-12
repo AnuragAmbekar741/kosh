@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
@@ -13,6 +13,7 @@ __all__ = [
     "DocumentDetail",
     "DocumentSummary",
     "DocumentUploadResponse",
+    "DuplicateBill",
     "ManualDocumentCreate",
 ]
 
@@ -35,9 +36,21 @@ class DocumentSummary(BaseModel):
     needs_review: bool = False
 
 
+class DuplicateBill(BaseModel):
+    document_id: UUID
+    merchant: str
+    spent_at: date
+    total: Decimal
+    currency: str
+    bill_number: str | None
+    certain: bool
+
+
 class DocumentDetail(DocumentSummary):
     content_hash: str
+    bill_number: str | None = None
     hash_matches_existing: bool = False
+    possible_duplicates: list[DuplicateBill] = Field(default_factory=list)
     extraction: dict[str, Any] | None = None
     drafts: list[SpendItemPublic] = Field(default_factory=list)
 
