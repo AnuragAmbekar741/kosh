@@ -31,7 +31,9 @@ _PROMPT = (
     "Utilities: electricity, water, gas, internet, phone. "
     "Entertainment: streaming, events, games. "
     "Travel: flights, hotels, car rental. "
-    "Use Other only when none fit."
+    "Use Other only when none fit. "
+    "For receipts, bill_number is the transaction, invoice, or bill number printed on it, "
+    "or the digits printed under its barcode; use null when none is printed."
 )
 
 

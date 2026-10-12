@@ -13,7 +13,7 @@ __all__ = [
     "Transaction",
 ]
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 Category = Literal[
     "Groceries",
@@ -60,6 +60,7 @@ class ReceiptExtraction(_Strict):
     document_kind: Literal["receipt"]
     merchant: str
     store_location: str | None = None
+    bill_number: str | None = None
     purchased_at: date
     currency: CurrencyCode
     subtotal: MoneyText | None = None

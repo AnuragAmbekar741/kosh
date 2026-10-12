@@ -256,7 +256,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     line = next(item for item in drafts if item["line_index"] == 0)
     with Session(database.engine) as session:
         attempts = list_extraction_attempts(session, UUID(document_id))
-        assert attempts[0].schema_version == 4
+        assert attempts[0].schema_version == 5
     assert client.get("/spend-items", headers=headers).json()["data"] == []
     patched = client.patch(
         f"/spend-items/{line['id']}",
