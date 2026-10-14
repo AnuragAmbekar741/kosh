@@ -333,7 +333,8 @@ function SpendingBillRow({
   const showAddRow = canAddLine(group)
   const categories = uniqueCategories(group.items)
   const actionsRef = useRef<HTMLSpanElement>(null)
-  const [dateOpen, setDateOpen] = useState(false)
+  const dateRef = useRef<HTMLSpanElement>(null)
+  const [dateAnchor, setDateAnchor] = useState<typeof actionsRef | null>(null)
 
   return (
     <AccordionItem className="group/bill" value={group.id}>
@@ -361,7 +362,7 @@ function SpendingBillRow({
                   <PencilIcon />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setDateOpen(true)}>
+                <DropdownMenuItem onClick={() => setDateAnchor(actionsRef)}>
                   <CalendarIcon />
                   Change date
                 </DropdownMenuItem>
@@ -386,7 +387,22 @@ function SpendingBillRow({
           <span className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="truncate font-medium">{group.title}</span>
             <span className="flex shrink-0 items-center gap-1.5">
-              <Badge variant="outline">{formatDate(group.spentAt)}</Badge>
+              {/* Inside the trigger button, so a span: the click must not toggle the bill. */}
+              <Badge
+                className="cursor-pointer gap-1 hover:bg-accent hover:text-accent-foreground"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  setDateAnchor(dateRef)
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                ref={dateRef}
+                title="Change date"
+                variant="outline"
+              >
+                <CalendarIcon />
+                {formatDate(group.spentAt)}
+              </Badge>
               <Badge variant="outline">
                 {group.source === "manual" ? "Manual entry" : "Document"}
               </Badge>
@@ -422,11 +438,14 @@ function SpendingBillRow({
         </div>
       </AccordionContent>
       <BillDatePopover
-        anchor={actionsRef}
+        align={dateAnchor === dateRef ? "start" : "end"}
+        anchor={dateAnchor ?? actionsRef}
         documentId={billDocumentId(group)}
         itemId={group.items[0]?.id}
-        onOpenChange={setDateOpen}
-        open={dateOpen}
+        onOpenChange={(open) =>
+          setDateAnchor(open ? (dateAnchor ?? actionsRef) : null)
+        }
+        open={dateAnchor !== null}
         spentAt={group.spentAt}
         title={group.title}
       />

@@ -16,6 +16,7 @@ import { useUpdateSpendItem } from "@/hooks/spend-items/use-spend-items"
 import { fromIsoDate, toIsoDate } from "./spend-period"
 
 type BillDatePopoverProps = {
+  align?: "start" | "end"
   anchor: RefObject<HTMLElement | null>
   /** The bill's document; legacy ungrouped rows have none and use `itemId`. */
   documentId: string | null
@@ -28,6 +29,7 @@ type BillDatePopoverProps = {
 
 /** Calendar popover that moves a whole bill, and every line on it, to a new date. */
 export function BillDatePopover({
+  align = "end",
   anchor,
   documentId,
   itemId,
@@ -77,7 +79,7 @@ export function BillDatePopover({
 
   return (
     <Popover onOpenChange={handleOpenChange} open={open}>
-      <PopoverContent align="end" anchor={anchor} className="w-auto">
+      <PopoverContent align={align} anchor={anchor} className="w-auto">
         <PopoverHeader>
           <PopoverTitle>Bill date</PopoverTitle>
           <PopoverDescription>
