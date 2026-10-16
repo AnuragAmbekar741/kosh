@@ -4,6 +4,7 @@ import { ItemBadge } from "@/components/spending/ItemBadge"
 import {
   formatDate,
   formatMoney,
+  formatShortDate,
 } from "@/components/spending/spending-formatters"
 import {
   Table,
@@ -28,22 +29,32 @@ type ItemListRowProps = {
   item: SpendItem
 }
 
-/** Phones: one stacked row per item instead of eight table columns. */
+/** The product badge earns phone space only when it asks for a pick. */
+function needsItemPick(item: SpendItem) {
+  return item.item_status === "needs_review" || item.item_status === "failed"
+}
+
+/**
+ * Phones: two aligned lines per item. Name and amount on top; merchant, date
+ * and category below, with the category under the amount.
+ */
 function ItemListRow({ item }: ItemListRowProps) {
   return (
-    <li className="flex items-start gap-3 px-4 py-3 not-first:border-t">
-      <div className="grid min-w-0 flex-1 gap-1">
-        <span className="truncate font-medium">{itemName(item)}</span>
-        <span className="truncate text-xs text-muted-foreground">
-          {formatDate(item.spent_at)} · {item.merchant}
-        </span>
-        <span className="flex flex-wrap items-center gap-1.5">
-          {item.category ? <CategoryBadge category={item.category} /> : null}
-          {item.item_status === "none" ? null : <ItemBadge item={item} />}
-        </span>
-      </div>
-      <span className="shrink-0 text-sm tabular-nums">
+    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-4 py-3 not-first:border-t">
+      <span className="truncate text-sm font-medium">{itemName(item)}</span>
+      <span className="text-right text-sm font-medium tabular-nums">
         {formatMoney(item.amount, item.currency)}
+      </span>
+      <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="truncate">{item.merchant}</span>
+        <span aria-hidden>·</span>
+        <span className="shrink-0 tabular-nums">
+          {formatShortDate(item.spent_at)}
+        </span>
+        {needsItemPick(item) ? <ItemBadge item={item} /> : null}
+      </span>
+      <span className="flex justify-end">
+        {item.category ? <CategoryBadge category={item.category} /> : null}
       </span>
     </li>
   )
