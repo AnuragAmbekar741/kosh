@@ -1,11 +1,10 @@
-import { Navigate, Outlet } from "react-router"
+import { Navigate, Outlet, useLocation } from "react-router"
 
 import { AgentWidget } from "@/components/agent/AgentWidget"
 import { AppHeader } from "@/components/layout/AppHeader"
 import { AppSidebar } from "@/components/layout/AppSidebar"
 import { DashboardSkeleton } from "@/components/layout/DashboardSkeleton"
-import { PhoneScanButton } from "@/components/layout/navigation/PhoneScanButton"
-import { PhoneTabBar } from "@/components/layout/navigation/PhoneTabBar"
+import { PhoneNav } from "@/components/layout/navigation/PhoneNav"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -32,6 +31,7 @@ export function AppShell() {
   const agent = useAgentPanelState()
   const scans = useChatScansState(uploads)
   const isPhone = useIsMobile()
+  const { pathname } = useLocation()
 
   if (me.isPending) return <DashboardSkeleton />
   if (!me.data) return <Navigate replace to="/login" />
@@ -45,15 +45,17 @@ export function AppShell() {
               className="h-dvh overflow-hidden"
               defaultOpen={readSidebarOpen()}
             >
-              {/* Phones navigate with the bottom tab bar instead. */}
+              {/* Phones navigate with the floating nav button instead. */}
               {isPhone ? null : <AppSidebar user={me.data} />}
               <SidebarInset className="max-h-dvh min-h-0 overflow-hidden bg-card md:max-h-[calc(100dvh-1rem)] md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border">
                 <AppHeader />
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 md:px-6 md:pb-6">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 md:px-6 md:pb-6">
                   <Outlet />
                 </div>
-                {isPhone ? <PhoneTabBar user={me.data} /> : null}
-                {isPhone ? <PhoneScanButton /> : null}
+                {/* Chat puts it in the composer row instead. */}
+                {isPhone && pathname !== "/chat" ? (
+                  <PhoneNav placement="floating" />
+                ) : null}
               </SidebarInset>
             </SidebarProvider>
             {/* Phones chat on /chat instead of the floating panel. */}

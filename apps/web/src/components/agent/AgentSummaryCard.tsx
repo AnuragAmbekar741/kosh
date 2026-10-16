@@ -4,7 +4,7 @@ import { Link } from "react-router"
 import { formatMoney } from "@/components/spending/spending-formatters"
 import { currentMonthRange } from "@/components/spending/spend-period"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useDocumentInbox } from "@/hooks/documents/use-documents"
+import { useReviewCount } from "@/hooks/documents/use-review-count"
 import { useSpendSummary } from "@/hooks/spend-items/use-spend-items"
 
 const monthName = new Intl.DateTimeFormat(undefined, { month: "long" })
@@ -21,15 +21,12 @@ export function AgentSummaryCard() {
     spent_to: range.to,
     period: "month",
   })
-  const inbox = useDocumentInbox()
-  const toReview = (inbox.data ?? []).filter(
-    (document) => document.status === "ready" && document.needs_review
-  ).length
+  const toReview = useReviewCount()
   const data = summary.data
 
   return (
     <Link
-      className="group flex items-center gap-3 rounded-xl bg-muted/60 p-4 ring-1 ring-border outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex items-center gap-3 rounded-2xl glass px-4 py-3.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 motion-safe:animate-rise"
       to="/spending/bills?date=this-month"
     >
       <span className="grid min-w-0 flex-1 gap-0.5">
@@ -37,7 +34,7 @@ export function AgentSummaryCard() {
           {monthName.format(new Date())} so far
         </span>
         {data ? (
-          <span className="text-2xl font-medium tabular-nums">
+          <span className="text-[26px] leading-tight font-medium tracking-tight tabular-nums">
             {formatMoney(data.total, data.currency)}
           </span>
         ) : (

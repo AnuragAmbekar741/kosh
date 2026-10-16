@@ -6,6 +6,8 @@ import { AgentHistory } from "@/components/agent/AgentHistory"
 import { AgentHome } from "@/components/agent/AgentHome"
 import { AgentScans } from "@/components/agent/AgentScans"
 import { AgentThread } from "@/components/agent/AgentThread"
+import { ChatBackdrop } from "@/components/agent/ChatBackdrop"
+import { PhoneNav } from "@/components/layout/navigation/PhoneNav"
 import { useAgentPanel } from "@/hooks/agent/use-agent-panel"
 import { useChatScans } from "@/hooks/agent/use-chat-scans"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -21,7 +23,7 @@ function OpenPanelOnOverview() {
   return <Navigate replace to="/overview" />
 }
 
-/** Phone home: the assistant, full screen between the header and the tab bar. */
+/** Phone home: the assistant, full screen under the header, over the waveform. */
 export function ChatPage() {
   const isPhone = useIsMobile()
   const { view } = useAgentPanel()
@@ -31,18 +33,28 @@ export function ChatPage() {
 
   return (
     // Edge to edge: cancel the shell's page padding.
-    <main className="-mx-4 -mb-4 flex min-h-0 flex-1 flex-col text-sm">
-      {view === "history" ? (
-        <AgentHistory />
-      ) : (
-        <>
-          <AgentThread
-            empty={<AgentHome />}
-            extra={scans.length ? <AgentScans /> : null}
-          />
-          <AgentComposer scan />
-        </>
-      )}
+    <main className="relative -mx-4 flex min-h-0 flex-1 flex-col text-sm">
+      <ChatBackdrop />
+      {/* `relative` paints the content over the absolute backdrop. */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {view === "history" ? (
+          <>
+            <AgentHistory />
+            <PhoneNav placement="floating" />
+          </>
+        ) : (
+          <>
+            <AgentThread
+              empty={<AgentHome />}
+              extra={scans.length ? <AgentScans /> : null}
+            />
+            <AgentComposer
+              leading={<PhoneNav placement="inline" />}
+              variant="phone"
+            />
+          </>
+        )}
+      </div>
     </main>
   )
 }

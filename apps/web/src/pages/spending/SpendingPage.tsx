@@ -24,6 +24,7 @@ import {
   useSpendItems,
   useSpendSummary,
 } from "@/hooks/spend-items/use-spend-items"
+import { cn } from "@/lib/utils"
 
 export function SpendingPage() {
   const filters = useSpendFilters()
@@ -80,8 +81,8 @@ export function SpendingPage() {
       : null
 
   return (
-    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-6 2xl:mx-auto 2xl:max-w-7xl">
-      <div className="flex min-h-0 flex-1 flex-col gap-6">
+    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-3 md:pt-6 2xl:mx-auto 2xl:max-w-7xl">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 md:gap-6">
         <SpendingToolbar countLabel={countLabel} disabled={firstUse} />
 
         <section
@@ -147,7 +148,16 @@ export function SpendingPage() {
             </div>
           ) : hasLedger ? (
             filters.view === "items" ? (
-              <div className="flex min-h-0 flex-1 flex-col gap-3">
+              <div
+                className={cn(
+                  "flex min-h-0 flex-1 flex-col gap-3",
+                  // Phones: the pager shares the nav button's row at the
+                  // bottom; with no pager, the list stops above the button.
+                  total > filters.pageSize
+                    ? "max-md:pb-[calc(1rem+env(safe-area-inset-bottom))]"
+                    : "max-md:pb-(--phone-nav-clearance)"
+                )}
+              >
                 <SpendingItemsTable
                   items={items}
                   page={filters.page}
@@ -161,7 +171,7 @@ export function SpendingPage() {
                 />
               </div>
             ) : (
-              <div className="no-scrollbar min-h-0 flex-1 scroll-fade-y overflow-y-auto">
+              <div className="no-scrollbar min-h-0 flex-1 scroll-fade-y overflow-y-auto max-md:pb-(--phone-nav-clearance)">
                 <SpendingAccordion emptyManual={emptyManual} items={items} />
               </div>
             )
