@@ -3,7 +3,7 @@ import { useRef } from "react"
 import { useLocation, useNavigate } from "react-router"
 
 import { Button } from "@/components/ui/button"
-import { useChatScans } from "@/hooks/agent/use-chat-scans"
+import { CAMERA_CAPTURE, useChatScans } from "@/hooks/agent/use-chat-scans"
 
 /**
  * Bills and Insights on phones: one tap to the camera. The photo is sent from
@@ -29,7 +29,7 @@ export function PhoneScanButton() {
       </Button>
       <input
         accept="image/*"
-        capture="environment"
+        capture={CAMERA_CAPTURE}
         className="hidden"
         onChange={(event) => {
           const files = event.currentTarget.files
