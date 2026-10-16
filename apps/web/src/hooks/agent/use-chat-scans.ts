@@ -7,13 +7,6 @@ import { shrinkImage } from "@/lib/shrink-image"
 /** Matches the API's MAX_IN_FLIGHT_DOCUMENTS and the add dialog. */
 export const MAX_SCAN_FILES = 5
 
-/**
- * `capture` opens the camera directly. Chrome on Android does that with its
- * own camera, which stays black on insecure pages (`http://<lan-ip>`). There
- * we leave it off and the phone offers Camera or Files instead.
- */
-export const CAMERA_CAPTURE = window.isSecureContext ? "environment" : undefined
-
 export type ScanPage = {
   /** Upload key; `uploads.accepted[key]` is the document once the API has it. */
   key: string

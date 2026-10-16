@@ -2,7 +2,7 @@ import { CameraIcon, ImageIcon } from "lucide-react"
 import { useRef } from "react"
 
 import { Button } from "@/components/ui/button"
-import { CAMERA_CAPTURE, useChatScans } from "@/hooks/agent/use-chat-scans"
+import { useChatScans } from "@/hooks/agent/use-chat-scans"
 
 const ACCEPTED = "image/*,.heic,.heif,application/pdf"
 
@@ -51,7 +51,7 @@ export function AgentScanButtons({ onAdded }: AgentScanButtonsProps) {
       </Button>
       <input
         accept="image/*"
-        capture={CAMERA_CAPTURE}
+        capture="environment"
         className="hidden"
         onChange={(event) => choose(event.currentTarget)}
         ref={camera}
