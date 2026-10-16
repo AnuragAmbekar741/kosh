@@ -11,7 +11,14 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 from storage import database
 from storage.crud import agent as crud
-from storage.models import AgentConversation, AgentRun, RunStatus
+from storage.models import (
+    AgentConversation,
+    AgentRun,
+    Document,
+    DocumentSource,
+    DocumentStatus,
+    RunStatus,
+)
 
 
 def _auth(client: TestClient) -> dict[str, str]:
@@ -266,3 +273,89 @@ def test_reply_finishes_after_the_browser_leaves(client, model) -> None:
             for m in crud.list_messages(session, conversation_id=run.conversation_id)
         ]
     assert roles == ["user", "assistant", "tool", "assistant"]
+
+
+# Attachments
+
+_JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64
+
+
+def _upload_for_chat(client, headers) -> str:
+    response = client.post(
+        "/documents",
+        files={"file": ("IMG_4021.jpg", _JPEG + uuid4().bytes, "image/jpeg")},
+        data={"source": "agent"},
+        headers=headers,
+    )
+    assert response.status_code == 202
+    return response.json()["id"]
+
+
+def _mark_ready(document_id: str) -> None:
+    with Session(database.engine) as session:
+        document = session.get(Document, UUID(document_id))
+        assert document.source == DocumentSource.AGENT
+        document.status = DocumentStatus.READY
+        session.add(document)
+        session.commit()
+
+
+def test_upload_rejects_an_unknown_source(client) -> None:
+    headers = _auth(client)
+    response = client.post(
+        "/documents",
+        files={"file": ("a.jpg", _JPEG, "image/jpeg")},
+        data={"source": "whatsapp"},
+        headers=headers,
+    )
+    assert response.status_code == 422
+
+
+def test_bill_without_text_is_sent_and_kept_in_the_transcript(client, model) -> None:
+    headers = _auth(client)
+    conversation_id = _new(client, headers)
+    document_id = _upload_for_chat(client, headers)
+    _mark_ready(document_id)
+    model.script = [_turn(text="Toit Brewpub, ₹1,710. Check and save it.")]
+
+    response = client.post(
+        f"/agent/conversations/{conversation_id}/messages",
+        headers=headers,
+        json={"document_ids": [document_id, document_id]},
+    )
+    assert response.status_code == 200
+    events = _events(response.text)
+    assert [kind for kind, _ in events] == ["document", "delta", "done"]
+    assert events[0][1] == {"id": document_id, "status": "ready"}
+
+    detail = client.get(
+        f"/agent/conversations/{conversation_id}", headers=headers
+    ).json()
+    user_message = detail["messages"][0]
+    assert user_message["content"] == ""
+    assert user_message["document_ids"] == [document_id]  # duplicates dropped
+
+
+def test_someone_elses_bill_is_404(client, model) -> None:
+    owner, other = _auth(client), _auth(client)
+    document_id = _upload_for_chat(client, owner)
+    conversation_id = _new(client, other)
+    response = client.post(
+        f"/agent/conversations/{conversation_id}/messages",
+        headers=other,
+        json={"text": "Save this", "document_ids": [document_id]},
+    )
+    assert response.status_code == 404
+    detail = client.get(f"/agent/conversations/{conversation_id}", headers=other)
+    assert detail.json()["messages"] == []  # nothing saved
+
+
+def test_more_than_five_bills_is_rejected(client, model) -> None:
+    headers = _auth(client)
+    conversation_id = _new(client, headers)
+    response = client.post(
+        f"/agent/conversations/{conversation_id}/messages",
+        headers=headers,
+        json={"document_ids": [str(uuid4()) for _ in range(6)]},
+    )
+    assert response.status_code == 422

@@ -18,6 +18,7 @@ class DocumentSource(StrEnum):
     DASHBOARD = "dashboard"
     WHATSAPP = "whatsapp"
     MANUAL = "manual"
+    AGENT = "agent"  # attached to a chat message
 
 
 class Document(SQLModel, table=True):

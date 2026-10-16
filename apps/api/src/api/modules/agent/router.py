@@ -59,12 +59,14 @@ def send_message(
     user: CurrentUserDep,
     session: SessionDep,
 ) -> StreamingResponse:
-    """Stream the reply as server-sent events: tool, delta, done or error."""
-    run = service.start_message(session, user.id, conversation_id, body.text)
+    """Stream the reply as server-sent events: document, tool, delta, done or error."""
+    run = service.start_message(
+        session, user.id, conversation_id, body.text, body.document_ids
+    )
     # Give the connection back now; the turn opens its own short sessions.
     session.close()
     return StreamingResponse(
-        service.stream(run),
+        service.stream(run, body.document_ids),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

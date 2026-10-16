@@ -7,8 +7,8 @@ Status: **decisions and architecture locked** (rows 52–61 in [decisions.md](..
 | Phase | Delivers | Done when |
 |---|---|---|
 | **1. Read-only chat** | `agent_conversations`, `agent_messages`, `agent_runs` + migration; conversation and message endpoints with SSE; read tools; daily budget; web chat page; `make evals` with ~20 golden cases | "How much did I spend on groceries last month?" answers from the DB; golden ≥ 90% |
-| **2. Attachments** | Upload in chat (`source=agent`); wait-for-extraction; `agent_pending_actions`; `confirm_document` with confirm / cancel endpoints and the card | Receipt photo → drafts shown → card → confirmed bill on Spending |
-| **3. Writes** | `update_spend_item`, `delete_spend_items` (≤ 50); expiry; ~10 safety cases | Safety 100%: injected receipts and "delete everything" never change data without a click |
+| **2. Attachments** | Upload in chat (`source=agent`); wait-for-extraction; risk-based guardrail in the runtime; `confirm_document` answered with the document's own review (drafts + `POST /documents/{id}/confirm`), no new approval table | Receipt photo → drafts shown → card → confirmed bill on Spending |
+| **3. Writes** | Approval store for writes with no review state of their own (reworked from closed PR #61: a service call, a summary the service writes, atomic claim, expiry); `update_spend_item`, `delete_spend_items` (≤ 50); ~10 safety cases | Safety 100%: injected receipts and "delete everything" never change data without a click |
 | **4. Learning loop** | 👍 / 👎 on replies; review list of failed runs; per-user preferences in context | A reviewed failure becomes a failing case, then a passing one |
 | **5. WhatsApp** | Webhook router; `channel_accounts`; buttons as confirm cards | Same runtime, new transport |
 
@@ -54,15 +54,17 @@ Below 768px (`useIsMobile`), the app becomes chat-first. Desktop does not change
 | **2. Phone shell** | B. Phone UI | `AppShell` below 768px: no sidebar or launcher, bottom tabs (Chat, Bills, Insights, You), safe areas, `100dvh`; You tab with account, theme, sign out | Browser 375px light and dark; desktop unchanged | merged (#56) |
 | **3. Chat page** | B | `/chat` full screen, reusing the agent thread and composer; header with history and bell; summary card (month total, bills, needs review); example chips; desktop `/chat` → `/overview` with the panel open | Same chat as the widget; card numbers match Overview and Bills | merged (#58) |
 | **4. Bills and Insights on phone** | B | Bill rows as stacked rows, filters in a bottom sheet, review dialog as a full-screen sheet, charts at phone width | 375px pass over every Spending state | merged (#59) |
-| **5. Scan from phone** | C. Capture | Composer camera and gallery, browser-side shrinking (2000px JPEG), upload through `POST /documents`, thumbnails and progress in the thread, **Review** link into the review sheet; floating scan button on Bills and Insights | Real phone: camera → bill in review → saved | this PR |
-| **6. Storage** | D. Agent phase 2 (backend) | `DocumentSource.AGENT`, `agent_pending_actions` model, crud, migration | Owner scoping, status changes, expiry query | |
-| **7. Attachments in a turn** | D | `document_ids` on `POST …/messages`, ownership check, wait for the worker (1s poll, about 60s), `document` SSE events, templated timeout reply with no model call | Fake worker: ready, failed, timeout; someone else's document → 404 | |
-| **8. Pending actions** | D | `confirm_document` write tool → pending row; `POST /agent/actions/{id}/confirm` and `/cancel`; expiry; templated message on confirm | Confirm runs the stored arguments only; expired, cancelled, wrong owner | |
-| **9. Evals** | D | Attachment golden cases and safety cases (a receipt with injected instructions, "save everything") | Golden ≥ 90%, safety 100% | |
-| **10. Confirm card** | E. Chat flow | Web sends `document_ids`, renders `document` and `action` events; card with Save bill, Edit, Discard; card survives reload; PR 5's Review link becomes this flow | Real phone: snap → card → Save → bill on Bills | |
+| **5. Scan from phone** | C. Capture | Composer camera and gallery, browser-side shrinking (2000px JPEG), upload through `POST /documents`, thumbnails and progress in the thread, **Review** link into the review sheet; floating scan button on Bills and Insights | Real phone: camera → bill in review → saved | merged (#60) |
+| **6. Storage** | D. Agent phase 2 (backend) | Deferred to phase 3 ([#61](https://github.com/AnuragAmbekar741/kosh/pull/61) closed, branch kept): bills already have an approval step, so the table has no job yet. `DocumentSource.AGENT` moved to PR 7 | — | deferred |
+| **7. Attachments in a turn** | D | `DocumentSource.AGENT` and `source=agent` on upload; `document_ids` on `POST …/messages`, ownership check, wait for the worker (1s poll, about 60s), `document` SSE events, templated timeout reply with no model call | Fake worker: ready, failed, timeout; someone else's document → 404 | this PR |
+| **8. Guardrail and confirm_document** | D | Tools declare risk (read / write / destructive); the runtime never runs a write. `confirm_document` becomes a write whose answer is the document's own review: an `action` SSE event naming the document, the model told it awaits the user. Nothing new is stored: the tool call in `agent_messages` and the document's drafts are the record | A write tool never executes; drafts stay `pending_review` after the turn; owner checks | |
+| **9. Evals** | D | Attachment golden cases and safety cases (a receipt with injected instructions, "save everything"); safety passes when the bill is still a draft after the turn | Golden ≥ 90%, safety 100% | |
+| **10. Confirm card** | E. Chat flow | Web sends `document_ids`, renders `document` and `action` events; the card (merchant, date, lines, total, duplicate warning) uses the existing review: **Save bill** → `POST /documents/{id}/confirm`, **Edit** → review sheet, **Discard** → `DELETE /documents/{id}`; rebuilt from the transcript after a reload; PR 5's scans become this flow | Real phone: snap → card → Save → bill on Bills | |
 | **11. Installable app** | E | Web app manifest, icons, `theme-color`, minimal service worker (no offline) | Add to Home Screen over Tailscale; opens full screen | |
 
-Order: PRs 1–5 go one after another (all in `apps/web`). PRs 6–9 are backend only and can run in parallel with 2–5. PR 10 needs 5 and 8. PR 11 can land any time after 2.
+Order: PRs 1–5 went one after another (all in `apps/web`). PRs 7–9 are backend only. PR 10 needs 5 and 8. PR 11 can land any time after 2.
+
+**Principle (from PR 6):** the agent is a client of existing services. A write goes through the system's own approval step when it has one (a bill's drafts and confirm); only writes with none get an approval store, in phase 3.
 
 ## Open
 

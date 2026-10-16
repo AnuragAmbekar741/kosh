@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from storage.models import (
     AgentConversation,
@@ -43,6 +44,7 @@ def to_detail(
             id=m.id,
             role=m.role,
             content=m.content or "",
+            document_ids=[UUID(d) for d in m.document_ids or []],
             created_at=m.created_at,
             status=status.get(m.run_id) if m.role == MessageRole.USER else None,
         )

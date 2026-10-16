@@ -468,3 +468,11 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Chat only, with lists and charts as cards (browsing bills in a thread is slow); keeping today's pages with chat as one more tab (adding a bill stays several taps away); auto-saving scans and flagging only doubtful ones (breaks the "no write without a click" rule from the agent design).
 - Why: The friction is getting a bill from the phone into the ledger. Snap, check, and save in one thread removes the laptop step, and the tabs keep browsing usable.
 - Revisit when: Users want to customise the home summary card or the tabs (deferred), or WhatsApp becomes the main way bills are added.
+
+**Agent writes use the system's own approval step when one exists**
+
+- Chosen: Tools wrap the same services the UI uses; the runtime never runs a write tool itself. Saving a scanned bill from chat answers with the document's existing review: drafts stay `pending_review` and only the user's `POST /documents/{id}/confirm` saves them. A separate approval store is added only for writes with no review state of their own (edits and deletes, phase 3).
+- Rejected: An `agent_pending_actions` row for every agent write in phase 2 (PR #61): for bills it duplicates the drafts, needs its own confirm and cancel endpoints, and adds a second path to the same save.
+- Why: Each capability exists once in the system; the agent adds guardrails, not pipelines. The tool call in `agent_messages` plus the document's state already record what was proposed and what the user did.
+- Revisit when: Phase 3 brings writes with no review state; the approval store returns then, reworked from #61.
+

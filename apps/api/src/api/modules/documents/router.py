@@ -1,8 +1,9 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, File, Header, Response, UploadFile, status
+from fastapi import APIRouter, File, Form, Header, Response, UploadFile, status
 from security import CurrentUserDep
+from storage.models import DocumentSource
 from storage.settings import get_settings as get_storage_settings
 
 from api.common.dependencies import SessionDep
@@ -36,6 +37,8 @@ def upload(
     idempotency_key: Annotated[
         str | None, Header(alias="Idempotency-Key", max_length=200)
     ] = None,
+    # `agent`: attached to a chat message, then sent with it as `document_ids`.
+    source: Annotated[Literal["dashboard", "agent"], Form()] = "dashboard",
 ) -> DocumentUploadResponse:
     max_bytes = get_storage_settings().max_upload_mb * 1024 * 1024
     data = file.file.read(max_bytes + 1)
@@ -48,6 +51,7 @@ def upload(
         filename=file.filename or "upload",
         data=data,
         idempotency_key=key,
+        source=DocumentSource(source),
     )
     return DocumentUploadResponse(id=document.id, status=document.status)
 

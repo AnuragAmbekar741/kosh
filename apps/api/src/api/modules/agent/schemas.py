@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 __all__ = [
     "ConversationDetail",
@@ -12,16 +12,33 @@ __all__ = [
 ]
 
 
+# Matches MAX_IN_FLIGHT_DOCUMENTS: one send can't attach more than can be processing.
+MAX_ATTACHMENTS = 5
+
+
 class MessageCreate(BaseModel):
-    text: str = Field(min_length=1, max_length=4000)
+    text: str = Field(default="", max_length=4000)
+    document_ids: list[UUID] = Field(
+        default_factory=list,
+        max_length=MAX_ATTACHMENTS,
+        description="Bills uploaded with `source=agent` to attach to this message.",
+    )
 
     @field_validator("text")
     @classmethod
-    def not_blank(cls, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise ValueError("text must not be blank")
-        return value
+    def strip(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("document_ids")
+    @classmethod
+    def unique(cls, value: list[UUID]) -> list[UUID]:
+        return list(dict.fromkeys(value))
+
+    @model_validator(mode="after")
+    def not_empty(self) -> MessageCreate:
+        if not self.text and not self.document_ids:
+            raise ValueError("send text, a bill, or both")
+        return self
 
 
 class ConversationPublic(BaseModel):
@@ -36,6 +53,9 @@ class MessagePublic(BaseModel):
     id: UUID
     role: Literal["user", "assistant"]
     content: str
+    document_ids: list[UUID] = Field(
+        default_factory=list, description="Bills attached to a user message."
+    )
     created_at: datetime
     status: Literal["running", "completed", "failed"] | None = Field(
         default=None,

@@ -4,7 +4,7 @@ import contextvars
 import json
 import queue
 import threading
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -24,6 +24,7 @@ from api.common.errors import (
 from api.modules.agent.core import runtime
 from api.modules.agent.core.prompts import PROMPT_VERSION
 from api.modules.agent.settings import get_settings
+from api.modules.documents import service as documents
 
 __all__ = [
     "STALE_AFTER",
@@ -62,10 +63,16 @@ def get_owned(
 
 
 def start_message(
-    session: Session, user_id: UUID, conversation_id: UUID, text: str
+    session: Session,
+    user_id: UUID,
+    conversation_id: UUID,
+    text: str,
+    document_ids: Sequence[UUID] = (),
 ) -> AgentRun:
     """Every reason to refuse, then save the message and open its run."""
     conversation = get_owned(session, user_id, conversation_id)
+    for document_id in document_ids:
+        documents.get(session, user_id, document_id)  # someone else's → 404
     now = datetime.now(UTC)
     if crud.active_run(
         session, conversation_id=conversation.id, started_after=now - STALE_AFTER
@@ -86,6 +93,7 @@ def start_message(
             content=text,
             model=ai.agent_model(),
             prompt_version=PROMPT_VERSION,
+            document_ids=document_ids,
         )
     except IntegrityError:
         # Two sends raced for the same message number; the other one won.
@@ -94,7 +102,7 @@ def start_message(
     return run
 
 
-def stream(run: AgentRun) -> Iterator[str]:
+def stream(run: AgentRun, document_ids: Sequence[UUID] = ()) -> Iterator[str]:
     """Server-sent events for the turn.
 
     The turn runs in its own thread and finishes and saves even if the browser
@@ -110,6 +118,7 @@ def stream(run: AgentRun) -> Iterator[str]:
         "conversation_id": run.conversation_id,
         "run_id": run.id,
         "model": run.model,
+        "document_ids": tuple(document_ids),
     }
 
     def work() -> None:
