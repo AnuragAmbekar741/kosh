@@ -80,8 +80,8 @@ export function SpendingPage() {
       : null
 
   return (
-    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-6 2xl:mx-auto 2xl:max-w-7xl">
-      <div className="flex min-h-0 flex-1 flex-col gap-6">
+    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-3 md:pt-6 2xl:mx-auto 2xl:max-w-7xl">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 md:gap-6">
         <SpendingToolbar countLabel={countLabel} disabled={firstUse} />
 
         <section
@@ -147,7 +147,8 @@ export function SpendingPage() {
             </div>
           ) : hasLedger ? (
             filters.view === "items" ? (
-              <div className="flex min-h-0 flex-1 flex-col gap-3">
+              // Phones: the pager stays clear of the floating nav button.
+              <div className="flex min-h-0 flex-1 flex-col gap-3 max-md:pb-(--phone-nav-clearance)">
                 <SpendingItemsTable
                   items={items}
                   page={filters.page}
@@ -161,7 +162,7 @@ export function SpendingPage() {
                 />
               </div>
             ) : (
-              <div className="no-scrollbar min-h-0 flex-1 scroll-fade-y overflow-y-auto">
+              <div className="no-scrollbar min-h-0 flex-1 scroll-fade-y overflow-y-auto max-md:pb-(--phone-nav-clearance)">
                 <SpendingAccordion emptyManual={emptyManual} items={items} />
               </div>
             )

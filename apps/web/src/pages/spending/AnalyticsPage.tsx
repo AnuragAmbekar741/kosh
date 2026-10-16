@@ -78,8 +78,8 @@ export function AnalyticsPage() {
   }
 
   return (
-    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-6 2xl:mx-auto 2xl:max-w-7xl">
-      <div className="flex min-h-0 flex-1 flex-col gap-6">
+    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden pt-3 md:pt-6 2xl:mx-auto 2xl:max-w-7xl">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 md:gap-6">
         <SpendingToolbar
           countLabel={countLabel}
           disabled={firstUse}
@@ -88,7 +88,7 @@ export function AnalyticsPage() {
 
         <section
           aria-label="Analytics"
-          className="min-h-0 flex-1 overflow-y-auto p-px pb-6"
+          className="min-h-0 flex-1 overflow-y-auto p-px pb-6 max-md:pb-(--phone-nav-clearance)"
         >
           {analytics.isPending ? (
             <AnalyticsSkeleton />
