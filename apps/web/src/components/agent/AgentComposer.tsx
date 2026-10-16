@@ -1,6 +1,7 @@
 import { ArrowUpIcon } from "lucide-react"
 import { useState, type KeyboardEvent, type Ref } from "react"
 
+import { AgentScanButtons } from "@/components/agent/AgentScanButtons"
 import {
   InputGroup,
   InputGroupAddon,
@@ -13,9 +14,11 @@ const MAX_LENGTH = 4000
 
 type AgentComposerProps = {
   inputRef?: Ref<HTMLTextAreaElement>
+  /** Phone chat: camera and gallery buttons before the text box. */
+  scan?: boolean
 }
 
-export function AgentComposer({ inputRef }: AgentComposerProps) {
+export function AgentComposer({ inputRef, scan = false }: AgentComposerProps) {
   const { chat } = useAgentPanel()
   const [text, setText] = useState("")
   const busy = Boolean(chat.turn?.streaming)
@@ -40,12 +43,13 @@ export function AgentComposer({ inputRef }: AgentComposerProps) {
 
   return (
     <form
-      className="border-t p-3"
+      className="flex items-end gap-2 border-t p-3"
       onSubmit={(event) => {
         event.preventDefault()
         submit()
       }}
     >
+      {scan ? <AgentScanButtons /> : null}
       <InputGroup>
         <InputGroupTextarea
           aria-label="Message the assistant"
@@ -53,7 +57,8 @@ export function AgentComposer({ inputRef }: AgentComposerProps) {
           maxLength={MAX_LENGTH}
           onChange={(event) => setText(event.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Ask about your spending…"
+          // Phones: the scan buttons leave room for a short line only.
+          placeholder={scan ? "Ask a question…" : "Ask about your spending…"}
           ref={inputRef}
           rows={1}
           value={text}

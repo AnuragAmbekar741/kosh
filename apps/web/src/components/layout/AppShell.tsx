@@ -4,6 +4,7 @@ import { AgentWidget } from "@/components/agent/AgentWidget"
 import { AppHeader } from "@/components/layout/AppHeader"
 import { AppSidebar } from "@/components/layout/AppSidebar"
 import { DashboardSkeleton } from "@/components/layout/DashboardSkeleton"
+import { PhoneScanButton } from "@/components/layout/navigation/PhoneScanButton"
 import { PhoneTabBar } from "@/components/layout/navigation/PhoneTabBar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
@@ -12,6 +13,10 @@ import {
   AgentPanelContext,
   useAgentPanelState,
 } from "@/hooks/agent/use-agent-panel"
+import {
+  ChatScansContext,
+  useChatScansState,
+} from "@/hooks/agent/use-chat-scans"
 import { UploadsContext, useUploadsState } from "@/hooks/documents/use-uploads"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useGetMe } from "@/hooks/users/use-me"
@@ -25,6 +30,7 @@ export function AppShell() {
   const me = useGetMe()
   const uploads = useUploadsState()
   const agent = useAgentPanelState()
+  const scans = useChatScansState(uploads)
   const isPhone = useIsMobile()
 
   if (me.isPending) return <DashboardSkeleton />
@@ -33,26 +39,29 @@ export function AppShell() {
   return (
     <UploadsContext.Provider value={uploads}>
       <AgentPanelContext.Provider value={agent}>
-        <TooltipProvider>
-          <SidebarProvider
-            className="h-dvh overflow-hidden"
-            defaultOpen={readSidebarOpen()}
-          >
-            {/* Phones navigate with the bottom tab bar instead. */}
-            {isPhone ? null : <AppSidebar user={me.data} />}
-            <SidebarInset className="max-h-dvh min-h-0 overflow-hidden bg-card md:max-h-[calc(100dvh-1rem)] md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border">
-              <AppHeader />
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 md:px-6 md:pb-6">
-                <Outlet />
-              </div>
-              {isPhone ? <PhoneTabBar user={me.data} /> : null}
-            </SidebarInset>
-          </SidebarProvider>
-          {/* Phones chat on /chat instead of the floating panel. */}
-          {isPhone ? null : <AgentWidget />}
-          {/* Bottom-right belongs to the assistant launcher. */}
-          <Toaster position="top-center" />
-        </TooltipProvider>
+        <ChatScansContext.Provider value={scans}>
+          <TooltipProvider>
+            <SidebarProvider
+              className="h-dvh overflow-hidden"
+              defaultOpen={readSidebarOpen()}
+            >
+              {/* Phones navigate with the bottom tab bar instead. */}
+              {isPhone ? null : <AppSidebar user={me.data} />}
+              <SidebarInset className="max-h-dvh min-h-0 overflow-hidden bg-card md:max-h-[calc(100dvh-1rem)] md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border">
+                <AppHeader />
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 md:px-6 md:pb-6">
+                  <Outlet />
+                </div>
+                {isPhone ? <PhoneTabBar user={me.data} /> : null}
+                {isPhone ? <PhoneScanButton /> : null}
+              </SidebarInset>
+            </SidebarProvider>
+            {/* Phones chat on /chat instead of the floating panel. */}
+            {isPhone ? null : <AgentWidget />}
+            {/* Bottom-right belongs to the assistant launcher. */}
+            <Toaster position="top-center" />
+          </TooltipProvider>
+        </ChatScansContext.Provider>
       </AgentPanelContext.Provider>
     </UploadsContext.Provider>
   )

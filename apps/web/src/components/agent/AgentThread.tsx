@@ -74,9 +74,14 @@ function withoutTurnInFlight(messages: MessagePublic[]): MessagePublic[] {
 type AgentThreadProps = {
   /** Shown when the chat has no messages yet. */
   empty?: ReactNode
+  /** Items after the messages (phone scans); null keeps the empty state. */
+  extra?: ReactNode
 }
 
-export function AgentThread({ empty = <AgentEmpty /> }: AgentThreadProps) {
+export function AgentThread({
+  empty = <AgentEmpty />,
+  extra = null,
+}: AgentThreadProps) {
   const { conversationId, chat, forgetConversation } = useAgentPanel()
   const conversation = useConversation(conversationId)
   const turn = chat.turn
@@ -99,7 +104,7 @@ export function AgentThread({ empty = <AgentEmpty /> }: AgentThreadProps) {
       </div>
     )
   }
-  if (!turn && messages.length === 0) return empty
+  if (!turn && messages.length === 0 && !extra) return empty
 
   const last = messages.at(-1)
   const stillRunning =
@@ -154,6 +159,7 @@ export function AgentThread({ empty = <AgentEmpty /> }: AgentThreadProps) {
                 </div>
               </MessageScrollerItem>
             ) : null}
+            {extra}
           </MessageScrollerContent>
         </MessageScrollerViewport>
         <MessageScrollerButton />

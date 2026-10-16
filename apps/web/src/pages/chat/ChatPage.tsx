@@ -4,8 +4,10 @@ import { Navigate } from "react-router"
 import { AgentComposer } from "@/components/agent/AgentComposer"
 import { AgentHistory } from "@/components/agent/AgentHistory"
 import { AgentHome } from "@/components/agent/AgentHome"
+import { AgentScans } from "@/components/agent/AgentScans"
 import { AgentThread } from "@/components/agent/AgentThread"
 import { useAgentPanel } from "@/hooks/agent/use-agent-panel"
+import { useChatScans } from "@/hooks/agent/use-chat-scans"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 /** Desktop keeps the floating panel: open it over Overview instead. */
@@ -23,6 +25,7 @@ function OpenPanelOnOverview() {
 export function ChatPage() {
   const isPhone = useIsMobile()
   const { view } = useAgentPanel()
+  const { scans } = useChatScans()
 
   if (!isPhone) return <OpenPanelOnOverview />
 
@@ -33,8 +36,11 @@ export function ChatPage() {
         <AgentHistory />
       ) : (
         <>
-          <AgentThread empty={<AgentHome />} />
-          <AgentComposer />
+          <AgentThread
+            empty={<AgentHome />}
+            extra={scans.length ? <AgentScans /> : null}
+          />
+          <AgentComposer scan />
         </>
       )}
     </main>
