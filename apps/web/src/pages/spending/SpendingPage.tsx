@@ -24,6 +24,7 @@ import {
   useSpendItems,
   useSpendSummary,
 } from "@/hooks/spend-items/use-spend-items"
+import { cn } from "@/lib/utils"
 
 export function SpendingPage() {
   const filters = useSpendFilters()
@@ -147,8 +148,16 @@ export function SpendingPage() {
             </div>
           ) : hasLedger ? (
             filters.view === "items" ? (
-              // Phones: the pager stays clear of the floating nav button.
-              <div className="flex min-h-0 flex-1 flex-col gap-3 max-md:pb-(--phone-nav-clearance)">
+              <div
+                className={cn(
+                  "flex min-h-0 flex-1 flex-col gap-3",
+                  // Phones: the pager shares the nav button's row at the
+                  // bottom; with no pager, the list stops above the button.
+                  total > filters.pageSize
+                    ? "max-md:pb-[calc(1rem+env(safe-area-inset-bottom))]"
+                    : "max-md:pb-(--phone-nav-clearance)"
+                )}
+              >
                 <SpendingItemsTable
                   items={items}
                   page={filters.page}

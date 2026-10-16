@@ -49,16 +49,17 @@ export function SpendingItemsPager({
   }
 
   return (
-    // Keep clear of the assistant launcher fixed at the bottom right: room
-    // below the pager on phones, beside it on wider screens.
+    // Wider screens: room beside it for the assistant launcher. Phones: pinned
+    // to the bottom in the nav button's row, ending left of the button.
     <div
       className={cn(
-        "flex shrink-0 flex-wrap items-center justify-between gap-3",
-        isMobile ? "pb-12" : "pr-12"
+        "flex shrink-0 items-center justify-between gap-3",
+        isMobile ? "mt-auto min-h-12 pr-16" : "flex-wrap pr-12"
       )}
     >
-      <p className="text-xs text-muted-foreground">
-        Showing {start}–{end} of {total}
+      <p className="text-xs text-muted-foreground tabular-nums">
+        {isMobile ? null : "Showing "}
+        {start}–{end} of {total}
       </p>
       <Pagination className="mx-0 w-auto justify-end">
         <PaginationContent>

@@ -196,9 +196,15 @@ bill divider.
 - **Lines** drop the number column. The name gets its own line and wraps in
   full instead of truncating, with the category and item badges wrapping
   under it.
-- **Items** is a stacked list instead of the table: the name, then
-  "date · merchant", then the category and item badges, with the amount on the
-  right. The table returns from `md`.
+- **Items** is a list instead of the table, two aligned lines per item: the
+  name and the amount on top; "merchant · date" (short date, year only when
+  it isn't this year) and the category badge below, the badge right-aligned
+  under the amount. The product badge only shows when it asks for a pick
+  ("Pick item"); matching and resolved states stay on the desktop table,
+  which returns from `md`.
+- **Items pager** is pinned to the bottom, in the nav button's row and ending
+  left of it: "1–15 of 214" on the left, arrows around "Page X of N" on the
+  right. With a single page, the list stops above the nav button instead.
 - **Toolbar** is compact: a 36px search field (`flex-1`) and a 36px
   outline Filters icon button with a dot when any filter is on ("Filters,
   2 on"). Below it, only when there is something to show, active filters are
