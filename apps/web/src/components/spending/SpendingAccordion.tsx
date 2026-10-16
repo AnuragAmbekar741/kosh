@@ -224,8 +224,8 @@ function SpendingLineRow({
   )
 
   return (
-    <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto_2.75rem] items-center gap-x-3 px-4 py-2.5 not-first:border-t sm:grid-cols-[2.25rem_minmax(0,1fr)_auto_2.25rem] sm:px-5">
-      <span className="text-center text-xs text-muted-foreground tabular-nums">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-3 px-4 py-2.5 not-first:border-t md:grid-cols-[2.25rem_minmax(0,1fr)_auto_2.25rem] md:px-5">
+      <span className="text-center text-xs text-muted-foreground tabular-nums max-md:hidden">
         {position}
       </span>
       <div className="min-w-0">
@@ -266,10 +266,10 @@ function SpendingLineRow({
             ) : null}
           </Field>
         ) : (
-          <div className="inline-flex max-w-full flex-nowrap items-center gap-2">
+          <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 md:inline-flex md:flex-nowrap">
             <button
               aria-label={`Edit ${label}. Double-click, or press Enter.`}
-              className="max-w-full shrink cursor-text truncate rounded-sm text-left text-sm font-normal outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring"
+              className="max-w-full shrink cursor-text truncate rounded-sm text-left text-sm font-normal outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring max-md:whitespace-normal"
               onClick={(event) => {
                 if (event.detail === 0) startEditing()
               }}
@@ -340,7 +340,10 @@ function SpendingBillRow({
     <AccordionItem className="group/bill" value={group.id}>
       <AccordionTrigger
         actions={
-          <span className="flex shrink-0 items-center gap-3" ref={actionsRef}>
+          <span
+            className="flex shrink-0 items-center gap-2 md:gap-3"
+            ref={actionsRef}
+          >
             <span className="font-medium tabular-nums">
               {formatMoney(total, group.currency)}
             </span>
@@ -378,15 +381,15 @@ function SpendingBillRow({
           </span>
         }
         className="cursor-pointer items-center rounded-none py-0 hover:no-underline **:data-[slot=accordion-trigger-icon]:hidden"
-        headerClassName="px-4 py-3 hover:bg-muted/50 group-data-open/bill:hover:bg-transparent sm:px-5 sm:py-3.5"
+        headerClassName="gap-3 px-4 py-3 hover:bg-muted/50 group-data-open/bill:hover:bg-transparent md:px-5 md:py-3.5"
       >
         <span className="flex min-w-0 items-center gap-3 text-left">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent [&_svg]:size-4">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent max-md:hidden [&_svg]:size-4">
             {group.source === "manual" ? <PencilIcon /> : <FileTextIcon />}
           </span>
           <span className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="truncate font-medium">{group.title}</span>
-            <span className="flex shrink-0 items-center gap-1.5">
+            <span className="flex flex-wrap items-center gap-1.5 md:shrink-0 md:flex-nowrap">
               {/* Inside the trigger button, so a span: the click must not toggle the bill. */}
               <Badge
                 className="cursor-pointer gap-1 hover:bg-accent hover:text-accent-foreground"
@@ -403,15 +406,18 @@ function SpendingBillRow({
                 <CalendarIcon />
                 {formatDate(group.spentAt)}
               </Badge>
-              <Badge variant="outline">
+              <Badge className="max-md:hidden" variant="outline">
                 {group.source === "manual" ? "Manual entry" : "Document"}
               </Badge>
               <Badge variant="outline">
                 {group.items.length} {itemLabel}
               </Badge>
-              {categories.map((category) => (
-                <CategoryBadge category={category} key={category} />
-              ))}
+              {/* Phones: categories show on the lines when the bill opens. */}
+              <span className="contents max-md:hidden">
+                {categories.map((category) => (
+                  <CategoryBadge category={category} key={category} />
+                ))}
+              </span>
             </span>
           </span>
         </span>

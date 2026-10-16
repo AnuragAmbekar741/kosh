@@ -140,7 +140,7 @@ that bill. Each line is a four-column grid that mirrors the bill row: a
 category badge aligned to the merchant text, the amount aligned to the bill
 total, and an action column under the three-dot tile (the delete icon while
 editing). The name truncates; the badge stays `w-fit` and does not wrap
-underneath. Bill rows use `py-3` (`sm:py-3.5`).
+underneath (phones wrap instead; see below). Bill rows use `py-3` (`sm:py-3.5`).
 
 Analytics, Bills, and Items navigation lives in the Spending sidebar group
 and the header breadcrumb dropdown; the page has no heading above the ledger. Items is a read-only table: #, Date, Item,
@@ -187,6 +187,25 @@ and reveal a muted hover state while closed. The accordion is a 1px card box
 with `rounded-xl` corners; inner rows stay square. Products use
 `not-first:border-t` so the last product does not stack a second rule on the
 bill divider.
+
+### Phones (below `md`)
+
+- **Bill rows** drop the merchant tile, the source badge, and the category
+  badges; the title truncates, and the date and item-count badges wrap under
+  it, so the total and the three-dot tile always fit.
+- **Lines** drop the number column. The name gets its own line and wraps in
+  full instead of truncating, with the category and item badges wrapping
+  under it.
+- **Items** is a stacked list instead of the table: the name, then
+  "date · merchant", then the category and item badges, with the amount on the
+  right. The table returns from `md`.
+- **Filters** use the bottom sheet, with the safe-area inset below Clear
+  filters.
+- **Review** (`ReviewDocumentDialog`) is full screen with no rounding, so
+  Save and Discard sit at the bottom within thumb reach above the safe area.
+  Review lines wrap long names the same way ledger lines do.
+- Analytics needs no phone changes: stat cards are two up and the charts
+  scale to the width.
 
 The surface stays flat and monochrome: semantic neutral backgrounds and muted
 fills establish hierarchy. Category badges are the only chromatic marks in

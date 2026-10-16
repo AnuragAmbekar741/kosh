@@ -3,6 +3,7 @@ import axios from "axios"
 
 import { apiDetail } from "@/api/client"
 import { useUploadDocument } from "@/hooks/documents/use-documents"
+import { randomId } from "@/lib/utils"
 
 /** Matches the API's MAX_IN_FLIGHT_DOCUMENTS; the server enforces it too. */
 export const MAX_PENDING_DOCUMENTS = 5
@@ -81,7 +82,7 @@ export function useUploadsState() {
     commit([
       ...current.current,
       ...files.map((file) => ({
-        key: crypto.randomUUID(),
+        key: randomId(),
         file,
         status: "waiting" as const,
       })),

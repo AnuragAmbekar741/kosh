@@ -256,10 +256,10 @@ function DocumentReviewLineRow({
             ) : null}
           </Field>
         ) : (
-          <div className="inline-flex max-w-full flex-nowrap items-center gap-2">
+          <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 md:inline-flex md:flex-nowrap">
             <button
               aria-label={`Edit ${name}. Double-click, or press Enter.`}
-              className="max-w-full shrink cursor-text truncate rounded-sm text-left text-sm outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring"
+              className="max-w-full shrink cursor-text truncate rounded-sm text-left text-sm outline-none hover:text-brand-ink focus-visible:ring-2 focus-visible:ring-ring max-md:whitespace-normal"
               onClick={(event) => {
                 if (event.detail === 0) beginNameEdit()
               }}

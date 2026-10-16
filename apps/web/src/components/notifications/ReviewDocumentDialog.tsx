@@ -37,8 +37,9 @@ export function ReviewDocumentDialog({
       }}
       open={documentId !== null}
     >
-      <DialogContent className="max-h-[calc(100svh-1rem)] max-w-[calc(100%-1rem)] gap-0 overflow-hidden p-0">
-        <div className="flex max-h-[calc(100svh-1rem)] min-h-0 flex-col">
+      {/* Phones: full screen, so Save and Discard sit at the bottom within reach. */}
+      <DialogContent className="max-h-[calc(100svh-1rem)] max-w-[calc(100%-1rem)] gap-0 overflow-hidden p-0 max-md:h-dvh max-md:max-h-none max-md:max-w-none max-md:rounded-none max-md:ring-0">
+        <div className="flex max-h-[calc(100svh-1rem)] min-h-0 flex-col max-md:h-full max-md:max-h-none max-md:pb-[env(safe-area-inset-bottom)]">
           <DialogHeader className="border-b px-5 py-5 pr-12 sm:px-6">
             <DialogTitle className="text-lg">Review bill</DialogTitle>
             <DialogDescription>
