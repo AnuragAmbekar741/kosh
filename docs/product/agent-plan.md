@@ -28,6 +28,42 @@ Each PR merges on its own and leaves `main` working; the API is not reachable un
 
 `DocumentSource.AGENT` moves to phase 2 with attachments.
 
+## Phone UI (agreed, not built)
+
+Below 768px (`useIsMobile`), the app becomes chat-first. Desktop does not change. When this ships, move this section into a `docs/design/mobile.md` and link it from `design/README.md`.
+
+| Area | Agreed |
+|---|---|
+| **Shell** | No sidebar and no floating launcher. A bottom tab bar holds **Chat** (`/chat`, the phone home), **Bills** (`/spending/bills`), **Insights** (`/spending/analytics`) and **You** (account, theme, sign out). Items is reached from inside Bills. Overview is not a tab; the chat summary card replaces it. On desktop, `/chat` redirects to `/overview` with the panel open. |
+| **Chat header** | "Kosh", then history (the past chats list; new chat lives there) and the notification bell. |
+| **Summary card** | At the top of an empty thread: month-to-date total, bill count, and "N need review" (tapping opens Bills filtered to review). Its contents are fixed for now; letting users customise it is deferred. |
+| **Composer** | Camera (`accept="image/*" capture="environment"`), gallery (`multiple`, same 5-file cap as upload), text, send. Text sent along with photos is a note on the bill. The three example questions show as chips above the composer while the thread is empty. |
+| **Photos** | Shrunk in the browser to a 2000px long edge as JPEG before upload. PDFs, and files the browser can't decode (HEIC outside Safari), are uploaded untouched. |
+| **In the thread** | The user bubble shows page thumbnails. Then a status line ("Reading your bill…", with the page count) and a note that the bell will say when it's ready. Leaving the screen is fine. |
+| **Confirm card** | Merchant, date, lines, tax, total and any duplicate warning. Actions: **Save bill** (primary), **Edit** (opens the existing review as a full-screen sheet), and discard. Nothing is saved without a tap. |
+| **Scan from any tab** | Bills and Insights get a floating camera button above the tab bar. After a photo is taken, it switches to Chat with the upload in the thread. |
+| **Phone details** | `100dvh`, `env(safe-area-inset-bottom)` under the tab bar, `interactive-widget=resizes-content` so the composer sits above the keyboard, 44px touch targets (already the mobile control size), toasts top-center. |
+
+## Phone + attachments pull requests
+
+11 PRs in five stages. Each one merges on its own and leaves `main` working. Snapping a bill from the phone works after **PR 5**. The confirm card in chat arrives with **PR 10**.
+
+| PR | Stage | Scope | Tests | Status |
+|---|---|---|---|---|
+| **1. Phone dev setup** | A. Test on phone | `pnpm dev:phone` (`vite --host`), `server.allowedHosts` for `.ts.net`, viewport `interactive-widget=resizes-content`; docs for LAN and Tailscale testing (email login on LAN, `cookie_secure` off for http) | App opens on a real phone over LAN and over Tailscale HTTPS | |
+| **2. Phone shell** | B. Phone UI | `AppShell` below 768px: no sidebar or launcher, bottom tabs (Chat, Bills, Insights, You), safe areas, `100dvh`; You tab with account, theme, sign out | Browser 375px light and dark; desktop unchanged | |
+| **3. Chat page** | B | `/chat` full screen, reusing the agent thread and composer; header with history and bell; summary card (month total, bills, needs review); example chips; desktop `/chat` → `/overview` with the panel open | Same chat as the widget; card numbers match Overview and Bills | |
+| **4. Bills and Insights on phone** | B | Bill rows as stacked rows, filters in a bottom sheet, review dialog as a full-screen sheet, charts at phone width | 375px pass over every Spending state | |
+| **5. Scan from phone** | C. Capture | Composer camera and gallery, browser-side shrinking (2000px JPEG), upload through `POST /documents`, thumbnails and progress in the thread, **Review** link into the review sheet; floating scan button on Bills and Insights | Real phone: camera → bill in review → saved | |
+| **6. Storage** | D. Agent phase 2 (backend) | `DocumentSource.AGENT`, `agent_pending_actions` model, crud, migration | Owner scoping, status changes, expiry query | |
+| **7. Attachments in a turn** | D | `document_ids` on `POST …/messages`, ownership check, wait for the worker (1s poll, about 60s), `document` SSE events, templated timeout reply with no model call | Fake worker: ready, failed, timeout; someone else's document → 404 | |
+| **8. Pending actions** | D | `confirm_document` write tool → pending row; `POST /agent/actions/{id}/confirm` and `/cancel`; expiry; templated message on confirm | Confirm runs the stored arguments only; expired, cancelled, wrong owner | |
+| **9. Evals** | D | Attachment golden cases and safety cases (a receipt with injected instructions, "save everything") | Golden ≥ 90%, safety 100% | |
+| **10. Confirm card** | E. Chat flow | Web sends `document_ids`, renders `document` and `action` events; card with Save bill, Edit, Discard; card survives reload; PR 5's Review link becomes this flow | Real phone: snap → card → Save → bill on Bills | |
+| **11. Installable app** | E | Web app manifest, icons, `theme-color`, minimal service worker (no offline) | Add to Home Screen over Tailscale; opens full screen | |
+
+Order: PRs 1–5 go one after another (all in `apps/web`). PRs 6–9 are backend only and can run in parallel with 2–5. PR 10 needs 5 and 8. PR 11 can land any time after 2.
+
 ## Open
 
 - **Concurrency ceiling:** each streaming reply holds one of FastAPI's 40 shared threads; past about 40 live chats every route slows (measured: `/health` 0.01 s → 1.8 s at 60 chats). Planned fix: async stream + global cap on live replies. See [architecture/agent.md §13](../architecture/agent.md#13-concurrency-limits-known-not-fixed-yet). Do before real traffic.
