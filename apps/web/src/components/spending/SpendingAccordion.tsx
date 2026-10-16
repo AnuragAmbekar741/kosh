@@ -37,6 +37,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useDeleteDocument } from "@/hooks/documents/use-documents"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   useDeleteSpendItem,
   useUpdateSpendItem,
@@ -44,8 +45,10 @@ import {
 
 import { BillDatePopover } from "./BillDatePopover"
 import { CategoryBadge } from "./CategoryBadge"
+import { ItemBadge } from "./ItemBadge"
 import { ItemPicker } from "./ItemPicker"
-import { SpendingAddLineRow } from "./SpendingAddLineRow"
+import { LineItemSheet } from "./LineItemSheet"
+import { PhoneAddLineRow, SpendingAddLineRow } from "./SpendingAddLineRow"
 import { formatDate, formatMoney } from "./spending-formatters"
 
 type SpendingAccordionProps = {
@@ -309,6 +312,53 @@ function SpendingLineRow({
   )
 }
 
+type PhoneLineRowProps = Omit<SpendingLineRowProps, "position">
+
+/**
+ * Phones: the whole line is one tap target that opens the line sheet (name,
+ * price, category, product, delete) instead of editing inside the row.
+ */
+function PhoneLineRow({
+  isEditing,
+  item,
+  onDelete,
+  onEdit,
+  onStopEditing,
+}: PhoneLineRowProps) {
+  return (
+    <>
+      <button
+        aria-haspopup="dialog"
+        className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-3 text-left outline-none not-first:border-t focus-visible:bg-muted active:bg-muted"
+        onClick={() => onEdit(item.id)}
+        type="button"
+      >
+        <span className="text-sm">
+          <span className="sr-only">Edit </span>
+          {itemName(item)}
+        </span>
+        <span className="text-right text-sm tabular-nums">
+          {formatMoney(item.amount, item.currency)}
+        </span>
+        <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <CategoryBadge category={item.category} />
+          <ItemBadge item={item} />
+        </span>
+        <PencilIcon
+          aria-hidden
+          className="size-3.5 justify-self-end text-muted-foreground"
+        />
+      </button>
+      <LineItemSheet
+        onDelete={onDelete}
+        onOpenChange={(open) => (open ? onEdit(item.id) : onStopEditing())}
+        open={isEditing}
+        target={{ kind: "edit", item }}
+      />
+    </>
+  )
+}
+
 function uniqueCategories(items: SpendItem[]) {
   const names: Category[] = []
   for (const item of items) {
@@ -335,6 +385,7 @@ function SpendingBillRow({
   const actionsRef = useRef<HTMLSpanElement>(null)
   const dateRef = useRef<HTMLSpanElement>(null)
   const [dateAnchor, setDateAnchor] = useState<typeof actionsRef | null>(null)
+  const isPhone = useIsMobile()
 
   return (
     <AccordionItem className="group/bill" value={group.id}>
@@ -424,18 +475,36 @@ function SpendingBillRow({
       </AccordionTrigger>
       <AccordionContent className="border-t bg-muted/40 pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
         <div className="no-scrollbar max-h-72 scroll-fade-y overflow-y-auto">
-          {group.items.map((item, index) => (
-            <SpendingLineRow
-              isEditing={editingItemId === item.id}
-              item={item}
-              key={item.id}
-              position={index + 1}
-              onDelete={onDeleteItem}
-              onEdit={onEditItem}
-              onStopEditing={onStopEditing}
+          {group.items.map((item, index) =>
+            isPhone ? (
+              <PhoneLineRow
+                isEditing={editingItemId === item.id}
+                item={item}
+                key={item.id}
+                onDelete={onDeleteItem}
+                onEdit={onEditItem}
+                onStopEditing={onStopEditing}
+              />
+            ) : (
+              <SpendingLineRow
+                isEditing={editingItemId === item.id}
+                item={item}
+                key={item.id}
+                position={index + 1}
+                onDelete={onDeleteItem}
+                onEdit={onEditItem}
+                onStopEditing={onStopEditing}
+              />
+            )
+          )}
+          {showAddRow && isPhone ? (
+            // Phones: never pop a sheet on load; the row is the way in.
+            <PhoneAddLineRow
+              billTitle={group.title}
+              currency={group.currency}
+              documentId={group.id}
             />
-          ))}
-          {showAddRow ? (
+          ) : showAddRow ? (
             <SpendingAddLineRow
               documentId={group.id}
               startOpen={group.items.length === 0}

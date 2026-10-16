@@ -11,6 +11,41 @@ import { useAddDocumentLineItem } from "@/hooks/documents/use-documents"
 import { cn } from "@/lib/utils"
 
 import { CategoryBadge } from "./CategoryBadge"
+import { LineItemSheet } from "./LineItemSheet"
+
+type PhoneAddLineRowProps = {
+  documentId: string
+  billTitle: string
+  currency: string
+}
+
+/** Phones: a full-width "Add item" row that opens the line sheet. */
+export function PhoneAddLineRow({
+  documentId,
+  billTitle,
+  currency,
+}: PhoneAddLineRowProps) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        aria-haspopup="dialog"
+        className="flex min-h-11 w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-medium text-muted-foreground outline-none not-first:border-t focus-visible:bg-muted active:bg-muted"
+        onClick={() => setOpen(true)}
+        type="button"
+      >
+        <PlusIcon aria-hidden className="size-4" />
+        Add item
+      </button>
+      <LineItemSheet
+        onOpenChange={setOpen}
+        open={open}
+        target={{ kind: "add", documentId, billTitle, currency }}
+      />
+    </>
+  )
+}
 
 type SpendingAddLineRowProps = {
   documentId: string
@@ -91,7 +126,7 @@ export function SpendingAddLineRow({
   }
 
   return (
-    <div className="grid items-center gap-3 py-2 pr-4 pl-16 not-first:border-t grid-cols-[minmax(0,1fr)] sm:grid-cols-[minmax(0,1fr)_auto] sm:pr-5 sm:pl-17">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-3 py-2 pr-4 pl-16 not-first:border-t sm:grid-cols-[minmax(0,1fr)_auto] sm:pr-5 sm:pl-17">
       <Field className="min-w-0 gap-1" data-invalid={Boolean(error)}>
         <FieldLabel className="sr-only" htmlFor={nameId}>
           Item name
