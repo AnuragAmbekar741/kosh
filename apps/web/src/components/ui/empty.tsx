@@ -3,14 +3,14 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const emptyVariants = cva(
-  "flex flex-col items-center gap-5 text-center text-balance",
+  "group/empty flex flex-col bg-(image:--empty-wash) text-balance",
   {
     variants: {
       variant: {
-        // A page with nothing to show: a calm card with a hairline and a soft shadow.
-        card: "w-full max-w-md rounded-xl border bg-muted/40 px-8 py-10 shadow-sm",
-        // Inside a popover, panel or card that already frames it: no second box.
-        plain: "w-full px-6 py-10",
+        // A page with nothing to show: a left-aligned banner on a slate mist.
+        card: "w-full max-w-[520px] items-start gap-2.5 overflow-hidden rounded-2xl border bg-card px-6 pt-7 pb-6 text-left shadow-sm sm:px-7 sm:pt-8",
+        // Inside a popover or panel that already frames it: no second box.
+        plain: "w-full items-center gap-5 px-6 py-10 text-center",
       },
     },
     defaultVariants: {
@@ -38,7 +38,10 @@ function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="empty-header"
-      className={cn("flex max-w-sm flex-col items-center gap-2", className)}
+      className={cn(
+        "flex max-w-sm flex-col items-center gap-2 group-data-[variant=card]/empty:max-w-none group-data-[variant=card]/empty:items-start",
+        className
+      )}
       {...props}
     />
   )
@@ -74,12 +77,25 @@ function EmptyMedia({
   )
 }
 
+function EmptyEyebrow({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="empty-eyebrow"
+      className={cn(
+        "mb-0.5 font-mono text-[11px] tracking-[0.06em] text-muted-foreground uppercase",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
 function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="empty-title"
       className={cn(
-        "font-heading text-base font-medium tracking-tight",
+        "font-heading text-base font-medium tracking-tight group-data-[variant=card]/empty:text-xl",
         className
       )}
       {...props}
@@ -92,7 +108,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
     <div
       data-slot="empty-description"
       className={cn(
-        "max-w-xs text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        "max-w-xs text-sm/relaxed text-muted-foreground group-data-[variant=card]/empty:max-w-[40ch] group-data-[variant=card]/empty:text-pretty [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
         className
       )}
       {...props}
@@ -106,6 +122,8 @@ function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="empty-content"
       className={cn(
         "flex w-full max-w-sm min-w-0 flex-col items-center gap-2.5 text-sm text-balance",
+        // Card actions share a two-column grid so every button is the same width.
+        "group-data-[variant=card]/empty:mt-4 group-data-[variant=card]/empty:grid group-data-[variant=card]/empty:grid-cols-2 group-data-[variant=card]/empty:gap-2 group-data-[variant=card]/empty:[&>*]:w-full",
         className
       )}
       {...props}
@@ -116,6 +134,7 @@ function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
 export {
   Empty,
   EmptyHeader,
+  EmptyEyebrow,
   EmptyTitle,
   EmptyDescription,
   EmptyContent,

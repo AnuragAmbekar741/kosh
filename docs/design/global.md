@@ -48,17 +48,29 @@ Use shadcn primitives in `apps/web/src/components/ui/`.
 
 ### Empty states
 
-One `Empty` component, two variants:
+One `Empty` component, two variants. Both sit on the slate mist
+(`--empty-wash`): two faint slate radial gradients, top-right and
+bottom-left, stronger in dark so they read on near-black. No category hues,
+no coloured strip, no illustration.
 
 | Variant | Where | Look |
 |---|---|---|
-| `card` (default) | A page with nothing to show (Overview, Spending first use or no matches, Analytics) | `max-w-md`, `rounded-xl`, solid 1px `border`, `bg-muted/40`, `shadow-sm`, 40px vertical padding; centred in the panel |
-| `plain` | Inside something that already frames it (a popover, the assistant panel) | No border, background or shadow; never a box inside a box |
+| `card` (default) | A page with nothing to show (Overview, Spending first use or no matches, Analytics) | Left-aligned banner: `max-w-[520px]`, `rounded-2xl`, 1px `border`, `bg-card` + mist, `shadow-sm`; centred in the panel |
+| `plain` | Inside something that already frames it (a popover, the assistant panel) | Centred, mist only, no border or shadow; never a box inside a box |
 
-The icon sits in a raised 44px tile (`bg-background`, `ring-1 ring-border`,
-`shadow-sm`, `rounded-xl`, muted 20px glyph). Title is `text-base` medium;
-the description is muted, `max-w-xs`, balanced. One primary or outline action
-at most. Never the dashed frame.
+A `card` reads top to bottom: `EmptyEyebrow` (Geist Mono, 11px, uppercase,
+muted) naming the page or cause, an `xl` medium title, and a muted
+description (`max-w-[40ch]`). No icon. Actions sit in a two-column grid so
+every button is the same width; a lone action takes one column. Use at most
+a primary and an outline action, such as Add spending and Upload receipt.
+
+A `plain` empty state keeps the raised 44px icon tile (`bg-background`,
+`ring-1 ring-border`, `shadow-sm`, `rounded-xl`, muted 20px glyph) above a
+`text-base` title and a balanced description.
+
+Empty-state buttons open the header's Add spending dialog with
+`openAddSpending()` or `openAddSpending("upload")` from
+`components/spending/add-spending.ts`.
 
 ### Buttons
 

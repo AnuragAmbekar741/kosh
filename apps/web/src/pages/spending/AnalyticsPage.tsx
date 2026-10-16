@@ -1,4 +1,4 @@
-import { AlertCircleIcon, ChartNoAxesCombinedIcon } from "lucide-react"
+import { AlertCircleIcon, PlusIcon, UploadIcon } from "lucide-react"
 import { useNavigate, useSearchParams } from "react-router"
 
 import { AnalyticsStats } from "@/components/spending-analytics/AnalyticsStats"
@@ -10,14 +10,15 @@ import {
 import { TrendChart } from "@/components/spending-analytics/TrendChart"
 import { WeekdayChart } from "@/components/spending-analytics/WeekdayChart"
 import { SpendingToolbar } from "@/components/spending/SpendingToolbar"
+import { openAddSpending } from "@/components/spending/add-spending"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
   EmptyContent,
   EmptyDescription,
+  EmptyEyebrow,
   EmptyHeader,
-  EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -39,13 +40,6 @@ function AnalyticsSkeleton() {
       </div>
     </div>
   )
-}
-
-function openAddSpending() {
-  // ponytail: header owns the dialog; empty CTA reuses the trigger
-  document
-    .querySelector<HTMLButtonElement>("[data-slot=add-spending-trigger]")
-    ?.click()
 }
 
 export function AnalyticsPage() {
@@ -110,24 +104,38 @@ export function AnalyticsPage() {
             <div className="flex h-full items-center justify-center">
               <Empty>
                 <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <ChartNoAxesCombinedIcon />
-                  </EmptyMedia>
+                  <EmptyEyebrow>
+                    {firstUse ? "Analytics" : "Filters"}
+                  </EmptyEyebrow>
                   <EmptyTitle>
-                    {firstUse ? "No analytics yet" : "Nothing matches"}
+                    {firstUse
+                      ? "Charts appear with your first bill"
+                      : "Nothing matches"}
                   </EmptyTitle>
                   <EmptyDescription>
                     {firstUse
-                      ? "Charts appear once you add a receipt or a bill."
+                      ? "Add a receipt or a bill and your trends, categories, and weekdays fill in here."
                       : "No spending matches the current filters."}
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
                   {firstUse ? (
-                    <Button onClick={openAddSpending}>Add spending</Button>
+                    <>
+                      <Button onClick={() => openAddSpending()}>
+                        <PlusIcon data-icon="inline-start" />
+                        Add spending
+                      </Button>
+                      <Button
+                        onClick={() => openAddSpending("upload")}
+                        variant="outline"
+                      >
+                        <UploadIcon data-icon="inline-start" />
+                        Upload receipt
+                      </Button>
+                    </>
                   ) : (
                     <Button onClick={filters.resetFilters} variant="outline">
-                      Reset
+                      Reset filters
                     </Button>
                   )}
                 </EmptyContent>
