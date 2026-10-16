@@ -50,8 +50,8 @@ Below 768px (`useIsMobile`), the app becomes chat-first. Desktop does not change
 
 | PR | Stage | Scope | Tests | Status |
 |---|---|---|---|---|
-| **1. Phone dev setup** | A. Test on phone | `pnpm dev:phone` (`vite --host`), `server.allowedHosts` for `.ts.net`, viewport `interactive-widget=resizes-content`; docs for LAN and Tailscale testing (email login on LAN, `cookie_secure` off for http) | App opens on a real phone over LAN and over Tailscale HTTPS | |
-| **2. Phone shell** | B. Phone UI | `AppShell` below 768px: no sidebar or launcher, bottom tabs (Chat, Bills, Insights, You), safe areas, `100dvh`; You tab with account, theme, sign out | Browser 375px light and dark; desktop unchanged | |
+| **1. Phone dev setup** | A. Test on phone | `pnpm dev:phone` (`vite --host`), `server.allowedHosts` for `.ts.net`, viewport `interactive-widget=resizes-content`; docs for LAN and Tailscale testing (email login on LAN, `cookie_secure` off for http) | App opens on a real phone over LAN and over Tailscale HTTPS | merged (#55) |
+| **2. Phone shell** | B. Phone UI | `AppShell` below 768px: no sidebar or launcher, bottom tabs (Chat, Bills, Insights, You), safe areas, `100dvh`; You tab with account, theme, sign out | Browser 375px light and dark; desktop unchanged | this PR |
 | **3. Chat page** | B | `/chat` full screen, reusing the agent thread and composer; header with history and bell; summary card (month total, bills, needs review); example chips; desktop `/chat` → `/overview` with the panel open | Same chat as the widget; card numbers match Overview and Bills | |
 | **4. Bills and Insights on phone** | B | Bill rows as stacked rows, filters in a bottom sheet, review dialog as a full-screen sheet, charts at phone width | 375px pass over every Spending state | |
 | **5. Scan from phone** | C. Capture | Composer camera and gallery, browser-side shrinking (2000px JPEG), upload through `POST /documents`, thumbnails and progress in the thread, **Review** link into the review sheet; floating scan button on Bills and Insights | Real phone: camera → bill in review → saved | |

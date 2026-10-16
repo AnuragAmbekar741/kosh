@@ -74,7 +74,7 @@ export function AgentPanel({ onClose }: AgentPanelProps) {
     <motion.section
       animate={{ opacity: 1, scale: 1, y: 0 }}
       aria-labelledby="agent-panel-title"
-      className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-popover text-sm text-popover-foreground sm:inset-auto sm:right-6 sm:bottom-[4.75rem] sm:h-[min(40rem,calc(100svh-6.5rem))] sm:w-[25rem] sm:origin-bottom-right sm:rounded-xl sm:shadow-md sm:ring-1 sm:ring-foreground/10"
+      className="fixed inset-x-0 top-0 bottom-(--phone-tab-bar) z-40 flex flex-col overflow-hidden bg-popover text-sm text-popover-foreground md:inset-auto md:right-6 md:bottom-[4.75rem] md:h-[min(40rem,calc(100svh-6.5rem))] md:w-[25rem] md:origin-bottom-right md:rounded-xl md:shadow-md md:ring-1 md:ring-foreground/10"
       exit={{
         opacity: 0,
         scale: reduceMotion ? 1 : 0.98,

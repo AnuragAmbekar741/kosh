@@ -25,7 +25,7 @@ function writeConversation(id: string | null) {
   }
 }
 
-/** Widget state: owned once by AgentWidget, read by its parts via context. */
+/** Assistant state: owned once by AppShell, read by the widget and tab bar via context. */
 export function useAgentPanelState() {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<AgentView>("thread")
@@ -66,6 +66,6 @@ export const AgentPanelContext = createContext<AgentPanelState | null>(null)
 
 export function useAgentPanel(): AgentPanelState {
   const value = useContext(AgentPanelContext)
-  if (!value) throw new Error("useAgentPanel must be used inside AgentWidget")
+  if (!value) throw new Error("useAgentPanel must be used inside AppShell")
   return value
 }
