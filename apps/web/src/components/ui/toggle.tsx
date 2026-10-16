@@ -17,6 +17,9 @@ const toggleVariants = cva(
         default:
           "h-11 min-w-11 px-3 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 sm:h-9 sm:min-w-9",
         sm: "h-10 min-w-10 rounded-[min(var(--radius-md),12px)] px-3 text-[0.8rem] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 sm:h-8 sm:min-w-8 [&_svg:not([class*='size-'])]:size-3.5",
+        // Phone-only toolbars: 36px at every width.
+        dense:
+          "h-9 min-w-9 px-2.5 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-11 min-w-11 px-4 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 sm:h-10 sm:min-w-10",
       },
     },
