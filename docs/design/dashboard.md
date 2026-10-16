@@ -11,9 +11,8 @@ The signed-in product is Operate-mode: scan, move, come back. Brand lives in
 precise details — monochrome primary, Geist, flat 1px hairlines — not in
 marketing chrome.
 
-Overview is an empty destination until analytics exist: the `card` Empty
-state from [global.md](./global.md#empty-states), centered in the panel, with a single CTA
-to Spending. Spending contains the document intake,
+Overview is a starter banner until analytics exist (see [Overview](#overview)).
+Spending contains the document intake,
 extraction review, and confirmed ledger described in [spending.md](./spending.md).
 
 Every signed-in page also carries the assistant: a launcher bottom-right that
@@ -24,13 +23,46 @@ While `useGetMe` is pending, the shell renders `DashboardSkeleton` — the same
 inset Sidebar chrome with Skeleton placeholders — so the first paint matches
 the loaded layout. The status is announced as “Opening your workspace.”
 
+## Overview
+
+On desktop (≥768px) `/overview` is `OverviewStarter`
+(`src/components/overview/`): a full-panel banner that says what Kosh is and
+shows how line-by-line bills reveal habits. It fills the inset panel edge to
+edge with no card around it, and always shows until real Overview totals
+exist. Phones keep the `card` Empty state (they land on Chat anyway). Copy and
+sample rows live in `overview-copy.ts`.
+
+- **Backdrop:** `--empty-wash` (Slate mist) plus `ContourRings`
+  (`src/components/visuals/`): 16 faint closed rings in the top-right in
+  `--auth-line-mid`, masked to a radial fade, drifting on a 26s loop like
+  `ContourField`. This is not the auth waveform.
+- **Hero, left:** `EngravedWordmark`, an SVG "Kosh" in Geist 640 whose glyphs
+  are filled with 64 contour rings (0.55px, `--foreground`) under a 1px outline
+  at 55%. On mount the outline draws in (1.6s), the rings fade in from the
+  center out, then the meaning line rises in. After that the rings "breathe": a
+  slow phase drift at 30fps via `useAnimationFrame`, writing `d` through refs.
+  Under it: `/kōsh/ a treasury. Yours is in the details.`, the lede, and two
+  `lg` actions: **Add your first bill** (`openAddSpending("upload")`) and
+  **Ask the assistant** (opens the assistant panel).
+- **Hero, right:** `SampleLedger`, a `glass` panel of six static example lines
+  (dashed **Example** tag, existing `CategoryBadge`), which write in once and
+  again from its Replay button, then the late-night pattern card.
+- **Steps:** three `StarterSteps` link cards (Upload a bill, Bills, Analytics).
+  Hover changes only the border (`--ring` at 40%) and nudges the arrow; no
+  lift or shadow.
+- **Layout:** two hero columns over the step row. Below a 900px container
+  width (a container query, since the sidebar collapses) everything stacks
+  into one column and the banner scrolls.
+- **Reduced motion:** no drift, entrance, Breathe or write-in; the final state
+  shows at once.
+
 ## Navigation
 
 | Path                  | Page      | Notes                                                                         |
 | --------------------- | --------- | ----------------------------------------------------------------------------- |
 | `/`                   | Redirect  | Signed-in users go to `/overview` (phones: `/chat`). Guests go to `/login`. |
 | `/chat`               | Chat      | Phones only: the assistant full screen. Desktop redirects to `/overview` with the panel open. |
-| `/overview`           | Overview  | Empty destination. CTA to Spending. Future totals and breakdowns.             |
+| `/overview`           | Overview  | Starter banner (desktop). Future totals and breakdowns.                       |
 | `/spending`           | Redirect  | Preserves search params and opens Bills.                                      |
 | `/spending/analytics` | Analytics | Charts over the filtered ledger. See [spending.md](./spending.md#analytics). |
 | `/spending/bills`     | Bills     | Existing grouped bill ledger.                                                 |
