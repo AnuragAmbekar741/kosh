@@ -193,9 +193,26 @@ bill divider.
 - **Bill rows** drop the merchant tile, the source badge, and the category
   badges; the title truncates, and the date and item-count badges wrap under
   it, so the total and the three-dot tile always fit.
-- **Lines** drop the number column. The name gets its own line and wraps in
-  full instead of truncating, with the category and item badges wrapping
-  under it.
+- **Lines** drop the number column. Each line is one tap target: the name
+  (wrapping in full) and the amount on top, the category and item badges
+  below with a small pencil hint. Tapping it opens the **line sheet**
+  (`LineItemSheet`, a bottom sheet) instead of editing inside the row.
+- **Line sheet:** full-width **Name** ("As it reads on the bill") and
+  **Price** (currency prefix, decimal keyboard), the 14 categories as one-tap
+  chips (36px, with swatches), and, when editing, the **Product** picker.
+  Errors and confirmations show in the pinned footer above the actions, so
+  they stay in view however far the form scrolls; only the field a message
+  is about turns red.
+  - **Edit:** opens with the line's saved values and focus on the sheet, not
+    a field, so the keyboard stays down until a field is tapped. Save sends
+    only the fields that changed (name, price, category). Delete hands off to
+    the usual "Delete this item?" confirmation.
+  - **Add:** the bill's full-width "+ Add item" row opens it with focus in
+    Name. **Add item** saves and keeps the sheet open for the next line:
+    the form clears, the category stays (lines on one receipt usually share
+    one), Name takes focus again, and the footer reads "Added {name} ·
+    {price}". **Done** closes it. The sheet never opens on its own, even for
+    a new empty bill.
 - **Items** is a list instead of the table, two aligned lines per item: the
   name and the amount on top; "merchant · date" (short date, year only when
   it isn't this year) and the category badge below, the badge right-aligned
