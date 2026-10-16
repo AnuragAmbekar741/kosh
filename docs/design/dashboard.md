@@ -28,7 +28,7 @@ the loaded layout. The status is announced as “Opening your workspace.”
 
 | Path                  | Page      | Notes                                                                         |
 | --------------------- | --------- | ----------------------------------------------------------------------------- |
-| `/`                   | Redirect  | Signed-in users go to `/overview`. Guests go to `/login`.                     |
+| `/`                   | Redirect  | Signed-in users go to `/overview` (phones: `/spending/bills`). Guests go to `/login`. |
 | `/overview`           | Overview  | Empty destination. CTA to Spending. Future totals and breakdowns.             |
 | `/spending`           | Redirect  | Preserves search params and opens Bills.                                      |
 | `/spending/analytics` | Analytics | Charts over the filtered ledger. See [spending.md](./spending.md#analytics). |
@@ -52,10 +52,9 @@ Collapsing leaves a
 3rem icon rail: hovering or activating the centered Spending icon
 opens a keyboard-accessible `DropdownMenu` containing the same children.
 Collapse state persists in the `sidebar_state` cookie and toggles with
-`Cmd/Ctrl+B`. Below `768px` the expandable hierarchy appears in the existing
-nav sheet.
+`Cmd/Ctrl+B`. Below `768px` there is no sidebar; see [Phones](#phones).
 
-The inset panel is locked to the viewport (`h-svh`, inset margin subtracted
+The inset panel is locked to the viewport (`h-dvh`, inset margin subtracted
 on `md+`). The header stays put; page content fills the remaining height
 with `overflow-hidden`, so Overview and Spending do not scroll the page.
 
@@ -63,6 +62,26 @@ The account menu sits in the sidebar footer. Its trigger shows the initials
 tile and the name (email when there is no name), centered on one line; the
 open menu shows name, email, and Sign out.
 Settings is out of this step.
+
+### Phones
+
+Below `768px` (`useIsMobile`), the sidebar and its trigger are gone, and a
+bottom tab bar (`PhoneTabBar`) sits under the page:
+
+| Tab | Goes to | Active when |
+|---|---|---|
+| Chat | Opens the assistant panel above the tab bar | The panel is open |
+| Bills | `/spending/bills` | Bills or Items is open |
+| Insights | `/spending/analytics` | Analytics is open |
+| You | A bottom sheet: initials, name, email, **Sign out**, and a Light / Dark / System theme switch | The sheet is open |
+
+Tabs are 56px tall plus `env(safe-area-inset-bottom)` (`--phone-tab-bar`),
+with a 20px icon over an 11px label. The active tab is `foreground` and the
+rest are `muted-foreground`; only one is active at a time. Sign out sits in
+the sheet header, not at the bottom, because a double tap on You lands at
+the bottom of the sheet. Page padding drops to 16px. Overview has no tab, so
+phones land on Bills. A full-screen chat page replaces the Chat panel in the
+next step ([agent-plan.md](../product/agent-plan.md#phone-ui-agreed-not-built)).
 
 ## Visual rules
 

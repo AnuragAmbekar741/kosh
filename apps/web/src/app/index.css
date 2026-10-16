@@ -107,6 +107,8 @@
 }
 
 :root {
+  /* Phone tab bar; the chat panel stops above it. */
+  --phone-tab-bar: calc(3.5rem + env(safe-area-inset-bottom));
   --font-raleway: "Raleway Variable", sans-serif;
   --font-nunito-sans: "Nunito Sans Variable", sans-serif;
   --background: #ffffff;

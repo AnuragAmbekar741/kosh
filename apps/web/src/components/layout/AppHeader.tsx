@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 function ChildSwitcher({ item }: { item: NavItem }) {
   const { pathname, search } = useLocation()
@@ -66,11 +67,16 @@ function ChildSwitcher({ item }: { item: NavItem }) {
 export function AppHeader() {
   const { pathname } = useLocation()
   const current = getNavItem(pathname)
+  const isPhone = useIsMobile()
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-4">
-      <SidebarTrigger className="size-11 sm:size-9" />
-      <Separator orientation="vertical" />
+      {isPhone ? null : (
+        <>
+          <SidebarTrigger className="size-9" />
+          <Separator orientation="vertical" />
+        </>
+      )}
       {current?.children ? (
         <nav
           aria-label="Breadcrumb"

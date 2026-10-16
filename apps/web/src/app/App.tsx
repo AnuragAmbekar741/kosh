@@ -7,10 +7,17 @@ import {
 } from "react-router"
 
 import { AppShell } from "@/components/layout/AppShell"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { AuthPage } from "@/pages/auth/AuthPage"
 import { OverviewPage } from "@/pages/overview/OverviewPage"
 import { AnalyticsPage } from "@/pages/spending/AnalyticsPage"
 import { SpendingPage } from "@/pages/spending/SpendingPage"
+
+/** Phones have no Overview tab, so they land on Bills. */
+function HomeRedirect() {
+  const isPhone = useIsMobile()
+  return <Navigate replace to={isPhone ? "/spending/bills" : "/overview"} />
+}
 
 function SpendingRedirect({
   view: requestedView,
@@ -41,7 +48,7 @@ export function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<AppShell />}>
-          <Route element={<Navigate replace to="/overview" />} path="/" />
+          <Route element={<HomeRedirect />} path="/" />
           <Route element={<OverviewPage />} path="/overview" />
           <Route path="/spending">
             <Route element={<SpendingRedirect />} index />

@@ -3,7 +3,6 @@ import type { Ref } from "react"
 
 import { Button } from "@/components/ui/button"
 import { AGENT_PANEL_ID } from "@/hooks/agent/use-agent-panel"
-import { cn } from "@/lib/utils"
 
 type AgentLauncherProps = {
   open: boolean
@@ -21,11 +20,7 @@ export function AgentLauncher({
       aria-controls={AGENT_PANEL_ID}
       aria-expanded={open}
       aria-label={open ? "Close assistant" : "Open assistant"}
-      className={cn(
-        "fixed right-4 bottom-4 z-40 sm:right-6 sm:bottom-6",
-        // Full-screen on phones: the panel's own close button replaces this one.
-        open && "max-sm:hidden"
-      )}
+      className="fixed right-6 bottom-6 z-40"
       onClick={onToggle}
       ref={buttonRef}
       size="icon-lg"

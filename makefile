@@ -1,4 +1,4 @@
-.PHONY: help db-up db-down migrate migrate-new catalog test evals api web worker dev setup git-config
+.PHONY: help db-up db-down migrate migrate-new catalog test evals api web web-phone worker dev dev-phone setup git-config
 
 help:
 	@grep -E '^[a-zA-Z_-]+:' Makefile | cut -d: -f1 | sort
@@ -35,8 +35,15 @@ api:
 web:
 	pnpm --dir apps/web dev
 
+# Vite on the LAN; API calls go through the Vite proxy
+web-phone:
+	pnpm --dir apps/web dev:phone
+
 dev:
 	$(MAKE) -j3 api worker web
+
+dev-phone:
+	$(MAKE) -j3 api worker web-phone
 
 setup:
 	cp -n .env.example .env || true
