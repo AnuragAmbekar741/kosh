@@ -1,8 +1,12 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { FileUpIcon, PenLineIcon, PlusIcon } from "lucide-react"
 
 import { apiDetail } from "@/api/client"
 import { AddDocumentFlow } from "@/components/spending/AddDocumentDialog"
+import {
+  ADD_SPENDING_EVENT,
+  type AddSpendingStart,
+} from "@/components/spending/add-spending"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -47,6 +51,15 @@ export function AddSpendingDialog() {
   const createManual = useCreateManualDocument()
   const billSaved = useBillSavedToast()
   const error = validationError || apiDetail(createManual.error)
+
+  useEffect(() => {
+    function onOpen(event: Event) {
+      setStep((event as CustomEvent<AddSpendingStart>).detail)
+      setOpen(true)
+    }
+    window.addEventListener(ADD_SPENDING_EVENT, onOpen)
+    return () => window.removeEventListener(ADD_SPENDING_EVENT, onOpen)
+  }, [])
 
   function goToChooser() {
     setStep("choose")

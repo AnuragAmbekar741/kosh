@@ -1,4 +1,3 @@
-import { LayoutDashboardIcon } from "lucide-react"
 import { Link } from "react-router"
 
 import { Button } from "@/components/ui/button"
@@ -6,8 +5,8 @@ import {
   Empty,
   EmptyContent,
   EmptyDescription,
+  EmptyEyebrow,
   EmptyHeader,
-  EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
 
@@ -17,10 +16,8 @@ export function OverviewPage() {
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <Empty>
           <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <LayoutDashboardIcon />
-            </EmptyMedia>
-            <EmptyTitle>No overview yet</EmptyTitle>
+            <EmptyEyebrow>Overview</EmptyEyebrow>
+            <EmptyTitle>Nothing to summarize yet</EmptyTitle>
             <EmptyDescription>
               Overview appears after you add spending to review.
             </EmptyDescription>

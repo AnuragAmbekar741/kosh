@@ -1,11 +1,12 @@
 import { useEffect } from "react"
-import { AlertCircleIcon, ReceiptTextIcon } from "lucide-react"
+import { AlertCircleIcon, PlusIcon, UploadIcon } from "lucide-react"
 
 import { SpendingAccordion } from "@/components/spending/SpendingAccordion"
 import { SpendingItemsPager } from "@/components/spending/SpendingItemsPager"
 import { SpendingItemsTable } from "@/components/spending/SpendingItemsTable"
 import { SpendingLedgerSkeleton } from "@/components/spending/SpendingLedgerSkeleton"
 import { SpendingToolbar } from "@/components/spending/SpendingToolbar"
+import { openAddSpending } from "@/components/spending/add-spending"
 import { dateInRange } from "@/components/spending/spend-period"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -13,8 +14,8 @@ import {
   Empty,
   EmptyContent,
   EmptyDescription,
+  EmptyEyebrow,
   EmptyHeader,
-  EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
 import { useDocuments } from "@/hooks/documents/use-documents"
@@ -23,13 +24,6 @@ import {
   useSpendItems,
   useSpendSummary,
 } from "@/hooks/spend-items/use-spend-items"
-
-function openAddSpending() {
-  // ponytail: header owns the dialog; empty CTA reuses the trigger
-  document
-    .querySelector<HTMLButtonElement>("[data-slot=add-spending-trigger]")
-    ?.click()
-}
 
 export function SpendingPage() {
   const filters = useSpendFilters()
@@ -108,17 +102,25 @@ export function SpendingPage() {
             <div className="flex min-h-0 flex-1 items-center justify-center">
               <Empty>
                 <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <ReceiptTextIcon />
-                  </EmptyMedia>
-                  <EmptyTitle>No spending yet</EmptyTitle>
+                  <EmptyEyebrow>Start your ledger</EmptyEyebrow>
+                  <EmptyTitle>Your first bill goes here</EmptyTitle>
                   <EmptyDescription>
                     Add a receipt or start a bill from the top bar. Entries
                     appear here after you save them.
                   </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
-                  <Button onClick={openAddSpending}>Add spending</Button>
+                  <Button onClick={() => openAddSpending()}>
+                    <PlusIcon data-icon="inline-start" />
+                    Add spending
+                  </Button>
+                  <Button
+                    onClick={() => openAddSpending("upload")}
+                    variant="outline"
+                  >
+                    <UploadIcon data-icon="inline-start" />
+                    Upload receipt
+                  </Button>
                 </EmptyContent>
               </Empty>
             </div>
@@ -126,20 +128,18 @@ export function SpendingPage() {
             <div className="flex min-h-0 flex-1 items-center justify-center">
               <Empty>
                 <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <ReceiptTextIcon />
-                  </EmptyMedia>
+                  <EmptyEyebrow>Filters</EmptyEyebrow>
                   <EmptyTitle>Nothing matches</EmptyTitle>
                   <EmptyDescription>
                     {filters.canReset
-                      ? "No bills match the current filters."
+                      ? "No bills match the current filters. Try a wider date range or clear a category."
                       : "No bills yet."}
                   </EmptyDescription>
                 </EmptyHeader>
                 {filters.canReset ? (
                   <EmptyContent>
                     <Button onClick={filters.resetFilters} variant="outline">
-                      Reset
+                      Reset filters
                     </Button>
                   </EmptyContent>
                 ) : null}
