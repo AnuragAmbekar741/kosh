@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useCreateManualDocument } from "@/hooks/documents/use-documents"
 import { useBillSavedToast } from "@/hooks/spend-items/use-bill-saved-toast"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 import { DatePicker } from "./DatePicker"
 import { toIsoDate } from "./spend-period"
@@ -43,6 +44,7 @@ function DialogBackButton({ onClick }: { onClick: () => void }) {
 }
 
 export function AddSpendingDialog() {
+  const isPhone = useIsMobile()
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>("choose")
   const [title, setTitle] = useState("")
@@ -94,10 +96,21 @@ export function AddSpendingDialog() {
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogTrigger data-slot="add-spending-trigger" render={<Button />}>
-        <PlusIcon data-icon="inline-start" />
-        Add spending
-      </DialogTrigger>
+      {isPhone ? (
+        // Phones: a compact "+" so the header stays one short row.
+        <DialogTrigger
+          aria-label="Add spending"
+          data-slot="add-spending-trigger"
+          render={<Button size="icon-dense-sm" />}
+        >
+          <PlusIcon />
+        </DialogTrigger>
+      ) : (
+        <DialogTrigger data-slot="add-spending-trigger" render={<Button />}>
+          <PlusIcon data-icon="inline-start" />
+          Add spending
+        </DialogTrigger>
+      )}
       <DialogContent className="max-h-[calc(100svh-1rem)] max-w-[calc(100%-1rem)] gap-0 overflow-hidden p-0">
         {step === "choose" ? (
           <>

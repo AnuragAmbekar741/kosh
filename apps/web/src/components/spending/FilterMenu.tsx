@@ -54,6 +54,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Toggle } from "@/components/ui/toggle"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useSpendFilters } from "@/hooks/spend-items/use-spend-filters"
 import { cn } from "@/lib/utils"
 
@@ -312,8 +313,23 @@ function MobileFilterSheet() {
     <Sheet onOpenChange={handleOpenChange}>
       <SheetTrigger
         render={
-          <Button className="md:hidden" variant="outline">
-            <FiltersButtonContent count={filters.filterCount} />
+          <Button
+            aria-label={
+              filters.filterCount
+                ? `Filters, ${filters.filterCount} on`
+                : "Filters"
+            }
+            className="relative md:hidden"
+            size="icon-dense"
+            variant="outline"
+          >
+            <ListFilterIcon />
+            {filters.filterCount ? (
+              <span
+                aria-hidden
+                className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-foreground ring-2 ring-background"
+              />
+            ) : null}
           </Button>
         }
       />
@@ -413,6 +429,121 @@ function MobileFilterSheet() {
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  )
+}
+
+/** Insights on phones: the common date presets, one tap each. */
+const PERIODS = [
+  { value: "this-month", label: "Month", name: "This month" },
+  { value: "last-3-months", label: "3 mo", name: "Last 3 months" },
+  { value: "this-year", label: "Year", name: "This year" },
+  { value: "all", label: "All", name: "All time" },
+] as const
+
+function isSwitchPeriod(date: DateFilter) {
+  return PERIODS.some((period) => period.value === date)
+}
+
+/** A compact period switch for the phone Insights toolbar. */
+export function PeriodSwitch() {
+  const filters = useSpendFilters()
+
+  return (
+    <ToggleGroup
+      aria-label="Period"
+      onValueChange={(value: string[]) => {
+        const next = PERIODS.find((period) => period.value === value[0])
+        if (next) filters.setDate(next.value)
+      }}
+      size="dense"
+      spacing={0}
+      value={isSwitchPeriod(filters.date) ? [filters.date] : []}
+      variant="outline"
+    >
+      {PERIODS.map((period) => (
+        <ToggleGroupItem
+          aria-label={period.name}
+          key={period.value}
+          value={period.value}
+        >
+          {period.label}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  )
+}
+
+type FilterChipProps = {
+  label: string
+  onRemove: () => void
+  swatch?: (typeof CATEGORIES)[number]
+}
+
+function FilterChip({ label, onRemove, swatch }: FilterChipProps) {
+  return (
+    <button
+      aria-label={`Remove ${label} filter`}
+      className="inline-flex h-[26px] shrink-0 items-center gap-1.5 rounded-lg border bg-accent pr-2 pl-2.5 text-xs text-accent-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      onClick={onRemove}
+      type="button"
+    >
+      {swatch ? <CategorySwatch category={swatch} /> : null}
+      {label}
+      <XIcon aria-hidden className="size-3 text-muted-foreground" />
+    </button>
+  )
+}
+
+type FilterChipsProps = {
+  /** e.g. "18 bills", right-aligned. */
+  countLabel?: string | null
+  /** Insights: the period switch already shows its own dates. */
+  periodSwitch?: boolean
+}
+
+/** Phones: active filters as small chips under the toolbar; a tap clears one. */
+export function FilterChips({
+  countLabel,
+  periodSwitch = false,
+}: FilterChipsProps) {
+  const filters = useSpendFilters()
+  const showDate =
+    filters.date !== "all" && !(periodSwitch && isSwitchPeriod(filters.date))
+  const hasChips =
+    showDate || filters.categories.length > 0 || Boolean(filters.source)
+
+  if (!hasChips && !countLabel) return null
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="no-scrollbar flex min-w-0 gap-1.5 overflow-x-auto">
+        {showDate ? (
+          <FilterChip
+            label={filters.dateLabel}
+            onRemove={() => filters.setDate("all")}
+          />
+        ) : null}
+        {filters.categories.map((category) => (
+          <FilterChip
+            key={category}
+            label={category}
+            onRemove={() => filters.toggleCategory(category)}
+            swatch={category}
+          />
+        ))}
+        {filters.source ? (
+          <FilterChip
+            label={sourceLabel(filters.source) ?? filters.source}
+            onRemove={() => filters.setSource(null)}
+          />
+        ) : null}
+      </div>
+      {countLabel ? (
+        <span className="ml-auto shrink-0 text-xs text-muted-foreground tabular-nums">
+          {countLabel}
+        </span>
+      ) : null}
+    </div>
   )
 }
 

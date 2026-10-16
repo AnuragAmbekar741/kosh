@@ -30,6 +30,12 @@ const buttonVariants = cva(
         "icon-sm":
           "size-10 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg sm:size-8",
         "icon-lg": "size-11 sm:size-10",
+        // Phone-only toolbars: fixed sizes, no desktop step.
+        "icon-dense": "size-9 rounded-[min(var(--radius-md),11px)]",
+        "icon-dense-sm":
+          "size-8 rounded-[min(var(--radius-md),10px)] [&_svg:not([class*='size-'])]:size-3.5",
+        // The phone's floating nav button.
+        "icon-fab": "size-12 rounded-2xl [&_svg:not([class*='size-'])]:size-5",
       },
     },
     defaultVariants: {
