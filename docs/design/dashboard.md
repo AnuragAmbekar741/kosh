@@ -66,52 +66,87 @@ Settings is out of this step.
 
 ### Phones
 
-Below `768px` (`useIsMobile`), the sidebar and its trigger are gone, and a
-bottom tab bar (`PhoneTabBar`) sits under the page:
+Below `768px` (`useIsMobile`), the sidebar and its trigger are gone. One
+floating nav button (`PhoneNav`) replaces the old bottom tab bar:
 
-| Tab | Goes to | Active when |
+- **Button:** 48px, `rounded-2xl`, `bg-primary`, `--glass-shadow-lg`, a grid
+  icon that turns into an X while open. On Bills, Items and Insights it floats
+  bottom-right, 16px from the edge and above `env(safe-area-inset-bottom)`. On
+  Chat it sits at the left of the composer row, so the two never overlap. A
+  small count badge shows bills waiting for review (the bell's inbox query),
+  and the button's name reads "Menu, 2 bills to review".
+- **Stack menu:** tapping the button blurs the page under a scrim (`--scrim`;
+  a tap on it or Esc closes) and stacks frosted rows upward from the button,
+  the nearest first, 30ms apart. Each row is a 44px `glass-strong` icon tile
+  with a frosted label pill on the inner side (left of the tile when the
+  button is on the right, right of it on Chat). The current page's tile is
+  filled `bg-primary`.
+
+| Row (top to bottom) | Does | Current when |
 |---|---|---|
+| Scan a bill (camera, 48px tile) | Opens the phone's camera (`capture="environment"`); the photo is sent from Chat, so it switches there | — |
 | Chat | `/chat` | Chat is open |
 | Bills | `/spending/bills` | Bills or Items is open |
 | Insights | `/spending/analytics` | Analytics is open |
-| You | A bottom sheet: initials, name, email, **Sign out**, and a Light / Dark / System theme switch | The sheet is open |
+| You | A bottom sheet: initials, name, email, **Sign out**, and a Light / Dark / System theme switch | — |
 
-Tabs are 56px tall plus `env(safe-area-inset-bottom)` (`--phone-tab-bar`),
-with a 20px icon over an 11px label. The active tab is `foreground` and the
-rest are `muted-foreground`; only one is active at a time. Sign out sits in
-the sheet header, not at the bottom, because a double tap on You lands at
-the bottom of the sheet. Page padding drops to 16px. Overview has no tab, so
-phones land on Chat. The loading skeleton drops the sidebar trigger and shows
-the tab bar's shape.
+The menu is a Base UI `Popover`: the button carries `aria-expanded` and
+`aria-haspopup`, focus moves to the first row on open and back to the button
+on close, rows are links with `aria-current="page"` (Scan and You are
+buttons), and every row is at least 44px tall. With reduced motion the menu
+appears without the rise or stagger.
+
+There is no reserved bar at the bottom: scrolling lists pad by
+`--phone-nav-clearance` (`5rem` plus the safe area) so the button never covers
+a row. Sign out sits in the You sheet header, not at the bottom. Page padding
+drops to 16px. Overview has no menu row, so phones land on Chat. The loading
+skeleton drops the sidebar trigger and shows the nav button's shape.
 
 ### Phone chat (`/chat`)
 
-The assistant fills the space between the header and the tab bar, edge to
-edge, sharing the desktop panel's state (same open chat, history, and reply
+The assistant fills the space under the header, edge to edge, sharing the desktop panel's state (same open chat, history, and reply
 in flight). The header reads "Kosh", with **Past chats** (↔ **Back to chat**)
 and **New chat** before the bell. There is no floating launcher or panel on
 phones.
 
+Behind it, `ChatBackdrop` gives the page depth: the slate mist
+(`--empty-wash`), the login page's waveform (`ContourField`) drifting slowly
+and masked to fade at every edge, and a faint glow in the middle. It is
+decorative and never takes taps. The cards, chips and composer above it are
+frosted glass (`glass`: translucent card, blur, hairline, soft shadow), in
+both themes. See [global.md](./global.md#glass-and-depth-phones).
+
 Before the first message the thread shows `AgentHome`:
 
-- **Summary card** (`AgentSummaryCard`), a link to Bills filtered to this
-  month: "{Month} so far", the month total (`/spend-items/summary`,
-  `period=month`), the bill count, and "· N to review" when extracted bills are
-  waiting (same inbox query as the bell). Skeleton while loading.
-- A muted line, "Ask about your spending. Answers come from your confirmed
-  bills.", then the three example questions as rounded outline chips that
-  wrap, sitting just above the composer. A chip sends its question.
+- **Summary card** (`AgentSummaryCard`, glass, `rounded-2xl`), a link to
+  Bills filtered to this month: "{Month} so far", the month total
+  (`/spend-items/summary`, `period=month`), the bill count, and "· N to
+  review" when extracted bills are waiting (same inbox query as the bell).
+  Skeleton while loading.
+- **Hero**, centred between the card and the chips: a 52px frosted icon tile
+  (sparkles), the mono eyebrow "Your spending assistant", "Ask about your
+  spending", and "Answers come from your confirmed bills. Nothing is changed
+  from chat."
+- **Suggestion chips**: the three example questions as full-width stacked
+  glass rows with a small leading icon, just above the composer. They rise in
+  one after another, then float a few pixels, slowly. A chip sends its
+  question.
 
+All of that motion, and the waveform drift, stops under
+`prefers-reduced-motion`.
+
+The composer is a frosted pill (at least 48px tall) with the text box, a
+paperclip, and a round send button; the nav button sits to its left. Past
+chats has no composer, so the nav button floats bottom-right there.
 The composer doesn't take focus on load, so the keyboard stays down until the
 user taps it.
 
 ### Scanning bills (phones)
 
-The phone composer starts with two secondary icon buttons, **Scan a bill**
-(camera, `capture="environment"`, opens the phone's own camera) and **Add
-photos** (up to 5 images or PDFs), then the text box ("Ask a question…").
-Bills and Insights also show a floating camera button (56px, `rounded-2xl`,
-16px above the tab bar); a photo taken there switches to Chat.
+**Scan a bill** is the first row of the nav menu on every phone page:
+it opens the phone's own camera (`capture="environment"`), and a photo taken
+from Bills or Insights switches to Chat. In the composer, the paperclip
+(**Add photos**) picks up to 5 images or PDFs.
 
 A chosen file sends at once; there is no staging step. Images are shrunk in
 the browser (`lib/shrink-image.ts`): long edge at most 2000px, JPEG at 0.85,

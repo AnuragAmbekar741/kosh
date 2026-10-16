@@ -72,6 +72,26 @@ Empty-state buttons open the header's Add spending dialog with
 `openAddSpending()` or `openAddSpending("upload")` from
 `components/spending/add-spending.ts`.
 
+### Glass and depth (phones)
+
+The phone chat and the nav menu float frosted surfaces over a soft backdrop.
+Tokens live in `index.css` for both themes:
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--glass` | white 62% | `#141516` 55% | Chat summary card, hero tile, suggestion chips, composer pill |
+| `--glass-strong` | white 82% | `#141516` 82% | Nav menu tiles and label pills (read over any page) |
+| `--glass-border` | slate 8% | white 8% | 1px hairline on every glass surface |
+| `--glass-shadow` / `--glass-shadow-lg` | soft slate | deep black | Glass surfaces / the nav button |
+| `--scrim` | slate-50 55% | near-black 55% | Behind the open nav menu, with `backdrop-blur-sm` |
+
+Use the `glass` and `glass-strong` utilities (background, hairline, shadow,
+`backdrop-filter` blur) rather than rebuilding them. Behind the chat,
+`ChatBackdrop` stacks `--empty-wash`, the login waveform (`ContourField`)
+masked to fade at the edges, and a faint centre glow; it is decorative
+(`aria-hidden`, no pointer events). Motion (`animate-rise`, `animate-float`,
+`animate-breathe`, the waveform drift) runs only under `motion-safe`.
+
 ### Buttons
 
 Selected `Toggle` / `ToggleGroup` items use `--primary` / `--primary-foreground`
@@ -91,9 +111,14 @@ overrides height or padding:
 | Default | 36px | 44px | `Button`, `Input`, `InputGroup`, `Toggle` / `ToggleGroup` — toolbars, headers, forms, dialog footers |
 | Compact (`sm`) | 32px | 40px | `Button`, `Toggle` inside dense rows and popovers |
 | Large (`lg`) | 40px | 44px | `Button`, `Toggle` for full-width form actions |
+| Dense (phones only) | — | 36px | `InputGroup size="dense"`, `Toggle` / `ToggleGroup` `dense`, `Button` `icon-dense` — the phone Bills and Insights toolbars |
+| Dense small (phones only) | — | 32px | `Button` `icon-dense-sm` — the phone header's Add spending "+" |
+| Nav button (phones only) | — | 48px | `Button` `icon-fab` (`rounded-2xl`) — the floating nav button |
 
 An input and the button beside it use the same size. Icon buttons use the
-matching `icon` / `icon-sm` / `icon-lg` variant.
+matching `icon` / `icon-sm` / `icon-lg` variant. Dense sizes are fixed (no
+`sm` step) because only phone layouts use them; desktop toolbars keep the
+default scale.
 
 ### Menus
 

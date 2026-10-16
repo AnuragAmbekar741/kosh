@@ -199,13 +199,24 @@ bill divider.
 - **Items** is a stacked list instead of the table: the name, then
   "date · merchant", then the category and item badges, with the amount on the
   right. The table returns from `md`.
+- **Toolbar** is compact: a 36px search field (`flex-1`) and a 36px
+  outline Filters icon button with a dot when any filter is on ("Filters,
+  2 on"). Below it, only when there is something to show, active filters are
+  26px chips (date, each category with its swatch, source; tapping one clears
+  it) that scroll sideways, with the count ("18 bills") right-aligned in
+  muted text. The header's Add spending is a 32px "+" icon button.
 - **Filters** use the bottom sheet, with the safe-area inset below Clear
   filters.
 - **Review** (`ReviewDocumentDialog`) is full screen with no rounding, so
   Save and Discard sit at the bottom within thumb reach above the safe area.
   Review lines wrap long names the same way ledger lines do.
-- Analytics needs no phone changes: stat cards are two up and the charts
-  scale to the width.
+- **Analytics** puts a compact period switch (**Month**, **3 mo**,
+  **Year**, **All**, the date presets) on the left of the toolbar and the
+  Filters icon button on the right; the chips row skips the date unless the
+  switch can't show it (last month, a custom range). Stat cards are two up
+  and the charts scale to the width.
+- Scrolling lists and the Items pager pad their bottom by
+  `--phone-nav-clearance` so the floating nav button never covers a row.
 
 The surface stays flat and monochrome: semantic neutral backgrounds and muted
 fills establish hierarchy. Category badges are the only chromatic marks in
