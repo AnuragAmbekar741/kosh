@@ -28,7 +28,8 @@ the loaded layout. The status is announced as “Opening your workspace.”
 
 | Path                  | Page      | Notes                                                                         |
 | --------------------- | --------- | ----------------------------------------------------------------------------- |
-| `/`                   | Redirect  | Signed-in users go to `/overview` (phones: `/spending/bills`). Guests go to `/login`. |
+| `/`                   | Redirect  | Signed-in users go to `/overview` (phones: `/chat`). Guests go to `/login`. |
+| `/chat`               | Chat      | Phones only: the assistant full screen. Desktop redirects to `/overview` with the panel open. |
 | `/overview`           | Overview  | Empty destination. CTA to Spending. Future totals and breakdowns.             |
 | `/spending`           | Redirect  | Preserves search params and opens Bills.                                      |
 | `/spending/analytics` | Analytics | Charts over the filtered ledger. See [spending.md](./spending.md#analytics). |
@@ -70,7 +71,7 @@ bottom tab bar (`PhoneTabBar`) sits under the page:
 
 | Tab | Goes to | Active when |
 |---|---|---|
-| Chat | Opens the assistant panel above the tab bar | The panel is open |
+| Chat | `/chat` | Chat is open |
 | Bills | `/spending/bills` | Bills or Items is open |
 | Insights | `/spending/analytics` | Analytics is open |
 | You | A bottom sheet: initials, name, email, **Sign out**, and a Light / Dark / System theme switch | The sheet is open |
@@ -80,8 +81,29 @@ with a 20px icon over an 11px label. The active tab is `foreground` and the
 rest are `muted-foreground`; only one is active at a time. Sign out sits in
 the sheet header, not at the bottom, because a double tap on You lands at
 the bottom of the sheet. Page padding drops to 16px. Overview has no tab, so
-phones land on Bills. A full-screen chat page replaces the Chat panel in the
-next step ([agent-plan.md](../product/agent-plan.md#phone-ui-agreed-not-built)).
+phones land on Chat. The loading skeleton drops the sidebar trigger and shows
+the tab bar's shape.
+
+### Phone chat (`/chat`)
+
+The assistant fills the space between the header and the tab bar, edge to
+edge, sharing the desktop panel's state (same open chat, history, and reply
+in flight). The header reads "Kosh", with **Past chats** (↔ **Back to chat**)
+and **New chat** before the bell. There is no floating launcher or panel on
+phones.
+
+Before the first message the thread shows `AgentHome`:
+
+- **Summary card** (`AgentSummaryCard`), a link to Bills filtered to this
+  month: "{Month} so far", the month total (`/spend-items/summary`,
+  `period=month`), the bill count, and "· N to review" when extracted bills are
+  waiting (same inbox query as the bell). Skeleton while loading.
+- A muted line, "Ask about your spending. Answers come from your confirmed
+  bills.", then the three example questions as rounded outline chips that
+  wrap, sitting just above the composer. A chip sends its question.
+
+The composer doesn't take focus on load, so the keyboard stays down until the
+user taps it.
 
 ## Visual rules
 

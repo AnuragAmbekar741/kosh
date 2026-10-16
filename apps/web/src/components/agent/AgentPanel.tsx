@@ -5,55 +5,16 @@ import {
   MessageCircleIcon,
   SquarePenIcon,
   XIcon,
-  type LucideIcon,
 } from "lucide-react"
 import { useEffect, useRef } from "react"
 
 import { AgentComposer } from "@/components/agent/AgentComposer"
+import { AgentHeaderButton } from "@/components/agent/AgentHeaderButton"
 import { AgentHistory } from "@/components/agent/AgentHistory"
 import { AgentThread } from "@/components/agent/AgentThread"
-import { Button } from "@/components/ui/button"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { AGENT_PANEL_ID, useAgentPanel } from "@/hooks/agent/use-agent-panel"
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const
-
-type HeaderButtonProps = {
-  icon: LucideIcon
-  label: string
-  onClick: () => void
-  disabled?: boolean
-}
-
-function HeaderButton({
-  icon: Icon,
-  label,
-  onClick,
-  disabled,
-}: HeaderButtonProps) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label={label}
-            disabled={disabled}
-            onClick={onClick}
-            size="icon-sm"
-            variant="ghost"
-          />
-        }
-      >
-        <Icon />
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
-  )
-}
 
 type AgentPanelProps = {
   onClose: () => void
@@ -74,7 +35,7 @@ export function AgentPanel({ onClose }: AgentPanelProps) {
     <motion.section
       animate={{ opacity: 1, scale: 1, y: 0 }}
       aria-labelledby="agent-panel-title"
-      className="fixed inset-x-0 top-0 bottom-(--phone-tab-bar) z-40 flex flex-col overflow-hidden bg-popover text-sm text-popover-foreground md:inset-auto md:right-6 md:bottom-[4.75rem] md:h-[min(40rem,calc(100svh-6.5rem))] md:w-[25rem] md:origin-bottom-right md:rounded-xl md:shadow-md md:ring-1 md:ring-foreground/10"
+      className="fixed right-6 bottom-[4.75rem] z-40 flex h-[min(40rem,calc(100svh-6.5rem))] w-[25rem] origin-bottom-right flex-col overflow-hidden rounded-xl bg-popover text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10"
       exit={{
         opacity: 0,
         scale: reduceMotion ? 1 : 0.98,
@@ -94,7 +55,7 @@ export function AgentPanel({ onClose }: AgentPanelProps) {
     >
       <header className="flex h-12 shrink-0 items-center gap-1 border-b px-2">
         {view === "history" ? (
-          <HeaderButton
+          <AgentHeaderButton
             icon={ArrowLeftIcon}
             label="Back to chat"
             onClick={() => setView("thread")}
@@ -108,19 +69,19 @@ export function AgentPanel({ onClose }: AgentPanelProps) {
           {view === "history" ? "Chats" : "Assistant"}
         </h2>
         {view === "thread" ? (
-          <HeaderButton
+          <AgentHeaderButton
             icon={HistoryIcon}
             label="Past chats"
             onClick={() => setView("history")}
           />
         ) : null}
-        <HeaderButton
+        <AgentHeaderButton
           disabled={busy}
           icon={SquarePenIcon}
           label="New chat"
           onClick={() => openConversation(null)}
         />
-        <HeaderButton icon={XIcon} label="Close" onClick={onClose} />
+        <AgentHeaderButton icon={XIcon} label="Close" onClick={onClose} />
       </header>
       {view === "history" ? (
         <AgentHistory />

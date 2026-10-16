@@ -48,7 +48,8 @@ export function AppShell() {
               {isPhone ? <PhoneTabBar user={me.data} /> : null}
             </SidebarInset>
           </SidebarProvider>
-          <AgentWidget showLauncher={!isPhone} />
+          {/* Phones chat on /chat instead of the floating panel. */}
+          {isPhone ? null : <AgentWidget />}
           {/* Bottom-right belongs to the assistant launcher. */}
           <Toaster position="top-center" />
         </TooltipProvider>

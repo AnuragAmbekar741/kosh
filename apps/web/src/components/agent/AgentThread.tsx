@@ -1,6 +1,6 @@
 import axios from "axios"
 import { CircleAlertIcon } from "lucide-react"
-import { useEffect } from "react"
+import { useEffect, type ReactNode } from "react"
 
 import type { MessagePublic } from "@/api/agent/agent.types"
 import { AgentEmpty } from "@/components/agent/AgentEmpty"
@@ -71,7 +71,12 @@ function withoutTurnInFlight(messages: MessagePublic[]): MessagePublic[] {
   return index === -1 ? messages : messages.slice(0, index)
 }
 
-export function AgentThread() {
+type AgentThreadProps = {
+  /** Shown when the chat has no messages yet. */
+  empty?: ReactNode
+}
+
+export function AgentThread({ empty = <AgentEmpty /> }: AgentThreadProps) {
   const { conversationId, chat, forgetConversation } = useAgentPanel()
   const conversation = useConversation(conversationId)
   const turn = chat.turn
@@ -94,7 +99,7 @@ export function AgentThread() {
       </div>
     )
   }
-  if (!turn && messages.length === 0) return <AgentEmpty />
+  if (!turn && messages.length === 0) return empty
 
   const last = messages.at(-1)
   const stillRunning =

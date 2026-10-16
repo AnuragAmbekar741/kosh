@@ -9,16 +9,14 @@ controls are the ones in [global.md](./global.md); behaviour behind it is in
 
 - **Launcher:** a primary `Button` (`size="icon-lg"`, MessageCircle icon; X
   while open) fixed bottom-right, 24px from the edges, from `md` (768px) up.
-  Phones have no launcher; the **Chat** tab in the bottom tab bar opens the
-  panel (see [dashboard.md](./dashboard.md#phones)). The panel state lives in
-  `AppShell`, so it exists on every signed-in page and never on login. Square
-  like every icon button; never a pill.
+  Phones have no launcher or panel; they chat on the full-screen `/chat` page
+  (see [dashboard.md](./dashboard.md#phone-chat-chat)). The state lives in
+  `AppShell`, so the panel and the page share one chat, and it exists on every
+  signed-in page and never on login. Square like every icon button; never a pill.
 - **Panel:** a non-modal floating `section` (`role="dialog"`) above the
   launcher, 400px wide and up to 640px tall (`min(40rem, 100svh − 6.5rem)`).
   It uses the incumbent floating-surface treatment from `Popover`:
   `bg-popover`, `ring-1 ring-foreground/10`, `shadow-md`, `rounded-xl`.
-  Below `md` it fills the screen above the tab bar, which stays visible; the
-  header's ✕ or another tab closes it.
 - **Stays open while navigating**, so the user can ask about the page they are
   on. Esc (inside the panel) or ✕ closes it and returns focus to the launcher.
 - **Toasts moved to bottom-center**; bottom-right belongs to the launcher.
