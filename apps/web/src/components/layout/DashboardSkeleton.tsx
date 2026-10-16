@@ -75,12 +75,8 @@ export function DashboardSkeleton() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4 md:p-6">
           <Skeleton className="h-full min-h-0 w-full flex-1 rounded-xl" />
         </div>
-        {/* Phones: the bottom tab bar's shape. */}
-        <div className="flex h-(--phone-tab-bar) shrink-0 items-center justify-around border-t border-border pb-[env(safe-area-inset-bottom)] md:hidden">
-          {["chat", "bills", "insights", "you"].map((tab) => (
-            <Skeleton className="size-6 rounded-md" key={tab} />
-          ))}
-        </div>
+        {/* Phones: the floating nav button's shape. */}
+        <Skeleton className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] size-12 rounded-2xl md:hidden" />
       </SidebarInset>
     </SidebarProvider>
   )
