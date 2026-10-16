@@ -105,6 +105,40 @@ Before the first message the thread shows `AgentHome`:
 The composer doesn't take focus on load, so the keyboard stays down until the
 user taps it.
 
+### Scanning bills (phones)
+
+The phone composer starts with two secondary icon buttons, **Scan a bill**
+(camera, `capture="environment"`, opens the phone's own camera) and **Add
+photos** (up to 5 images or PDFs), then the text box ("Ask a question…").
+Bills and Insights also show a floating camera button (56px, `rounded-2xl`,
+16px above the tab bar); a photo taken there switches to Chat.
+
+A chosen file sends at once; there is no staging step. Images are shrunk in
+the browser (`lib/shrink-image.ts`): long edge at most 2000px, JPEG at 0.85,
+EXIF orientation applied. PDFs, small images, and anything the browser can't
+decode (HEIC outside Safari) go up untouched. Each file uploads as its own
+document through the same queue as the Add documents dialog
+(`useUploads`, `POST /documents`), so the bell tracks it too.
+
+The thread shows each send after the conversation's messages: page
+thumbnails on the right (72×96, `object-cover`; a file tile for PDFs), then
+one status line per page that follows the document:
+
+| State | Line |
+|---|---|
+| Queued or sending | "Uploading {file}…" (shimmer) |
+| Upload failed | The upload error with **Retry** |
+| `uploaded` / `processing` | "Reading your bill…" (shimmer) |
+| `failed` | "Couldn’t read {file}." plus the worker's error |
+| `ready`, needs review | "{merchant} is ready to review" with **Review** (opens the full-screen review) |
+| `ready`, reviewed | "Saved {merchant}" |
+| Deleted | "Discarded {file}" |
+
+Scans live for the session (`useChatScans` in `AppShell`); after a reload
+the bell still has every document. One photo is one bill for now; combining
+pages into one bill, and handing the result to the assistant as a confirm
+card, come with agent phase 2.
+
 ## Visual rules
 
 - Sidebar canvas matches `--background`. The inset panel (and the mobile

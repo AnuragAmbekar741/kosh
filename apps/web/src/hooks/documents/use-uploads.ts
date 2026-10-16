@@ -34,6 +34,8 @@ export type Upload = {
  */
 export function useUploadsState() {
   const [uploads, setUploads] = useState<Upload[]>([])
+  /** Upload key → the document the API created, so callers can follow it. */
+  const [accepted, setAccepted] = useState<Record<string, string>>({})
   const current = useRef<Upload[]>([])
   const draining = useRef(false)
   const upload = useUploadDocument()
@@ -61,10 +63,11 @@ export function useUploadsState() {
         if (!next) break
         patch(next.key, { status: "uploading", error: undefined })
         try {
-          await upload.mutateAsync({
+          const document = await upload.mutateAsync({
             file: next.file,
             idempotencyKey: next.key,
           })
+          setAccepted((current) => ({ ...current, [next.key]: document.id }))
           commit(current.current.filter((item) => item.key !== next.key))
         } catch (error) {
           patch(next.key, {
@@ -78,16 +81,16 @@ export function useUploadsState() {
     }
   }
 
-  function add(files: File[]) {
-    commit([
-      ...current.current,
-      ...files.map((file) => ({
-        key: randomId(),
-        file,
-        status: "waiting" as const,
-      })),
-    ])
+  /** Queues files and returns their keys, in order. */
+  function add(files: File[]): string[] {
+    const added = files.map((file) => ({
+      key: randomId(),
+      file,
+      status: "waiting" as const,
+    }))
+    commit([...current.current, ...added])
     void drain()
+    return added.map((item) => item.key)
   }
 
   function retry(key: string) {
@@ -115,7 +118,7 @@ export function useUploadsState() {
     return () => window.removeEventListener("beforeunload", warn)
   }, [sending])
 
-  return { uploads, sending, add, retry, remove }
+  return { uploads, accepted, sending, add, retry, remove }
 }
 
 export type UploadsState = ReturnType<typeof useUploadsState>
