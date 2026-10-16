@@ -24,7 +24,7 @@ export function DashboardSkeleton() {
     <SidebarProvider
       aria-busy="true"
       aria-label="Opening your workspace"
-      className="h-svh overflow-hidden"
+      className="h-dvh overflow-hidden"
       defaultOpen={readSidebarOpen()}
       role="status"
     >
@@ -66,14 +66,20 @@ export function DashboardSkeleton() {
           </div>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="max-h-svh min-h-0 overflow-hidden bg-card md:max-h-[calc(100svh-1rem)] md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border">
+      <SidebarInset className="max-h-dvh min-h-0 overflow-hidden bg-card md:max-h-[calc(100dvh-1rem)] md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-border">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-4">
-          <Skeleton className="size-11 md:size-8" />
-          <Separator orientation="vertical" />
+          <Skeleton className="size-8 max-md:hidden" />
+          <Separator className="max-md:hidden" orientation="vertical" />
           <Skeleton className="h-4 w-20" />
         </header>
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pt-6 pb-6">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4 md:p-6">
           <Skeleton className="h-full min-h-0 w-full flex-1 rounded-xl" />
+        </div>
+        {/* Phones: the bottom tab bar's shape. */}
+        <div className="flex h-(--phone-tab-bar) shrink-0 items-center justify-around border-t border-border pb-[env(safe-area-inset-bottom)] md:hidden">
+          {["chat", "bills", "insights", "you"].map((tab) => (
+            <Skeleton className="size-6 rounded-md" key={tab} />
+          ))}
         </div>
       </SidebarInset>
     </SidebarProvider>

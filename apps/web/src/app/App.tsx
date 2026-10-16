@@ -9,14 +9,15 @@ import {
 import { AppShell } from "@/components/layout/AppShell"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { AuthPage } from "@/pages/auth/AuthPage"
+import { ChatPage } from "@/pages/chat/ChatPage"
 import { OverviewPage } from "@/pages/overview/OverviewPage"
 import { AnalyticsPage } from "@/pages/spending/AnalyticsPage"
 import { SpendingPage } from "@/pages/spending/SpendingPage"
 
-/** Phones have no Overview tab, so they land on Bills. */
+/** Phones land on chat; Overview has no tab there. */
 function HomeRedirect() {
   const isPhone = useIsMobile()
-  return <Navigate replace to={isPhone ? "/spending/bills" : "/overview"} />
+  return <Navigate replace to={isPhone ? "/chat" : "/overview"} />
 }
 
 function SpendingRedirect({
@@ -50,6 +51,7 @@ export function App() {
         <Route element={<AppShell />}>
           <Route element={<HomeRedirect />} path="/" />
           <Route element={<OverviewPage />} path="/overview" />
+          <Route element={<ChatPage />} path="/chat" />
           <Route path="/spending">
             <Route element={<SpendingRedirect />} index />
             <Route element={<AnalyticsPage />} path="analytics" />

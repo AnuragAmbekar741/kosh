@@ -7,6 +7,7 @@ import {
   navChildTarget,
   type NavItem,
 } from "@/components/layout/navigation/navigation"
+import { AgentChatActions } from "@/components/agent/AgentChatActions"
 import { NotificationCenter } from "@/components/notifications/NotificationCenter"
 import { AddSpendingDialog } from "@/components/spending/AddSpendingDialog"
 import { Button } from "@/components/ui/button"
@@ -96,6 +97,7 @@ export function AppHeader() {
       )}
       <div className="ml-auto flex items-center gap-2">
         {pathname.startsWith("/spending/") ? <AddSpendingDialog /> : null}
+        {pathname === "/chat" ? <AgentChatActions /> : null}
         <NotificationCenter />
       </div>
     </header>

@@ -5,17 +5,12 @@ import { AgentLauncher } from "@/components/agent/AgentLauncher"
 import { AgentPanel } from "@/components/agent/AgentPanel"
 import { useAgentPanel } from "@/hooks/agent/use-agent-panel"
 
-type AgentWidgetProps = {
-  /** Phones open the panel from the Chat tab instead. */
-  showLauncher: boolean
-}
-
 /**
  * The assistant on every signed-in page: a launcher bottom-right and a
  * floating, non-modal panel. Its state lives in AppShell, so a reply keeps
  * streaming while the panel is closed or the user changes page.
  */
-export function AgentWidget({ showLauncher }: AgentWidgetProps) {
+export function AgentWidget() {
   const state = useAgentPanel()
   const launcherRef = useRef<HTMLButtonElement>(null)
 
@@ -29,13 +24,11 @@ export function AgentWidget({ showLauncher }: AgentWidgetProps) {
       <AnimatePresence>
         {state.open ? <AgentPanel onClose={close} /> : null}
       </AnimatePresence>
-      {showLauncher ? (
-        <AgentLauncher
-          buttonRef={launcherRef}
-          onToggle={() => (state.open ? close() : state.setOpen(true))}
-          open={state.open}
-        />
-      ) : null}
+      <AgentLauncher
+        buttonRef={launcherRef}
+        onToggle={() => (state.open ? close() : state.setOpen(true))}
+        open={state.open}
+      />
     </>
   )
 }
