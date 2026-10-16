@@ -123,8 +123,8 @@ The model can only **propose** a write. Confirmation is enforced by code, not by
 1. The model calls a `write` or `destructive` tool.
 2. The runtime validates the arguments and inserts an `agent_pending_actions` row: tool name, exact arguments, a human summary ("Delete 12 Starbucks items · ₹870"), `pending`, `expires_at` = now + 15 min.
 3. The model gets `{"status": "pending_confirmation"}` and tells the user to confirm; the UI shows a card from `summary`.
-4. `POST /agent/actions/{id}/confirm` checks owner, `pending`, not expired; runs the stored tool with the stored arguments through the same service; records `result`, `confirmed`, `decided_at`; appends a templated assistant message. **No model call.**
-5. `POST /agent/actions/{id}/cancel` → `cancelled`. Unanswered → `expired`. Nothing changes.
+4. `POST /agent/actions/{id}/confirm` claims the action with one `UPDATE … WHERE status = 'pending' AND expires_at > now AND user_id = …` (`crud.agent.claim_action`), so a double-tapped Confirm runs it once. The winner runs the stored tool with the stored arguments through the same service, then records `result` (`record_action_result`; a failure sets `failed`) and appends a templated assistant message. **No model call.**
+5. `POST /agent/actions/{id}/cancel` → `cancelled` (same guarded UPDATE). Unanswered → `expired`, either by `expire_actions` or because claim and cancel refuse anything past `expires_at`. Nothing changes.
 
 What the user approves is exactly what runs, an injected instruction can at most produce a card the user cancels, and the card survives reloads (on WhatsApp it becomes reply buttons).
 
@@ -167,7 +167,7 @@ Every run records tokens and cost, so spend per user per day is one query on `ag
 
 ## 10. Database
 
-Four tables in `packages/storage/models/agent.py`. Phase 1 needs the first three.
+Four tables in `packages/storage/models/agent.py`. Phase 1 uses the first three; `agent_pending_actions` exists from phase 2 (migration `f1714bb611c5`).
 
 ```
 agent_conversations
@@ -201,7 +201,7 @@ agent_runs                             one per user turn
   feedback        smallint null        -1 | 1
   started_at, finished_at
 
-agent_pending_actions                  phase 2
+agent_pending_actions                  phase 2; read per conversation by joining runs
   id              uuid pk
   run_id          uuid fk
   user_id         uuid fk              index

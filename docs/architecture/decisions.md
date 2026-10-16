@@ -468,3 +468,10 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Chat only, with lists and charts as cards (browsing bills in a thread is slow); keeping today's pages with chat as one more tab (adding a bill stays several taps away); auto-saving scans and flagging only doubtful ones (breaks the "no write without a click" rule from the agent design).
 - Why: The friction is getting a bill from the phone into the ledger. Snap, check, and save in one thread removes the laptop step, and the tabs keep browsing usable.
 - Revisit when: Users want to customise the home summary card or the tabs (deferred), or WhatsApp becomes the main way bills are added.
+
+**Confirming a pending action claims it with one guarded UPDATE before running it**
+
+- Chosen: `claim_action` sets `status = confirmed` with `WHERE id, user_id, status = pending, expires_at > now`; only a caller that changed exactly one row runs the tool. `cancel_action` uses the same guard. `expire_actions` marks stale rows, but claim and cancel never depend on it having run.
+- Rejected: Reading the row, checking it in Python, then running (two taps or two tabs both pass the check and the bill saves twice); a row lock held while the tool runs (holds a transaction open across the write and its blob work).
+- Why: What the user approves must run at most once, without a lock held for the length of the tool call.
+- Revisit when: A tool needs to be retried after failing; today a failed action stays `failed` and the model proposes a new one.

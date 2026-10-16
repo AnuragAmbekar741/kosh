@@ -26,6 +26,14 @@ class RunStatus(StrEnum):
     FAILED = "failed"
 
 
+class ActionStatus(StrEnum):
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    CANCELLED = "cancelled"
+    EXPIRED = "expired"
+    FAILED = "failed"
+
+
 class AgentConversation(SQLModel, table=True):
     __tablename__ = "agent_conversations"
     __table_args__ = (
@@ -88,3 +96,24 @@ class AgentMessage(SQLModel, table=True):
         default=None, sa_column=Column(_JSON, nullable=True)
     )
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class AgentPendingAction(SQLModel, table=True):
+    """A write the model proposed; only the user's confirm runs it.
+
+    `arguments` are validated before insert and are exactly what confirm runs.
+    """
+
+    __tablename__ = "agent_pending_actions"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    run_id: UUID = Field(foreign_key="agent_runs.id", index=True)
+    user_id: UUID = Field(foreign_key="users.id", index=True)
+    tool_name: str
+    arguments: dict = Field(sa_column=Column(_JSON, nullable=False))
+    summary: str
+    status: str = ActionStatus.PENDING
+    result: dict | None = Field(default=None, sa_column=Column(_JSON, nullable=True))
+    expires_at: datetime
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    decided_at: datetime | None = None

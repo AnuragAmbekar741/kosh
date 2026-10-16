@@ -1,21 +1,23 @@
-"""Agent conversations, messages and runs.
+"""Agent conversations, messages, runs and pending actions.
 
 Functions that take a `conversation_id` without a `user_id` trust the caller
 to have loaded the conversation with `get_conversation` first.
 """
 
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import func
+from sqlalchemy import func, update
 from sqlmodel import Session, col, select
 
 from storage.models.agent import (
+    ActionStatus,
     AgentChannel,
     AgentConversation,
     AgentMessage,
+    AgentPendingAction,
     AgentRun,
     MessageRole,
     RunStatus,
@@ -23,19 +25,29 @@ from storage.models.agent import (
 from storage.pagination import paginate
 
 __all__ = [
+    "ACTION_TTL",
     "active_run",
     "append_messages",
+    "cancel_action",
     "chat_message",
+    "claim_action",
     "count_runs_since",
+    "create_action",
     "create_conversation",
+    "expire_actions",
     "finish_run",
+    "get_action",
     "get_conversation",
     "history",
+    "list_actions",
     "list_conversations_page",
     "list_messages",
     "list_runs",
+    "record_action_result",
     "start_turn",
 ]
+
+ACTION_TTL = timedelta(minutes=15)
 
 _TITLE_CHARS = 80
 
@@ -247,3 +259,133 @@ def _next_seq(session: Session, conversation_id: UUID) -> int:
         )
     ).one()
     return (current or 0) + 1
+
+
+def create_action(
+    session: Session,
+    *,
+    run: AgentRun,
+    tool_name: str,
+    arguments: dict[str, Any],
+    summary: str,
+    now: datetime | None = None,
+) -> AgentPendingAction:
+    """A write the model proposed, waiting for the user. Expires after `ACTION_TTL`."""
+    now = now or datetime.now(UTC)
+    action = AgentPendingAction(
+        run_id=run.id,
+        user_id=run.user_id,
+        tool_name=tool_name,
+        arguments=arguments,
+        summary=summary,
+        created_at=now,
+        expires_at=now + ACTION_TTL,
+    )
+    session.add(action)
+    session.commit()
+    session.refresh(action)
+    return action
+
+
+def get_action(
+    session: Session, *, user_id: UUID, action_id: UUID
+) -> AgentPendingAction | None:
+    action = session.get(AgentPendingAction, action_id)
+    if action is None or action.user_id != user_id:
+        return None
+    return action
+
+
+def claim_action(
+    session: Session, *, user_id: UUID, action_id: UUID, now: datetime | None = None
+) -> AgentPendingAction | None:
+    """Move a live pending action to `confirmed` in one UPDATE.
+
+    Only one caller can win, so a double-tapped Confirm runs the action once.
+    None when it is someone else's, already decided, or expired. The caller
+    then runs the stored tool and saves the outcome with `record_action_result`.
+    """
+    return _decide(session, user_id, action_id, ActionStatus.CONFIRMED, now)
+
+
+def cancel_action(
+    session: Session, *, user_id: UUID, action_id: UUID, now: datetime | None = None
+) -> AgentPendingAction | None:
+    """Pending → cancelled; None when it can no longer be cancelled."""
+    return _decide(session, user_id, action_id, ActionStatus.CANCELLED, now)
+
+
+def record_action_result(
+    session: Session,
+    action: AgentPendingAction,
+    *,
+    result: dict[str, Any],
+    failed: bool = False,
+) -> AgentPendingAction:
+    """Save what running a claimed action did; a failure marks it `failed`."""
+    action.result = result
+    if failed:
+        action.status = ActionStatus.FAILED
+    session.add(action)
+    session.commit()
+    session.refresh(action)
+    return action
+
+
+def expire_actions(session: Session, *, now: datetime | None = None) -> int:
+    """Mark pending actions past `expires_at` as expired; returns how many."""
+    now = now or datetime.now(UTC)
+    result = session.exec(
+        update(AgentPendingAction)
+        .where(
+            col(AgentPendingAction.status) == ActionStatus.PENDING,
+            col(AgentPendingAction.expires_at) <= now,
+        )
+        .values(status=ActionStatus.EXPIRED, decided_at=now)
+        .execution_options(synchronize_session=False)
+    )
+    session.commit()
+    return result.rowcount
+
+
+def list_actions(
+    session: Session, *, conversation_id: UUID
+) -> list[AgentPendingAction]:
+    """A conversation's actions, oldest first, so cards survive a reload."""
+    return list(
+        session.exec(
+            select(AgentPendingAction)
+            .join(AgentRun, col(AgentRun.id) == col(AgentPendingAction.run_id))
+            .where(AgentRun.conversation_id == conversation_id)
+            .order_by(col(AgentPendingAction.created_at))
+        ).all()
+    )
+
+
+def _decide(
+    session: Session,
+    user_id: UUID,
+    action_id: UUID,
+    status: ActionStatus,
+    now: datetime | None,
+) -> AgentPendingAction | None:
+    now = now or datetime.now(UTC)
+    result = session.exec(
+        update(AgentPendingAction)
+        .where(
+            col(AgentPendingAction.id) == action_id,
+            col(AgentPendingAction.user_id) == user_id,
+            col(AgentPendingAction.status) == ActionStatus.PENDING,
+            col(AgentPendingAction.expires_at) > now,
+        )
+        .values(status=status, decided_at=now)
+        # Loaded rows are refreshed below; don't evaluate the WHERE in Python.
+        .execution_options(synchronize_session=False)
+    )
+    session.commit()
+    if result.rowcount != 1:
+        return None
+    action = session.get(AgentPendingAction, action_id)
+    if action is not None:
+        session.refresh(action)
+    return action

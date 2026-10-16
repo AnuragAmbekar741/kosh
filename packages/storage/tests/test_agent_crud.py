@@ -5,7 +5,13 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from storage.crud import agent
-from storage.models import AgentMessage, MessageRole, RunStatus, User
+from storage.models import (
+    ActionStatus,
+    AgentMessage,
+    MessageRole,
+    RunStatus,
+    User,
+)
 
 
 def _user(session: Session) -> User:
@@ -207,3 +213,102 @@ def test_active_run_ignores_finished_and_stale_runs(session: Session) -> None:
     assert [
         r.id for r in agent.list_runs(session, conversation_id=conversation.id)
     ] == [run.id]
+
+
+# Pending actions
+
+
+def _action(session, *, now=None):
+    owner = _user(session)
+    conversation = agent.create_conversation(session, user_id=owner.id)
+    _, run = _turn(session, conversation)
+    action = agent.create_action(
+        session,
+        run=run,
+        tool_name="confirm_document",
+        arguments={"document_id": "d1"},
+        summary="Save Toit Brewpub · ₹1,710",
+        now=now,
+    )
+    return owner, conversation, action
+
+
+def test_action_starts_pending_and_expires_after_ttl(session: Session) -> None:
+    now = datetime.now(UTC)
+    owner, _, action = _action(session, now=now)
+    assert action.status == ActionStatus.PENDING
+    assert action.user_id == owner.id
+    assert action.arguments == {"document_id": "d1"}
+    assert action.expires_at - action.created_at == agent.ACTION_TTL
+
+
+def test_action_is_owner_scoped(session: Session) -> None:
+    owner, _, action = _action(session)
+    other = _user(session)
+    assert agent.get_action(session, user_id=owner.id, action_id=action.id)
+    assert agent.get_action(session, user_id=other.id, action_id=action.id) is None
+    assert agent.claim_action(session, user_id=other.id, action_id=action.id) is None
+    assert agent.cancel_action(session, user_id=other.id, action_id=action.id) is None
+
+
+def test_claim_wins_once(session: Session) -> None:
+    owner, _, action = _action(session)
+    first = agent.claim_action(session, user_id=owner.id, action_id=action.id)
+    assert first is not None
+    assert first.status == ActionStatus.CONFIRMED
+    assert first.decided_at is not None
+    # A double-tapped Confirm, or a cancel after it, changes nothing.
+    assert agent.claim_action(session, user_id=owner.id, action_id=action.id) is None
+    assert agent.cancel_action(session, user_id=owner.id, action_id=action.id) is None
+
+
+def test_cancelled_action_cannot_be_claimed(session: Session) -> None:
+    owner, _, action = _action(session)
+    cancelled = agent.cancel_action(session, user_id=owner.id, action_id=action.id)
+    assert cancelled is not None
+    assert cancelled.status == ActionStatus.CANCELLED
+    assert agent.claim_action(session, user_id=owner.id, action_id=action.id) is None
+
+
+def test_expired_action_cannot_be_claimed(session: Session) -> None:
+    created = datetime.now(UTC) - agent.ACTION_TTL - timedelta(seconds=1)
+    owner, _, action = _action(session, now=created)
+    assert agent.claim_action(session, user_id=owner.id, action_id=action.id) is None
+    assert agent.expire_actions(session) == 1
+    session.refresh(action)
+    assert action.status == ActionStatus.EXPIRED
+    assert agent.expire_actions(session) == 0
+
+
+def test_record_result_and_failure(session: Session) -> None:
+    owner, _, action = _action(session)
+    claimed = agent.claim_action(session, user_id=owner.id, action_id=action.id)
+    assert claimed is not None
+    done = agent.record_action_result(session, claimed, result={"saved": 3})
+    assert done.status == ActionStatus.CONFIRMED
+    assert done.result == {"saved": 3}
+
+    owner2, _, action2 = _action(session)
+    claimed2 = agent.claim_action(session, user_id=owner2.id, action_id=action2.id)
+    assert claimed2 is not None
+    failed = agent.record_action_result(
+        session, claimed2, result={"error": "gone"}, failed=True
+    )
+    assert failed.status == ActionStatus.FAILED
+
+
+def test_list_actions_by_conversation_in_order(session: Session) -> None:
+    _, conversation, first = _action(session)
+    _, run = _turn(session, conversation, "again")
+    second = agent.create_action(
+        session,
+        run=run,
+        tool_name="confirm_document",
+        arguments={"document_id": "d2"},
+        summary="Save DMart",
+        now=datetime.now(UTC) + timedelta(seconds=1),
+    )
+    _, other_conversation, _ = _action(session)
+    listed = agent.list_actions(session, conversation_id=conversation.id)
+    assert [a.id for a in listed] == [first.id, second.id]
+    assert agent.list_actions(session, conversation_id=other_conversation.id) != listed
