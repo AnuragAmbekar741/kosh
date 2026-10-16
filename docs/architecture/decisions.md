@@ -461,3 +461,10 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Rejected: Reading the bill date only from `Document` (every query and analytic is already line-based); patching each line from the browser (empty bills have no lines, and N requests can half-apply).
 - Why: An empty manual bill needs somewhere to keep the chosen date, and one endpoint keeps a bill's lines on a single date.
 - Revisit when: Bills get other bill-level fields (merchant, currency, notes) that should also live on the document.
+
+**On phones, chat is the home screen and the other pages sit in a bottom tab bar**
+
+- Chosen: Below 768px, `/chat` is home, with tabs for Chat, Bills, Insights, and You. Camera and gallery buttons sit in the composer, and a floating camera button on the other tabs drops the photo into chat. A scanned bill is saved only from a confirm card in the thread. Desktop keeps the sidebar and the floating panel.
+- Rejected: Chat only, with lists and charts as cards (browsing bills in a thread is slow); keeping today's pages with chat as one more tab (adding a bill stays several taps away); auto-saving scans and flagging only doubtful ones (breaks the "no write without a click" rule from the agent design).
+- Why: The friction is getting a bill from the phone into the ledger. Snap, check, and save in one thread removes the laptop step, and the tabs keep browsing usable.
+- Revisit when: Users want to customise the home summary card or the tabs (deferred), or WhatsApp becomes the main way bills are added.

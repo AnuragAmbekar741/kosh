@@ -12,6 +12,8 @@ export default defineConfig({
     },
   },
   server: {
+    // Tailscale HTTPS (`tailscale serve`) for testing on a phone.
+    allowedHosts: [".ts.net"],
     proxy: {
       "/agent": "http://127.0.0.1:8000",
       "/health": "http://127.0.0.1:8000",

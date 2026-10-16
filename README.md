@@ -60,6 +60,17 @@ make web      # Vite dev server on http://localhost:5173
 
 Uploads are accepted by the API alone, but only the worker processes them: it sends document contents to the extraction provider configured in `.env`.
 
+### On your phone
+
+```bash
+make dev-phone   # same as make dev, but Vite listens on your network
+```
+
+`dev:phone` clears `VITE_API_URL`, so the phone calls the API through the Vite proxy on the same address. The API stays on `127.0.0.1`.
+
+- **Same Wi-Fi:** open `http://<your-mac-ip>:5173` on the phone (`ipconfig getifaddr en0` prints the IP). Sign in with email and password, since Google sign-in only works on `localhost` or HTTPS. Keep `COOKIE_SECURE` unset (it defaults to off) so the refresh cookie works over http. The camera and photo picker work here.
+- **HTTPS, anywhere (Tailscale):** install Tailscale on the Mac and the phone, sign both in to the same tailnet, then run `tailscale serve --bg 5173`. Open the printed `https://<mac>.<tailnet>.ts.net` address on the phone. Only your own devices can reach it. Over HTTPS, Google sign-in also works once that address is added to the Google client's authorised JavaScript origins, and so does Add to Home Screen. `tailscale serve --https=443 off` stops it.
+
 ## Test
 
 ```bash
