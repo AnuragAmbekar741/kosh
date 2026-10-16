@@ -317,7 +317,10 @@ function MobileFilterSheet() {
           </Button>
         }
       />
-      <SheetContent className="max-h-[85dvh] overflow-y-auto" side="bottom">
+      <SheetContent
+        className="max-h-[85dvh] overflow-y-auto pb-[env(safe-area-inset-bottom)]"
+        side="bottom"
+      >
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
           <SheetDescription>

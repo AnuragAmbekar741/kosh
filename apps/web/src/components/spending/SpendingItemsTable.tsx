@@ -24,6 +24,31 @@ function itemName(item: SpendItem) {
   return item.description || item.merchant
 }
 
+type ItemListRowProps = {
+  item: SpendItem
+}
+
+/** Phones: one stacked row per item instead of eight table columns. */
+function ItemListRow({ item }: ItemListRowProps) {
+  return (
+    <li className="flex items-start gap-3 px-4 py-3 not-first:border-t">
+      <div className="grid min-w-0 flex-1 gap-1">
+        <span className="truncate font-medium">{itemName(item)}</span>
+        <span className="truncate text-xs text-muted-foreground">
+          {formatDate(item.spent_at)} · {item.merchant}
+        </span>
+        <span className="flex flex-wrap items-center gap-1.5">
+          {item.category ? <CategoryBadge category={item.category} /> : null}
+          {item.item_status === "none" ? null : <ItemBadge item={item} />}
+        </span>
+      </div>
+      <span className="shrink-0 text-sm tabular-nums">
+        {formatMoney(item.amount, item.currency)}
+      </span>
+    </li>
+  )
+}
+
 export function SpendingItemsTable({
   items,
   page,
@@ -32,59 +57,66 @@ export function SpendingItemsTable({
   const offset = (page - 1) * pageSize
 
   return (
-    <div className="no-scrollbar min-h-0 shrink scroll-fade-y overflow-auto rounded-xl border [&>[data-slot=table-container]]:overflow-visible">
-      <Table>
-        <TableHeader className="sticky top-0 z-10 bg-background">
-          <TableRow>
-            <TableHead className="w-12 text-right">#</TableHead>
-            <TableHead aria-sort="descending">Date</TableHead>
-            <TableHead>Item</TableHead>
-            <TableHead>Product</TableHead>
-            <TableHead>Merchant</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Source</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((item, index) => (
-            <TableRow key={item.id}>
-              <TableCell className="w-12 text-right text-xs text-muted-foreground tabular-nums">
-                {offset + index + 1}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatDate(item.spent_at)}
-              </TableCell>
-              <TableCell className="max-w-48 truncate font-medium">
-                {itemName(item)}
-              </TableCell>
-              <TableCell>
-                {item.item_status === "none" ? (
-                  <span className="text-muted-foreground">—</span>
-                ) : (
-                  <ItemBadge item={item} />
-                )}
-              </TableCell>
-              <TableCell className="max-w-40 truncate">
-                {item.merchant}
-              </TableCell>
-              <TableCell>
-                {item.category ? (
-                  <CategoryBadge category={item.category} />
-                ) : (
-                  <span className="text-muted-foreground">—</span>
-                )}
-              </TableCell>
-              <TableCell>
-                {item.source === "manual" ? "Manual entry" : "Document"}
-              </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {formatMoney(item.amount, item.currency)}
-              </TableCell>
+    <>
+      <ul className="no-scrollbar min-h-0 shrink scroll-fade-y overflow-auto rounded-xl border md:hidden">
+        {items.map((item) => (
+          <ItemListRow item={item} key={item.id} />
+        ))}
+      </ul>
+      <div className="no-scrollbar min-h-0 shrink scroll-fade-y overflow-auto rounded-xl border max-md:hidden [&>[data-slot=table-container]]:overflow-visible">
+        <Table>
+          <TableHeader className="sticky top-0 z-10 bg-background">
+            <TableRow>
+              <TableHead className="w-12 text-right">#</TableHead>
+              <TableHead aria-sort="descending">Date</TableHead>
+              <TableHead>Item</TableHead>
+              <TableHead>Product</TableHead>
+              <TableHead>Merchant</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Source</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {items.map((item, index) => (
+              <TableRow key={item.id}>
+                <TableCell className="w-12 text-right text-xs text-muted-foreground tabular-nums">
+                  {offset + index + 1}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatDate(item.spent_at)}
+                </TableCell>
+                <TableCell className="max-w-48 truncate font-medium">
+                  {itemName(item)}
+                </TableCell>
+                <TableCell>
+                  {item.item_status === "none" ? (
+                    <span className="text-muted-foreground">—</span>
+                  ) : (
+                    <ItemBadge item={item} />
+                  )}
+                </TableCell>
+                <TableCell className="max-w-40 truncate">
+                  {item.merchant}
+                </TableCell>
+                <TableCell>
+                  {item.category ? (
+                    <CategoryBadge category={item.category} />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {item.source === "manual" ? "Manual entry" : "Document"}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {formatMoney(item.amount, item.currency)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   )
 }
