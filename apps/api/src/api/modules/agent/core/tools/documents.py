@@ -1,4 +1,4 @@
-"""Document tools: the user's bills and the draft lines waiting for review."""
+"""Document tools: the user's bills, their draft lines, and proposing to save one."""
 
 from collections import defaultdict
 from decimal import Decimal
@@ -7,9 +7,18 @@ from uuid import UUID
 
 from pydantic import Field
 
-from api.modules.agent.core.tools.base import LINE_FIELDS, Args, Tool, ToolContext
+from api.common.errors import DocumentNotReadyError, NoDraftsToConfirmError
+from api.modules.agent.core.tools.base import (
+    LINE_FIELDS,
+    Args,
+    Tool,
+    ToolContext,
+    ToolRefused,
+)
 from api.modules.documents import presenter as document_presenter
 from api.modules.documents import service as documents
+from api.modules.documents.services.confirm import check_confirmable
+from api.modules.documents.services.duplicates import find_duplicates
 
 __all__ = ["TOOLS", "DocumentArgs", "DocumentsArgs"]
 
@@ -52,6 +61,37 @@ def _get_document(ctx: ToolContext, args: DocumentArgs) -> dict[str, Any]:
     return data
 
 
+def _confirm_document(ctx: ToolContext, args: DocumentArgs) -> dict[str, Any]:
+    """Check the bill could be saved and describe its card. Saves nothing."""
+    try:
+        drafts = check_confirmable(
+            ctx.session, user_id=ctx.user_id, document_id=args.document_id
+        )
+    except DocumentNotReadyError:
+        raise ToolRefused(
+            "this bill is still being read or could not be read"
+        ) from None
+    except NoDraftsToConfirmError:
+        raise ToolRefused("this bill has no lines waiting to be saved") from None
+    document = documents.get(ctx.session, ctx.user_id, args.document_id)
+    totals: dict[str, Decimal] = defaultdict(Decimal)
+    for draft in drafts:
+        totals[draft.currency] += draft.amount
+    duplicates = find_duplicates(
+        ctx.session, user_id=ctx.user_id, document=document, drafts=drafts
+    )
+    first = drafts[0]
+    return {
+        "kind": "review_document",
+        "document_id": str(document.id),
+        "merchant": first.merchant,
+        "spent_at": first.spent_at.isoformat(),
+        "line_count": len(drafts),
+        "totals": {currency: str(t) for currency, t in totals.items()},
+        "possible_duplicates": len(duplicates),
+    }
+
+
 TOOLS: dict[str, Tool] = {
     "list_documents": Tool(
         "The user's uploaded bills and manual bills, newest first, with "
@@ -64,5 +104,13 @@ TOOLS: dict[str, Tool] = {
         "their total per currency.",
         DocumentArgs,
         _get_document,
+    ),
+    "confirm_document": Tool(
+        "Offer to save a bill the user attached, once you have read it with "
+        "get_document. This does not save it: the user sees a card with the "
+        "lines and total and saves it with one tap. Use it once per bill.",
+        DocumentArgs,
+        _confirm_document,
+        risk="write",
     ),
 }
