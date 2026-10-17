@@ -50,6 +50,9 @@ class Bill(_Strict):
     date: date
     currency: str = "USD"
     status: Literal["ready", "processing", "failed"] = "ready"
+    error: str | None = Field(
+        default=None, description="What the worker said, for failed bills."
+    )
     lines: list[BillLine] = Field(default_factory=list)
 
 
