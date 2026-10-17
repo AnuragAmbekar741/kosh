@@ -8,6 +8,7 @@ from ai import (
     ExtractError,
     ExtractMeta,
     LineItem,
+    NotABill,
     ReceiptExtraction,
     RetryableExtractError,
     StatementExtraction,
@@ -1344,3 +1345,25 @@ def test_merchant_key() -> None:
     assert merchant_key("TRADER JOE'S #552") == "trader joes 552"
     assert merchant_key("  Trader Joes ") == "trader joes"
     assert merchant_key("***") == ""
+
+
+def test_a_photo_that_is_not_a_bill_fails_without_drafts(client, monkeypatch) -> None:
+    headers = _auth(client)
+    document_id = _process(
+        client,
+        monkeypatch,
+        headers,
+        NotABill(document_kind="not_a_bill", reason="a photo of a dog"),
+    )
+    document = client.get(f"/documents/{document_id}", headers=headers).json()
+    assert document["status"] == "failed"
+    assert document["error"] == "This doesn't look like a bill: a photo of a dog"
+    assert document["drafts"] == []
+    assert document["needs_review"] is False
+    with Session(database.engine) as session:
+        (attempt,) = list_extraction_attempts(session, UUID(document_id))
+        assert attempt.payload == {
+            "document_kind": "not_a_bill",
+            "reason": "a photo of a dog",
+        }
+        assert attempt.prompt_tokens == 1
