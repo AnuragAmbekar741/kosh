@@ -70,6 +70,7 @@ make dev-phone   # same as make dev, but Vite listens on your network
 
 - **Same Wi-Fi:** open `http://<your-mac-ip>:5173` on the phone (`ipconfig getifaddr en0` prints the IP). Sign in with email and password, since Google sign-in only works on `localhost` or HTTPS. Keep `COOKIE_SECURE` unset (it defaults to off) so the refresh cookie works over http. The camera and photo picker work here.
 - **HTTPS, anywhere (Tailscale):** install Tailscale on the Mac and the phone, sign both in to the same tailnet, then run `tailscale serve --bg 5173`. Open the printed `https://<mac>.<tailnet>.ts.net` address on the phone. Only your own devices can reach it. Over HTTPS, Google sign-in also works once that address is added to the Google client's authorised JavaScript origins, and so does Add to Home Screen. `tailscale serve --https=443 off` stops it.
+- **Install it (home screen):** over the HTTPS address, Android Chrome: menu → **Install app** (or **Add to Home screen**); iPhone Safari: Share → **Add to Home Screen**. Kosh then opens full screen with its own icon, and the status bar follows the app's theme. Over plain `http://<ip>` the phone only adds a bookmark that opens in the browser.
 
 ## Test
 
