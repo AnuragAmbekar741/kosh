@@ -1,11 +1,14 @@
 import Markdown from "react-markdown"
 
+import { AgentAttachments } from "@/components/agent/AgentAttachments"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
 import { Message, MessageContent } from "@/components/ui/message"
 
 type AgentMessageProps = {
   role: "user" | "assistant"
   content: string
+  /** Bills attached to a user message. */
+  documentIds?: string[]
 }
 
 // Replies may use bold and lists. Raw HTML is never rendered; anything else
@@ -22,16 +25,26 @@ const REPLY_ELEMENTS = [
   "br",
 ]
 
-export function AgentMessage({ role, content }: AgentMessageProps) {
+export function AgentMessage({
+  role,
+  content,
+  documentIds = [],
+}: AgentMessageProps) {
   if (role === "user") {
     return (
       <Message align="end">
-        <MessageContent>
-          <Bubble align="end" variant="secondary">
-            <BubbleContent className="whitespace-pre-wrap">
-              {content}
-            </BubbleContent>
-          </Bubble>
+        <MessageContent className="items-end gap-2">
+          {documentIds.length ? (
+            <AgentAttachments documentIds={documentIds} />
+          ) : null}
+          {/* A photo sent on its own has no text bubble. */}
+          {content ? (
+            <Bubble align="end" variant="secondary">
+              <BubbleContent className="whitespace-pre-wrap">
+                {content}
+              </BubbleContent>
+            </Bubble>
+          ) : null}
         </MessageContent>
       </Message>
     )

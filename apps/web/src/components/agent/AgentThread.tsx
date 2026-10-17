@@ -6,7 +6,11 @@ import type { MessagePublic } from "@/api/agent/agent.types"
 import { AgentBillCard } from "@/components/agent/AgentBillCard"
 import { AgentEmpty } from "@/components/agent/AgentEmpty"
 import { AgentMessage } from "@/components/agent/AgentMessage"
-import { FAILED_REPLY, toolLabel } from "@/components/agent/agent-copy"
+import {
+  FAILED_REPLY,
+  READING_BILLS,
+  toolLabel,
+} from "@/components/agent/agent-copy"
 import { Button } from "@/components/ui/button"
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker"
 import {
@@ -47,6 +51,13 @@ function Working({ label }: { label: string }) {
     <Marker aria-live="polite">
       <MarkerContent className="shimmer">{label}…</MarkerContent>
     </Marker>
+  )
+}
+
+/** An attached bill is still being read; the reply waits for it. */
+function reading(documents: Record<string, string>): boolean {
+  return Object.values(documents).some(
+    (status) => status === "uploaded" || status === "processing"
   )
 }
 
@@ -123,7 +134,11 @@ export function AgentThread({
                 scrollAnchor={message.role === "user"}
               >
                 <div className="flex flex-col gap-3">
-                  <AgentMessage content={message.content} role={message.role} />
+                  <AgentMessage
+                    content={message.content}
+                    documentIds={message.document_ids}
+                    role={message.role}
+                  />
                   {message.actions.map((action) => (
                     <AgentBillCard action={action} key={action.document_id} />
                   ))}
@@ -152,14 +167,24 @@ export function AgentThread({
             {turn ? (
               <MessageScrollerItem messageId="pending" scrollAnchor>
                 <div className="flex flex-col gap-3">
-                  <AgentMessage content={turn.text} role="user" />
+                  <AgentMessage
+                    content={turn.text}
+                    documentIds={turn.documentIds}
+                    role="user"
+                  />
                   {turn.actions.map((action) => (
                     <AgentBillCard action={action} key={action.document_id} />
                   ))}
                   {turn.reply ? (
                     <AgentMessage content={turn.reply} role="assistant" />
                   ) : turn.streaming ? (
-                    <Working label={toolLabel(turn.tool)} />
+                    <Working
+                      label={
+                        reading(turn.documents)
+                          ? READING_BILLS
+                          : toolLabel(turn.tool)
+                      }
+                    />
                   ) : null}
                   {turn.error ? (
                     <Failure

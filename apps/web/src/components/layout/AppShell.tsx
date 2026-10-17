@@ -29,7 +29,9 @@ export function AppShell() {
   const me = useGetMe()
   const uploads = useUploadsState()
   const agent = useAgentPanelState()
-  const scans = useChatScansState(uploads)
+  const scans = useChatScansState(uploads, (text, documentIds) => {
+    void agent.chat.send(text, documentIds)
+  })
   const isPhone = useIsMobile()
   const { pathname } = useLocation()
 
