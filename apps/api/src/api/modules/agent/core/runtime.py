@@ -22,7 +22,7 @@ from storage.models import (
 )
 
 from api.modules.agent.core.prompts import system_prompt
-from api.modules.agent.core.tools import ToolContext, run_tool, tool_schemas
+from api.modules.agent.core.tools import ToolContext, call_tool, tool_schemas
 
 __all__ = [
     "ATTACHMENT_WAIT_SECONDS",
@@ -58,7 +58,7 @@ Chat = Callable[..., ai.ChatTurn]
 class Event:
     """One thing the client should show: a tool chip, reply text, the end, or an error."""
 
-    type: Literal["document", "tool", "delta", "done", "error"]
+    type: Literal["document", "tool", "action", "delta", "done", "error"]
     data: dict[str, Any] = field(default_factory=dict)
 
 
@@ -103,6 +103,7 @@ def run_turn(
     }
     schemas = tool_schemas()
     usage = _Usage()
+    shown: set[tuple[str, str]] = set()  # one card per proposal, however often asked
     try:
         if document_ids:
             ready = yield from _wait_for_documents(document_ids, sleep, clock)
@@ -129,22 +130,38 @@ def run_turn(
                 yield Event("tool", {"name": call["function"]["name"]})
             with Session(database.engine) as session:
                 ctx = ToolContext(session=session, user_id=user_id)
-                results = [
-                    {
-                        "role": "tool",
-                        "tool_call_id": call["id"],
-                        "content": run_tool(
+                outcomes = [
+                    (
+                        call,
+                        call_tool(
                             ctx, call["function"]["name"], call["function"]["arguments"]
                         ),
-                    }
+                    )
                     for call in turn.tool_calls
                 ]
                 crud.append_messages(
                     session,
                     conversation_id=conversation_id,
                     run_id=run_id,
-                    messages=[turn.message, *results],
+                    messages=[
+                        turn.message,
+                        *(
+                            {
+                                "role": "tool",
+                                "tool_call_id": call["id"],
+                                "content": outcome.content,
+                            }
+                            for call, outcome in outcomes
+                        ),
+                    ],
                 )
+            for _, outcome in outcomes:
+                if outcome.action is None:
+                    continue
+                key = (outcome.action["tool"], str(outcome.action.get("document_id")))
+                if key not in shown:
+                    shown.add(key)
+                    yield Event("action", outcome.action)
         yield from _reply(
             run_id,
             conversation_id,

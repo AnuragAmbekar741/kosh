@@ -19,6 +19,7 @@ from storage.models import (
     DocumentSource,
     DocumentStatus,
     RunStatus,
+    SpendItem,
     SpendSource,
     SpendStatus,
     User,
@@ -339,3 +340,62 @@ def test_still_reading_after_the_wait_replies_without_the_model(
     assert messages[-1].content == runtime.STILL_READING_REPLY
     assert run.status == RunStatus.COMPLETED
     assert run.steps == 0
+
+
+# Guardrail
+
+
+def _drafts(db_engine, user_id, document_id, lines) -> None:
+    with Session(db_engine) as session:
+        for index, (name, amount) in enumerate(lines):
+            create_spend_item(
+                session,
+                user_id=user_id,
+                merchant="Toit Brewpub",
+                description=name,
+                amount=Decimal(amount),
+                currency="INR",
+                spent_at=date(2026, 10, 14),
+                category="Dining out",
+                source=SpendSource.DOCUMENT,
+                status=SpendStatus.PENDING_REVIEW,
+                document_id=document_id,
+                line_index=index,
+            )
+
+
+def test_offering_to_save_streams_one_card_and_saves_nothing(db_engine, turn) -> None:
+    kwargs, document_id = _attach(db_engine, turn, status=DocumentStatus.READY)
+    _drafts(
+        db_engine, turn["user_id"], document_id, [("Pizza", "640"), ("Beer", "780")]
+    )
+    confirm = ("confirm_document", {"document_id": str(document_id)})
+    chat = FakeChat(
+        _turn(calls=[("get_document", {"document_id": str(document_id)})]),
+        # Asked twice, even in one turn: one card.
+        _turn(calls=[confirm, confirm]),
+        _turn(text="Toit Brewpub, 2 lines, ₹1,420. Check them and tap Save bill."),
+    )
+    events = list(run_turn(chat=chat, sleep=lambda _: None, **kwargs))
+
+    assert [e.type for e in events] == [
+        "document",
+        "tool",
+        "tool",
+        "tool",
+        "action",
+        "delta",
+        "done",
+    ]
+    action = events[4].data
+    assert action["kind"] == "review_document"
+    assert action["document_id"] == str(document_id)
+    assert action["totals"] == {"INR": "1420.00"}
+    # The model heard that it awaits the user, not that it was saved.
+    result = json.loads(chat.calls[2][-1]["content"])
+    assert result["status"] == "awaiting_user"
+    with Session(db_engine) as session:
+        statuses = session.exec(
+            select(SpendItem.status).where(SpendItem.document_id == document_id)
+        ).all()
+    assert statuses == [SpendStatus.PENDING_REVIEW, SpendStatus.PENDING_REVIEW]
