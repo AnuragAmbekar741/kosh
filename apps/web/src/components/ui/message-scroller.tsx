@@ -71,10 +71,10 @@ function MessageScrollerItem({
     <MessageScrollerPrimitive.Item
       data-slot="message-scroller-item"
       scrollAnchor={scrollAnchor}
-      className={cn(
-        "min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem] [content-visibility:auto]",
-        className
-      )}
+      // No content-visibility: items range from a line of text to a photo and
+      // a bill card, and a placeholder height made the thread misjudge its own
+      // length and jump.
+      className={cn("min-w-0 shrink-0", className)}
       {...props}
     />
   )
