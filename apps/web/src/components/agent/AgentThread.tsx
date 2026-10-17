@@ -3,6 +3,7 @@ import { CircleAlertIcon } from "lucide-react"
 import { useEffect, type ReactNode } from "react"
 
 import type { MessagePublic } from "@/api/agent/agent.types"
+import { AgentBillCard } from "@/components/agent/AgentBillCard"
 import { AgentEmpty } from "@/components/agent/AgentEmpty"
 import { AgentMessage } from "@/components/agent/AgentMessage"
 import { FAILED_REPLY, toolLabel } from "@/components/agent/agent-copy"
@@ -123,6 +124,9 @@ export function AgentThread({
               >
                 <div className="flex flex-col gap-3">
                   <AgentMessage content={message.content} role={message.role} />
+                  {message.actions.map((action) => (
+                    <AgentBillCard action={action} key={action.document_id} />
+                  ))}
                   {unanswered(messages, index) ? (
                     <Failure
                       message={FAILED_REPLY}
@@ -149,6 +153,9 @@ export function AgentThread({
               <MessageScrollerItem messageId="pending" scrollAnchor>
                 <div className="flex flex-col gap-3">
                   <AgentMessage content={turn.text} role="user" />
+                  {turn.actions.map((action) => (
+                    <AgentBillCard action={action} key={action.document_id} />
+                  ))}
                   {turn.reply ? (
                     <AgentMessage content={turn.reply} role="assistant" />
                   ) : turn.streaming ? (
