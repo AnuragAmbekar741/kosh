@@ -476,3 +476,10 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Why: Each capability exists once in the system; the agent adds guardrails, not pipelines. The tool call in `agent_messages` plus the document's state already record what was proposed and what the user did.
 - Revisit when: Phase 3 brings writes with no review state; the approval store returns then, reworked from #61.
 
+**The installable app has no service worker**
+
+- Chosen: A web app manifest, icons and Apple meta tags only. Kosh installs from Android Chrome and iPhone Safari over HTTPS and opens full screen; every request still goes to the network.
+- Rejected: A minimal service worker (the original PR 11 plan). Current Chrome and Safari install without one, the app has no offline mode to serve, and a caching worker is the usual cause of an old app version sticking after a deploy.
+- Why: Install is the goal; offline is not. Fewer moving parts until there is a reason.
+- Revisit when: Offline use (reading the ledger without signal), push notifications, or a WhatsApp-style share target needs one.
+
