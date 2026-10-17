@@ -4,18 +4,19 @@ import json
 import time
 from collections.abc import Callable
 from typing import Any
+from uuid import UUID
 
 import ai
 from api.modules.agent.core import runtime
 from api.modules.agent.core.prompts import PROMPT_VERSION
 from api.modules.agent.core.tools import TOOLS
-from sqlmodel import Session
+from sqlmodel import Session, select
 from storage import database
 from storage.crud import agent as crud
-from storage.models import AgentRun, MessageRole
+from storage.models import AgentRun, MessageRole, SpendItem, SpendStatus
 
 from evals.agent.cases import Case, Outcome, score
-from evals.agent.ledger import BOB_SECRETS, seed
+from evals.agent.ledger import BOB_SECRETS, attach, seed
 
 __all__ = ["run_case"]
 
@@ -37,11 +38,16 @@ def run_case(
     started = time.monotonic()
     with Session(database.engine) as session:
         ada_id, _ = seed(session, case)
+        attached = attach(session, ada_id, case.attach)
+        drafts = _drafts(session, ada_id)
         conversation = crud.create_conversation(session, user_id=ada_id)
         conversation_id = conversation.id
 
     answer, run_id = "", None
-    for text in case.messages:
+    actions: list[dict[str, Any]] = []
+    for number, text in enumerate(case.messages, start=1):
+        # Bills go with the last message, as if just photographed.
+        document_ids = attached if number == len(case.messages) else []
         with Session(database.engine) as session:
             conversation = crud.get_conversation(
                 session, user_id=ada_id, conversation_id=conversation_id
@@ -52,9 +58,11 @@ def run_case(
                 content=text,
                 model=model,
                 prompt_version=PROMPT_VERSION,
+                document_ids=document_ids,
             )
             run_id = run.id
-        answer = ""
+        answer, actions = "", []
+        clock = _Clock()
         for event in runtime.run_turn(
             user_id=ada_id,
             conversation_id=conversation_id,
@@ -62,9 +70,14 @@ def run_case(
             model=model,
             chat=chat,
             today=case.today,
+            document_ids=document_ids,
+            sleep=clock.sleep,  # a bill "still processing" times out at once
+            clock=clock.now,
         ):
             if event.type == "delta":
                 answer += event.data["text"]
+            elif event.type == "action":
+                actions.append(event.data)
 
     with Session(database.engine) as session:
         messages = crud.list_messages(session, conversation_id=conversation_id)
@@ -90,6 +103,9 @@ def run_case(
             completion_tokens=run.completion_tokens,
             cost_usd=float(run.cost_usd or 0),
             seconds=round(time.monotonic() - started, 2),
+            actions=actions,
+            attached=[str(i) for i in attached],
+            drafts_changed=len(drafts - _drafts(session, ada_id)),
         )
 
     judged = None
@@ -99,6 +115,30 @@ def run_case(
         case, outcome, tool_names=set(TOOLS), forbidden=BOB_SECRETS, judged=judged
     )
     return outcome
+
+
+class _Clock:
+    """Instant waits: the agent's attachment poll never sleeps in an eval."""
+
+    def __init__(self) -> None:
+        self.at = 0.0
+
+    def sleep(self, seconds: float) -> None:
+        self.at += seconds
+
+    def now(self) -> float:
+        return self.at
+
+
+def _drafts(session: Session, user_id: UUID) -> set[UUID]:
+    return set(
+        session.exec(
+            select(SpendItem.id).where(
+                SpendItem.user_id == user_id,
+                SpendItem.status == SpendStatus.PENDING_REVIEW,
+            )
+        ).all()
+    )
 
 
 def _args(call: dict[str, Any]) -> dict[str, Any]:

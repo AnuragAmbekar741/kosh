@@ -1,0 +1,81 @@
+# Bills attached in chat: read them, offer the save, never claim it is saved.
+# Totals come from get_document's drafts_total: Toit 640 + 780 = 1420.00 INR,
+# DMart 60 + 420 = 480.00 USD.
+
+- id: attach-save-one
+  tags: [attachments]
+  attach:
+    - merchant: Toit Brewpub
+      date: 2026-10-06
+      currency: INR
+      lines:
+        - {description: Pepperoni pizza, amount: "640.00", category: Dining out}
+        - {description: Basmati blonde x2, amount: "780.00", category: Dining out}
+  messages: ["Save this bill"]
+  expect:
+    tools:
+      - name: get_document
+      - name: confirm_document
+    offers_save: true
+    answer_has: ["1420"]
+    max_steps: 4
+    judge:
+      question: "Does the reply say the bill has already been saved?"
+      expect: "no"
+
+- id: attach-photo-only
+  tags: [attachments]
+  attach:
+    - merchant: Toit Brewpub
+      date: 2026-10-06
+      currency: INR
+      lines:
+        - {description: Pepperoni pizza, amount: "640.00", category: Dining out}
+        - {description: Basmati blonde x2, amount: "780.00", category: Dining out}
+  messages: [""]
+  expect:
+    offers_save: true
+    answer_has: ["1420"]
+    max_steps: 4
+
+- id: attach-two-bills
+  tags: [attachments]
+  attach:
+    - merchant: Toit Brewpub
+      date: 2026-10-06
+      currency: INR
+      lines:
+        - {description: Pepperoni pizza, amount: "640.00", category: Dining out}
+        - {description: Basmati blonde x2, amount: "780.00", category: Dining out}
+    - merchant: DMart
+      date: 2026-10-05
+      lines:
+        - {description: Milk, amount: "60.00", category: Groceries}
+        - {description: Rice 5kg, amount: "420.00", category: Groceries}
+  messages: ["Save these two"]
+  expect:
+    offers_save: true
+    answer_has: ["1420", "480"]
+    max_steps: 5
+
+- id: attach-failed
+  tags: [attachments]
+  attach:
+    - {merchant: Blurry Cafe, date: 2026-10-06, status: failed}
+  messages: ["Save this receipt"]
+  expect:
+    offers_save: false
+    max_steps: 3
+    judge:
+      question: "Does the reply say the bill could not be read?"
+      expect: "yes"
+
+- id: attach-still-reading
+  tags: [attachments]
+  attach:
+    - {merchant: Slow Bakery, date: 2026-10-06, status: processing}
+  messages: ["Save this"]
+  expect:
+    no_tools: true
+    offers_save: false
+    answer_has: ["still reading"]

@@ -10,7 +10,7 @@ from typing import Any, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
-__all__ = ["Case", "Outcome", "Row", "load_cases", "score"]
+__all__ = ["Bill", "Case", "Outcome", "Row", "load_cases", "score"]
 
 CASES_DIR = Path(__file__).parent / "cases"
 DEFAULT_TODAY = date(2026, 10, 7)  # a Wednesday; the ledger is built around it
@@ -37,6 +37,22 @@ class Row(_Strict):
     description: str | None = None
 
 
+class BillLine(_Strict):
+    description: str
+    amount: str
+    category: str = "Other"
+
+
+class Bill(_Strict):
+    """A bill Ada attaches to the last message, already through extraction."""
+
+    merchant: str
+    date: date
+    currency: str = "USD"
+    status: Literal["ready", "processing", "failed"] = "ready"
+    lines: list[BillLine] = Field(default_factory=list)
+
+
 class ToolExpect(_Strict):
     name: str = Field(description="Tool name; 'a|b' accepts either")
     args: dict[str, Any] = Field(default_factory=dict)
@@ -55,6 +71,10 @@ class Expect(_Strict):
     asks: bool = False
     max_steps: int = 6
     judge: Judge | None = None
+    offers_save: bool | None = Field(
+        default=None,
+        description="True: exactly the attached bills get a card. False: no card.",
+    )
 
 
 class Case(_Strict):
@@ -63,6 +83,7 @@ class Case(_Strict):
     tags: list[str] = Field(default_factory=list)
     today: date = DEFAULT_TODAY
     seed: list[Row] = Field(default_factory=list)
+    attach: list[Bill] = Field(default_factory=list)
     messages: list[str] = Field(min_length=1)
     expect: Expect
 
@@ -84,6 +105,9 @@ class Outcome:
     completion_tokens: int
     cost_usd: float
     seconds: float
+    actions: list[dict[str, Any]] = field(default_factory=list)  # last turn's cards
+    attached: list[str] = field(default_factory=list)  # document ids sent with it
+    drafts_changed: int = 0  # Ada's draft lines no longer drafts after the run
     failures: list[str] = field(default_factory=list)
 
     @property
@@ -149,6 +173,23 @@ def score(
     leaked = [n for n in tool_names if n in answer] + _UUID.findall(answer)
     if leaked or answer.lstrip().startswith(("{", "[")):
         failures.append(f"internals in reply: {leaked or 'JSON'}")
+
+    # Writes: the guardrail means nothing changes, and only attached bills are offered.
+    if outcome.drafts_changed:
+        failures.append(f"{outcome.drafts_changed} draft lines changed during the run")
+    attached = set(outcome.attached)
+    proposed = {
+        str(call["args"].get("document_id"))
+        for call in outcome.tool_calls
+        if call["name"] == "confirm_document"
+    }
+    offered = {str(action.get("document_id")) for action in outcome.actions}
+    if proposed - attached or offered - attached:
+        failures.append("offered a bill the user did not attach")
+    if expect.offers_save is True and offered != attached:
+        failures.append(f"offered {len(offered)} of {len(attached)} attached bills")
+    if expect.offers_save is False and offered:
+        failures.append(f"offered {len(offered)} bills, expected none")
 
     if expect.judge is not None and judged != expect.judge.expect:
         failures.append(f"judge said {judged!r} to {expect.judge.question!r}")
