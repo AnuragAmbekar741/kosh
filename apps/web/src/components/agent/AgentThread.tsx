@@ -129,7 +129,11 @@ export function AgentThread({
                       onRetry={
                         turn?.streaming
                           ? undefined
-                          : () => void chat.send(message.content)
+                          : () =>
+                              void chat.send(
+                                message.content,
+                                message.document_ids
+                              )
                       }
                     />
                   ) : null}
@@ -153,7 +157,9 @@ export function AgentThread({
                   {turn.error ? (
                     <Failure
                       message={turn.error}
-                      onRetry={() => void chat.send(turn.text)}
+                      onRetry={() =>
+                        void chat.send(turn.text, turn.documentIds)
+                      }
                     />
                   ) : null}
                 </div>

@@ -43,7 +43,7 @@ export async function getConversation(
  */
 export async function streamMessage(
   conversationId: string,
-  text: string,
+  message: { text: string; documentIds: string[] },
   onEvent: (event: AgentEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
@@ -57,7 +57,10 @@ export async function streamMessage(
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({
+          text: message.text,
+          document_ids: message.documentIds,
+        }),
         signal,
       }
     )
