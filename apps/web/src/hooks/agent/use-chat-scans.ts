@@ -32,7 +32,7 @@ export function useChatScansState(uploads: UploadsState) {
     const files = Array.from(list).slice(0, MAX_SCAN_FILES)
     if (files.length === 0) return
     const shrunk = await Promise.all(files.map(shrinkImage))
-    const keys = uploads.add(shrunk)
+    const keys = uploads.add(shrunk, "agent")
     const pages = shrunk.map((file, index) => ({
       key: keys[index],
       name: file.name,

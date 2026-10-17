@@ -14,11 +14,16 @@ import {
 import type {
   DocumentDetail,
   DocumentSummary,
+  UploadSource,
 } from "@/api/documents/documents.types"
 import { documentQueryKeys } from "@/hooks/documents/query-keys"
 import { spendItemQueryKeys } from "@/hooks/spend-items/query-keys"
 
-type UploadInput = { file: File; idempotencyKey: string }
+type UploadInput = {
+  file: File
+  idempotencyKey: string
+  source?: UploadSource
+}
 
 export function useDocuments() {
   return useQuery({
@@ -69,8 +74,8 @@ export function useDocumentInbox() {
 export function useUploadDocument() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ file, idempotencyKey }: UploadInput) =>
-      uploadDocument(file, idempotencyKey),
+    mutationFn: ({ file, idempotencyKey, source }: UploadInput) =>
+      uploadDocument(file, idempotencyKey, source),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: documentQueryKeys.all })
     },
