@@ -22,6 +22,8 @@ class ToolContext:
 
     session: Session
     user_id: UUID
+    # The chat the call comes from; writes may only touch what was attached in it.
+    conversation_id: UUID | None = None
 
 
 class Args(BaseModel):
