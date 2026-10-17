@@ -66,7 +66,9 @@ origin, 220ms exponential ease-out. Reduced motion keeps only a 120ms fade.
 | Sending | The question at once, then a shimmering `Marker`: "Thinking…" until a tool runs, then its label ("Adding up your spending…", "Looking through your purchases…", "Checking your bills…") |
 | Reply | Replaces the marker; the saved transcript takes over when the stream ends |
 | Refused before streaming | Under the question: 409 "Still answering your last message", 429 daily limit, 503 not set up, 404 chat gone; offline: "Couldn't reach Kosh"; each with Retry |
-| Reply failed | Under the saved question: "Couldn't answer this one." with Retry (resends the text) |
+| Reply failed | Under the saved question: "Couldn't answer this one." with Retry (resends the text and any attached bills) |
+| Bills attached | The message shows them as thumbnails (file tiles after a reload); "Reading your bill…" while they're extracted |
+| Bill offered | A bill card under the reply with **Save bill**, **Edit** and discard; it shows "Saved." or "Discarded." once decided (see [dashboard.md](./dashboard.md#scanning-bills-phones)) |
 | Past chats | Header history button switches the panel to a list of chats (title, relative time, current one highlighted); ← returns |
 | No chats yet | `Empty variant="plain"`: "No chats yet" |
 
