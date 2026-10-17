@@ -137,10 +137,13 @@ skeleton drops the sidebar trigger and shows the nav button's shape.
 ### Installed app
 
 Kosh is installable (`public/manifest.webmanifest`): name "Kosh", `standalone`,
-start at `/` (phones land on Chat), portrait. Icons are the sidebar's wallet
-mark, near-white on the dark card colour: 192 and 512 px, a 512 px maskable one
-with the glyph inside the safe zone, a 180 px Apple touch icon, and
-`favicon.svg` (the same mark on a rounded tile). `ThemeProvider` keeps
+start at `/` (phones land on Chat), portrait. The icon is the **K** from the
+Overview's engraved wordmark: bold Geist (weight 640) filled with the same
+contour rings, under its faint outline, near-white on the dark card colour.
+Sizes: 192 and 512 px, a 512 px maskable one with a smaller K inside the safe
+zone, and a 180 px Apple touch icon. The rings don't survive 16–32 px, so
+`favicon.png` (64 px) is a solid K on a rounded tile. The icons are drawn from
+the `EngravedWordmark` ring formula on a canvas with Geist loaded. `ThemeProvider` keeps
 `<meta name="theme-color">` equal to the resolved `--background`, so the
 installed app's status bar follows the app's Light / Dark / System choice.
 iOS uses the `default` status bar style, so content never sits under it.
