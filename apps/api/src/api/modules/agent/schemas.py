@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 __all__ = [
+    "ActionPublic",
     "ConversationDetail",
     "ConversationPublic",
     "MessageCreate",
@@ -49,12 +50,33 @@ class ConversationPublic(BaseModel):
     updated_at: datetime
 
 
+class ActionPublic(BaseModel):
+    """A write the agent offered; the user decides it from a card.
+
+    Only `review_document` exists so far: the bill's drafts, saved by the
+    user with `POST /documents/{document_id}/confirm`.
+    """
+
+    tool: str
+    kind: Literal["review_document"]
+    document_id: UUID
+    merchant: str
+    spent_at: date
+    line_count: int
+    totals: dict[str, str]
+    possible_duplicates: int
+
+
 class MessagePublic(BaseModel):
     id: UUID
     role: Literal["user", "assistant"]
     content: str
     document_ids: list[UUID] = Field(
         default_factory=list, description="Bills attached to a user message."
+    )
+    actions: list[ActionPublic] = Field(
+        default_factory=list,
+        description="On replies: cards for writes the agent offered in that turn.",
     )
     created_at: datetime
     status: Literal["running", "completed", "failed"] | None = Field(

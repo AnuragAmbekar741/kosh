@@ -1,6 +1,7 @@
 import json
 import threading
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 from types import SimpleNamespace
 from uuid import UUID, uuid4
 
@@ -11,6 +12,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 from storage import database
 from storage.crud import agent as crud
+from storage.crud.spend import create_spend_item
 from storage.models import (
     AgentConversation,
     AgentRun,
@@ -18,6 +20,8 @@ from storage.models import (
     DocumentSource,
     DocumentStatus,
     RunStatus,
+    SpendSource,
+    SpendStatus,
 )
 
 
@@ -359,3 +363,59 @@ def test_more_than_five_bills_is_rejected(client, model) -> None:
         json={"document_ids": [str(uuid4()) for _ in range(6)]},
     )
     assert response.status_code == 422
+
+
+def test_offered_card_comes_back_with_the_transcript(client, model) -> None:
+    headers = _auth(client)
+    conversation_id = _new(client, headers)
+    document_id = _upload_for_chat(client, headers)
+    _mark_ready(document_id)
+    with Session(database.engine) as session:
+        document = session.get(Document, UUID(document_id))
+        create_spend_item(
+            session,
+            user_id=document.user_id,
+            merchant="Toit Brewpub",
+            description="Pizza",
+            amount=Decimal("640.00"),
+            currency="INR",
+            spent_at=date(2026, 10, 14),
+            category="Dining out",
+            source=SpendSource.DOCUMENT,
+            status=SpendStatus.PENDING_REVIEW,
+            document_id=document.id,
+            line_index=0,
+        )
+    confirm = _turn(call="confirm_document")
+    confirm.message["tool_calls"][0]["function"]["arguments"] = json.dumps(
+        {"document_id": document_id}
+    )
+    model.script = [confirm, _turn(text="Check the lines and tap Save bill.")]
+
+    response = client.post(
+        f"/agent/conversations/{conversation_id}/messages",
+        headers=headers,
+        json={"text": "Save this", "document_ids": [document_id]},
+    )
+    kinds = [kind for kind, _ in _events(response.text)]
+    assert kinds == ["document", "tool", "action", "delta", "done"]
+
+    messages = client.get(
+        f"/agent/conversations/{conversation_id}", headers=headers
+    ).json()["messages"]
+    assert [m["role"] for m in messages] == ["user", "assistant"]
+    assert messages[0]["actions"] == []
+    (card,) = messages[1]["actions"]
+    assert card == {
+        "tool": "confirm_document",
+        "kind": "review_document",
+        "document_id": document_id,
+        "merchant": "Toit Brewpub",
+        "spent_at": "2026-10-14",
+        "line_count": 1,
+        "totals": {"INR": "640.00"},
+        "possible_duplicates": 0,
+    }
+    # Saving is the bill's own endpoint, unchanged.
+    saved = client.post(f"/documents/{document_id}/confirm", headers=headers)
+    assert saved.status_code == 200

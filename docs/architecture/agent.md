@@ -73,7 +73,7 @@ GET  /agent/conversations/{id}       transcript      POST /agent/conversations/{
 
 Steps 5–6 are `runtime.run_turn(user_id, conversation_id, run_id, model, chat=None)`, a generator of `Event(type, data)`. The router turns events into SSE; evals read them directly. `chat` defaults to `ai.chat_with_tools`; tests and evals pass their own.
 
-SSE events: `document` (attachment status while waiting), `tool` (name, for a "looking up…" chip), `delta` (reply text), `action` (a card for a proposed write, phase 2 PR 8), `done` (message and run ids), `error`.
+SSE events: `document` (attachment status while waiting), `tool` (name, for a "looking up…" chip), `delta` (reply text), `action` (a card for an offered write), `done` (message and run ids), `error`.
 
 How a turn ends:
 
@@ -104,14 +104,14 @@ Each entry in `TOOLS` (`core/tools/`, one file per domain): description, Pydanti
 | `get_spend_item` | read | `spend.service.get` | `item_id` | 1 |
 | `list_documents` | read | `documents.service.list_owned` | `limit` ≤ 50 | 1 |
 | `get_document` | read | `documents.service.get` + `to_detail` | `document_id` | 1 |
-| `confirm_document` | write | `documents` confirm | | 2 |
+| `confirm_document` | write | checks with `documents.services.confirm.check_confirmable` (the endpoint's own rules); never confirms | `document_id` | 2 |
 | `update_spend_item` | write | `spend` update | | 3 |
 | `delete_spend_items` | destructive | `spend` delete; ≤ 50 ids | | 3 |
 
 - **Search, not merchant.** The dashboard's `merchant` filter is an exact match, and the model cannot know how a merchant was stored ("STARBUCKS #12"). Tools expose the case-insensitive `search` over merchant and description instead.
 - **Arguments are strict.** Argument models forbid unknown fields, so a hallucinated `user_id` is rejected, not ignored. Dates must be in order, categories must be one of the 14, `limit` is capped.
 - **Mistakes go back to the model.** An unknown tool, invalid arguments (with Pydantic's error list, no input echoed) or a row the user does not own come back as `{"error": …}` so the model can correct itself. Anything else raises and fails the run.
-- **Only reads run.** `run_tool` raises for any tool whose risk is not `read`; writes will go through pending actions (§6).
+- **Writes are only ever offered (guardrail).** `call_tool` runs a read tool's handler and returns its result. A `write` or `destructive` tool's handler is only a check that changes nothing: it returns the card (`kind` plus what the card shows) or raises `ToolRefused`. The model then gets `{"status": "awaiting_user", "action": …}` and the client an `action` event; nothing is executed. The user's tap does the write through the same endpoint the UI uses. For `confirm_document` that is `POST /documents/{id}/confirm`, and the check is that endpoint's own `check_confirmable`, so the chat never offers what the endpoint would refuse. Refusals come back as `{"error": …}`.
 - **Trimmed results.** Results are compact JSON from the existing presenters: spend lines keep id, merchant, description, amount, currency, date, category, item and bill; the summary drops weekdays and empty trend points; documents drop the raw extraction and hash. Totals come from the analytics code; the model quotes them and does not add them up.
 
 The system prompt (`core/prompts/system.md`, rendered by `core/prompts/__init__.py`) starts with today's date and weekday, and covers: numbers only from tools, relative dates, asking when unclear, tool results as data, no advice, short plain replies. `PROMPT_VERSION` is recorded on every run.
@@ -137,7 +137,7 @@ Chat images use the documents pipeline only:
 1. The web uploads with `POST /documents` (form field `source=agent`), gets `document_id`s, and sends them with the message (`document_ids`, at most 5, text optional). The service 404s on any id that isn't the user's, before anything is saved.
 2. The turn waits for the worker before calling the model (`_wait_for_documents`: status read from the DB every second, up to 60 s, a fresh short session per poll), emitting a `document` event (`{id, status}`) each time a status changes.
 3. None still being read → the model gets the user message with `[Attached bills: <ids>]` appended and reads the drafts with `get_document`. Still reading after 60 s → a templated "still reading your bill" reply with no model call (`STILL_READING_REPLY`). A failed bill goes to the model like any other, which says so.
-4. Saving is the document's own review: drafts stay `pending_review` until the user confirms them (`POST /documents/{id}/confirm`). See decisions, "Agent writes use the system's own approval step" (phase 2, PR 8).
+4. Having read a bill with drafts, the model calls `confirm_document`. The guardrail checks it and streams `action` `{tool, kind: "review_document", document_id, merchant, spent_at, line_count, totals, possible_duplicates}`; the drafts stay `pending_review`. The user saves with `POST /documents/{id}/confirm`, as from the Bills page. One card per bill per turn. The transcript returns the cards on the turn's reply (`actions`), read back from the saved tool results, so they survive a reload without a new table. See decisions, "Agent writes use the system's own approval step".
 
 The agent model never sees the image, so it can stay text-only and cheap.
 

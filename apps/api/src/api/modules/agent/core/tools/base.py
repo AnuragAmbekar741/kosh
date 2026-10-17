@@ -11,7 +11,7 @@ from storage.models.spend import SpendItem
 
 from api.modules.spend.presenter import to_public
 
-__all__ = ["LINE_FIELDS", "Args", "Risk", "Tool", "ToolContext", "line"]
+__all__ = ["LINE_FIELDS", "Args", "Risk", "Tool", "ToolContext", "ToolRefused", "line"]
 
 Risk = Literal["read", "write", "destructive"]
 
@@ -31,10 +31,22 @@ class Args(BaseModel):
 
 @dataclass(frozen=True)
 class Tool:
+    """A read tool's handler returns its result.
+
+    A write or destructive tool's handler is only a check: it must not change
+    anything. It returns the card to show the user (`kind` plus what the card
+    needs) or raises `ToolRefused`; `call_tool` never runs the write itself.
+    The user's tap does, through the same endpoint the UI uses.
+    """
+
     description: str
     args: type[Args]
     handler: Callable[[ToolContext, Any], dict[str, Any]]
     risk: Risk = "read"
+
+
+class ToolRefused(Exception):
+    """The request can't go ahead; the message goes back to the model."""
 
 
 # The fields of a spend line the model needs; the rest is UI bookkeeping.

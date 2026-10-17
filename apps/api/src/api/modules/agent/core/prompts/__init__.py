@@ -9,7 +9,7 @@ from pathlib import Path
 
 __all__ = ["PROMPT_VERSION", "system_prompt"]
 
-PROMPT_VERSION = "2"
+PROMPT_VERSION = "3"
 
 _SYSTEM = (Path(__file__).parent / "system.md").read_text(encoding="utf-8").strip()
 
