@@ -16,6 +16,7 @@ from api.modules.agent.core.tools import (
 )
 from api.modules.agent.core.tools.base import ToolRefused
 from sqlmodel import Session, select
+from storage.crud import agent as agent_crud
 from storage.crud.spend import create_spend_item
 from storage.models import (
     Document,
@@ -301,11 +302,27 @@ def _statuses(session, document) -> list[str]:
     ]
 
 
+def _chat(session, user, *attached) -> ToolContext:
+    """A chat where the user sent these bills; the context its tools run in."""
+    conversation = agent_crud.create_conversation(session, user_id=user.id)
+    agent_crud.start_turn(
+        session,
+        conversation=conversation,
+        content="",
+        model="m",
+        prompt_version="1",
+        document_ids=[bill.id for bill in attached],
+    )
+    return ToolContext(
+        session=session, user_id=user.id, conversation_id=conversation.id
+    )
+
+
 def test_confirm_document_shows_a_card_and_saves_nothing(session, ledger) -> None:
     ada, _ = ledger
     bill = _bill(session, ada, lines=(("Pizza", "640.00"), ("Beer", "780.00")))
     result = call_tool(
-        ToolContext(session=session, user_id=ada.id),
+        _chat(session, ada, bill),
         "confirm_document",
         json.dumps({"document_id": str(bill.id)}),
     )
@@ -340,3 +357,38 @@ def test_confirm_document_refuses_what_the_endpoint_would(session, ledger) -> No
         "error": "not found"
     }
     assert _statuses(session, ready) == ["pending_review"]
+
+
+def test_confirm_document_refuses_bills_not_attached_in_this_chat(
+    session, ledger
+) -> None:
+    ada, _ = ledger
+    sent, waiting, elsewhere = (
+        _bill(session, ada),
+        _bill(session, ada),
+        _bill(session, ada),
+    )
+    _chat(session, ada, elsewhere)  # attached, but in another chat
+    ctx = _chat(session, ada, sent)
+    refusal = {
+        "error": "only bills attached in this chat can be offered here; "
+        "this one is waiting in the bell for review"
+    }
+    for bill in (waiting, elsewhere):
+        result = call_tool(
+            ctx, "confirm_document", json.dumps({"document_id": str(bill.id)})
+        )
+        assert json.loads(result.content) == refusal
+        assert result.action is None
+    no_chat = ToolContext(session=session, user_id=ada.id)
+    assert (
+        json.loads(
+            call_tool(
+                no_chat, "confirm_document", json.dumps({"document_id": str(sent.id)})
+            ).content
+        )
+        == refusal
+    )
+    assert call_tool(
+        ctx, "confirm_document", json.dumps({"document_id": str(sent.id)})
+    ).action

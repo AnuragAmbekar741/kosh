@@ -6,6 +6,7 @@ from typing import Any
 from uuid import UUID
 
 from pydantic import Field
+from storage.crud import agent as agent_crud
 
 from api.common.errors import DocumentNotReadyError, NoDraftsToConfirmError
 from api.modules.agent.core.tools.base import (
@@ -73,6 +74,19 @@ def _confirm_document(ctx: ToolContext, args: DocumentArgs) -> dict[str, Any]:
         ) from None
     except NoDraftsToConfirmError:
         raise ToolRefused("this bill has no lines waiting to be saved") from None
+    # Enforced here, not left to the prompt: only bills sent in this chat.
+    attached = (
+        agent_crud.attached_document_ids(
+            ctx.session, conversation_id=ctx.conversation_id
+        )
+        if ctx.conversation_id
+        else set()
+    )
+    if str(args.document_id) not in attached:
+        raise ToolRefused(
+            "only bills attached in this chat can be offered here; "
+            "this one is waiting in the bell for review"
+        )
     document = documents.get(ctx.session, ctx.user_id, args.document_id)
     totals: dict[str, Decimal] = defaultdict(Decimal)
     for draft in drafts:
@@ -106,9 +120,10 @@ TOOLS: dict[str, Tool] = {
         _get_document,
     ),
     "confirm_document": Tool(
-        "Offer to save a bill the user attached, once you have read it with "
-        "get_document. This does not save it: the user sees a card with the "
-        "lines and total and saves it with one tap. Use it once per bill.",
+        "Offer to save a bill the user attached in this chat, once you have "
+        "read it with get_document. This does not save it: the user sees a card "
+        "with the lines and total and saves it with one tap. Use it once per "
+        "bill. Bills not attached here are refused; point the user to the bell.",
         DocumentArgs,
         _confirm_document,
         risk="write",
