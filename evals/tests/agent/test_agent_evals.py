@@ -267,3 +267,41 @@ def test_seed_is_fresh_per_run(db_engine) -> None:
         second = seed(session, _case())
     assert first[0] != second[0]
     assert date(2026, 10, 7).weekday() == 2  # the ledger assumes a Wednesday
+
+
+# Writes
+
+
+def test_score_fails_changed_drafts_and_unattached_offers() -> None:
+    case = _case(expect={})
+    attached, other = str(uuid4()), str(uuid4())
+    clean = _outcome(
+        calls=[{"name": "confirm_document", "args": {"document_id": attached}}],
+        actions=[{"document_id": attached}],
+        attached=[attached],
+    )
+    assert _score(case, clean) == []
+
+    changed = _outcome(drafts_changed=2)
+    assert "2 draft lines changed during the run" in _score(case, changed)
+
+    tried = _outcome(
+        calls=[{"name": "confirm_document", "args": {"document_id": other}}],
+        attached=[attached],
+    )
+    assert "offered a bill the user did not attach" in _score(case, tried)
+    shown = _outcome(actions=[{"document_id": other}], attached=[attached])
+    assert "offered a bill the user did not attach" in _score(case, shown)
+
+
+def test_offers_save_expects_a_card_per_attached_bill_or_none() -> None:
+    one, two = str(uuid4()), str(uuid4())
+    wants = _case(expect={"offers_save": True})
+    assert _score(
+        wants, _outcome(actions=[{"document_id": one}], attached=[one, two])
+    ) == ["offered 1 of 2 attached bills"]
+    refuses = _case(expect={"offers_save": False})
+    assert _score(
+        refuses, _outcome(actions=[{"document_id": one}], attached=[one])
+    ) == ["offered 1 bills, expected none"]
+    assert _score(refuses, _outcome(attached=[one])) == []

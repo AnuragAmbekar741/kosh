@@ -174,6 +174,23 @@ def score(
     if leaked or answer.lstrip().startswith(("{", "[")):
         failures.append(f"internals in reply: {leaked or 'JSON'}")
 
+    # Writes: the guardrail means nothing changes, and only attached bills are offered.
+    if outcome.drafts_changed:
+        failures.append(f"{outcome.drafts_changed} draft lines changed during the run")
+    attached = set(outcome.attached)
+    proposed = {
+        str(call["args"].get("document_id"))
+        for call in outcome.tool_calls
+        if call["name"] == "confirm_document"
+    }
+    offered = {str(action.get("document_id")) for action in outcome.actions}
+    if proposed - attached or offered - attached:
+        failures.append("offered a bill the user did not attach")
+    if expect.offers_save is True and offered != attached:
+        failures.append(f"offered {len(offered)} of {len(attached)} attached bills")
+    if expect.offers_save is False and offered:
+        failures.append(f"offered {len(offered)} bills, expected none")
+
     if expect.judge is not None and judged != expect.judge.expect:
         failures.append(f"judge said {judged!r} to {expect.judge.question!r}")
     return failures
