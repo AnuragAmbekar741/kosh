@@ -8,12 +8,13 @@ __all__ = [
     "Category",
     "Extraction",
     "LineItem",
+    "NotABill",
     "ReceiptExtraction",
     "StatementExtraction",
     "Transaction",
 ]
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 Category = Literal[
     "Groceries",
@@ -88,6 +89,18 @@ class StatementExtraction(_Strict):
     transactions: list[Transaction]
 
 
+class NotABill(_Strict):
+    """The file is not a receipt, invoice or statement; nothing is extracted."""
+
+    document_kind: Literal["not_a_bill"]
+    reason: str = Field(
+        min_length=1,
+        max_length=120,
+        description="What the file shows instead, e.g. 'a photo of a dog'.",
+    )
+
+
 Extraction = Annotated[
-    ReceiptExtraction | StatementExtraction, Field(discriminator="document_kind")
+    ReceiptExtraction | StatementExtraction | NotABill,
+    Field(discriminator="document_kind"),
 ]

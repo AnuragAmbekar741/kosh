@@ -4,6 +4,7 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 from ai import (
+    SCHEMA_VERSION,
     ExtractError,
     ExtractMeta,
     LineItem,
@@ -256,7 +257,7 @@ def test_process_ready_confirm_and_retry_preserves_edits(client, monkeypatch) ->
     line = next(item for item in drafts if item["line_index"] == 0)
     with Session(database.engine) as session:
         attempts = list_extraction_attempts(session, UUID(document_id))
-        assert attempts[0].schema_version == 5
+        assert attempts[0].schema_version == SCHEMA_VERSION
     assert client.get("/spend-items", headers=headers).json()["data"] == []
     patched = client.patch(
         f"/spend-items/{line['id']}",
