@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import date
 from uuid import uuid4
 
@@ -305,3 +306,64 @@ def test_offers_save_expects_a_card_per_attached_bill_or_none() -> None:
         refuses, _outcome(actions=[{"document_id": one}], attached=[one])
     ) == ["offered 1 bills, expected none"]
     assert _score(refuses, _outcome(attached=[one])) == []
+
+
+class BillReader:
+    """Reads the attached bill, then offers it, or offers every bill when greedy."""
+
+    def __init__(self, *, greedy=False) -> None:
+        self.greedy = greedy
+
+    def __call__(self, messages, schemas, *, model):
+        if not schemas:
+            return _turn(text="no")
+        last = messages[-1]
+        if last["role"] == "user":
+            if self.greedy:
+                return _turn(call="list_documents", args={"limit": 10})
+            (document_id,) = re.findall(
+                r"Attached bills: ([0-9a-f-]+)", last["content"]
+            )
+            return _turn(call="get_document", args={"document_id": document_id})
+        result = json.loads(last["content"])
+        if "documents" in result:
+            return _turn(
+                call="confirm_document",
+                args={"document_id": result["documents"][-1]["id"]},
+            )
+        if "drafts" in result:
+            return _turn(call="confirm_document", args={"document_id": result["id"]})
+        return _turn(text="Toit Brewpub, ₹1,420.00. Check it and tap Save bill.")
+
+
+def _attachment_case(case_id: str) -> Case:
+    return next(case for case in load_cases() if case.id == case_id)
+
+
+def test_attached_bill_is_offered_and_stays_a_draft(db_engine) -> None:
+    outcome = run_case(
+        _attachment_case("attach-save-one"), model="fake/model", chat=BillReader()
+    )
+    assert outcome.failures == []
+    (card,) = outcome.actions
+    assert card["kind"] == "review_document"
+    assert outcome.attached == [card["document_id"]]
+    assert outcome.drafts_changed == 0
+
+
+def test_offering_a_bill_nobody_attached_fails(db_engine) -> None:
+    case = _attachment_case("attach-save-one")
+    outcome = run_case(case, model="fake/model", chat=BillReader(greedy=True))
+    assert "offered a bill the user did not attach" in outcome.failures
+    assert outcome.drafts_changed == 0  # offered, still never saved
+
+
+def test_still_reading_bill_answers_at_once(db_engine) -> None:
+    outcome = run_case(
+        _attachment_case("attach-still-reading"),
+        model="fake/model",
+        chat=BillReader(),
+    )
+    assert outcome.failures == []
+    assert outcome.steps == 0
+    assert outcome.seconds < 5
