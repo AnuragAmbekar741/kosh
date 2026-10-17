@@ -8,6 +8,7 @@ from ai import (
     Category,
     ExtractError,
     Extraction,
+    NotABill,
     ReceiptExtraction,
     extract,
     inspect_and_normalize,
@@ -224,3 +225,26 @@ def test_live_fixture_optional() -> None:
     assert extraction.purchased_at == date(2024, 10, 19)
     assert extraction.total == "56.71"
     assert len(extraction.line_items) == 11
+
+
+def test_not_a_bill_needs_only_a_reason() -> None:
+    result = TypeAdapter(Extraction).validate_python(
+        {"document_kind": "not_a_bill", "reason": "a photo of a dog"}
+    )
+    assert isinstance(result, NotABill)
+    with pytest.raises(ValidationError):
+        TypeAdapter(Extraction).validate_python({"document_kind": "not_a_bill"})
+    with pytest.raises(ValidationError):
+        TypeAdapter(Extraction).validate_python(
+            {"document_kind": "not_a_bill", "reason": "x", "merchant": "Invented"}
+        )
+
+
+def test_strict_schema_offers_not_a_bill() -> None:
+    schema = strict_json_schema(Extraction)
+    (variant,) = [
+        v
+        for v in schema["oneOf"]
+        if v["properties"]["document_kind"]["const"] == "not_a_bill"
+    ]
+    assert set(variant["required"]) == {"document_kind", "reason"}

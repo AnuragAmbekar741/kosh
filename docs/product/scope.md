@@ -96,6 +96,8 @@ POST /documents → store original file → Document row (uploaded)
 
 States: `uploaded` → `processing` → `ready` | `failed`
 
+Extraction answers one of three kinds (`SCHEMA_VERSION` 6): `receipt`, `statement`, or `not_a_bill` with a short `reason` when the file clearly isn't a bill (a photo of people, pets or places, a screenshot, a blank page). A non-bill is `failed` at once with `error` "This doesn't look like a bill: {reason}", no drafts and no retry; its attempt is kept for the token count. A blurry or partly cut bill is still a bill: readable lines are extracted and unclear ones marked for review.
+
 ## Agent tools (v1 starter set)
 
 **Read:** `get_spending_summary`, `list_spend_items`, `get_spend_item`, `list_documents`, `get_document_status`

@@ -112,6 +112,7 @@ def attach(session: Session, user_id: UUID, bills: list[Bill]) -> list[UUID]:
             content_hash=uuid4().hex,
             source=DocumentSource.AGENT,
             status=bill.status,
+            error=bill.error,
         )
         session.add(document)
         session.commit()
