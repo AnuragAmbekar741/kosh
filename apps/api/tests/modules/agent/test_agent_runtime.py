@@ -12,8 +12,12 @@ from storage import database
 from storage.crud import agent as crud
 from storage.crud.spend import create_spend_item
 from storage.models import (
+    AgentConversation,
     AgentMessage,
     AgentRun,
+    Document,
+    DocumentSource,
+    DocumentStatus,
     RunStatus,
     SpendSource,
     SpendStatus,
@@ -229,3 +233,109 @@ def test_next_turn_sees_the_previous_one(db_engine, turn) -> None:
 
     roles = [m["role"] for m in chat.calls[0]]
     assert roles == ["system", "user", "assistant", "tool", "assistant", "user"]
+
+
+# Attachments
+
+
+def _attach(db_engine, turn, *, status=DocumentStatus.UPLOADED):
+    """Ada attaches one bill in a new message; returns run_turn's kwargs."""
+    with Session(db_engine) as session:
+        document = Document(
+            user_id=turn["user_id"],
+            filename="IMG_4021.jpg",
+            mime_type="image/jpeg",
+            size_bytes=1,
+            storage_key="k",
+            content_hash=uuid4().hex,
+            source=DocumentSource.AGENT,
+            status=status,
+        )
+        session.add(document)
+        session.commit()
+        conversation = session.get(AgentConversation, turn["conversation_id"])
+        _, run = crud.start_turn(
+            session,
+            conversation=conversation,
+            content="Save this",
+            model="fake/model",
+            prompt_version="2",
+            document_ids=[document.id],
+        )
+        return {**turn, "run_id": run.id, "document_ids": (document.id,)}, document.id
+
+
+def _set_status(db_engine, document_id, status) -> None:
+    with Session(db_engine) as session:
+        document = session.get(Document, document_id)
+        document.status = status
+        session.add(document)
+        session.commit()
+
+
+class FakeWorker:
+    """`sleep` stand-in: each poll moves the bill one step through extraction."""
+
+    def __init__(self, db_engine, document_id, steps) -> None:
+        self.db_engine, self.document_id = db_engine, document_id
+        self.steps = list(steps)
+        self.naps = 0
+
+    def __call__(self, seconds: float) -> None:
+        self.naps += 1
+        if self.steps:
+            _set_status(self.db_engine, self.document_id, self.steps.pop(0))
+
+
+def test_waits_for_attached_bill_then_answers(db_engine, turn) -> None:
+    kwargs, document_id = _attach(db_engine, turn)
+    worker = FakeWorker(
+        db_engine, document_id, [DocumentStatus.PROCESSING, DocumentStatus.READY]
+    )
+    chat = FakeChat(_turn(text="Toit Brewpub, 3 lines, ₹1,710. Check and save it."))
+    events = list(run_turn(chat=chat, sleep=worker, **kwargs))
+
+    assert [(e.type, e.data.get("status")) for e in events] == [
+        ("document", "uploaded"),
+        ("document", "processing"),
+        ("document", "ready"),
+        ("delta", None),
+        ("done", None),
+    ]
+    assert events[0].data["id"] == str(document_id)
+    # The model is called once, after extraction, and sees which bill is attached.
+    (messages,) = chat.calls
+    assert messages[-1] == {
+        "role": "user",
+        "content": f"Save this\n\n[Attached bills: {document_id}]",
+    }
+
+
+def test_failed_bill_still_gets_an_answer(db_engine, turn) -> None:
+    kwargs, _ = _attach(db_engine, turn, status=DocumentStatus.FAILED)
+    chat = FakeChat(_turn(text="I couldn't read that bill. Try a clearer photo."))
+    events = list(run_turn(chat=chat, sleep=lambda _: None, **kwargs))
+    assert [e.type for e in events] == ["document", "delta", "done"]
+    assert events[0].data["status"] == "failed"
+
+
+def test_still_reading_after_the_wait_replies_without_the_model(
+    db_engine, turn
+) -> None:
+    kwargs, _ = _attach(db_engine, turn, status=DocumentStatus.PROCESSING)
+    now = [0.0]
+
+    def sleep(seconds: float) -> None:
+        now[0] += seconds
+
+    chat = FakeChat(AssertionError("the model must not be called"))
+    events = list(run_turn(chat=chat, sleep=sleep, clock=lambda: now[0], **kwargs))
+
+    assert [e.type for e in events] == ["document", "delta", "done"]
+    assert events[1].data == {"text": runtime.STILL_READING_REPLY}
+    assert chat.calls == []
+    assert now[0] >= runtime.ATTACHMENT_WAIT_SECONDS
+    messages, run = _saved(db_engine, kwargs)
+    assert messages[-1].content == runtime.STILL_READING_REPLY
+    assert run.status == RunStatus.COMPLETED
+    assert run.steps == 0

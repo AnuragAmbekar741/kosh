@@ -1,7 +1,8 @@
 """The agent loop for one user turn: model ⇄ tools until a reply, as events."""
 
 import logging
-from collections.abc import Callable, Iterator
+import time
+from collections.abc import Callable, Generator, Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -12,12 +13,25 @@ import ai
 from sqlmodel import Session
 from storage import database
 from storage.crud import agent as crud
-from storage.models import AgentRun, RunStatus
+from storage.models import (
+    AgentMessage,
+    AgentRun,
+    Document,
+    DocumentStatus,
+    RunStatus,
+)
 
 from api.modules.agent.core.prompts import system_prompt
 from api.modules.agent.core.tools import ToolContext, run_tool, tool_schemas
 
-__all__ = ["HISTORY_TURNS", "MAX_STEPS", "Event", "run_turn"]
+__all__ = [
+    "ATTACHMENT_WAIT_SECONDS",
+    "HISTORY_TURNS",
+    "MAX_STEPS",
+    "STILL_READING_REPLY",
+    "Event",
+    "run_turn",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +42,14 @@ STEP_LIMIT_REPLY = (
     "for example one month or one category?"
 )
 FAILED_REPLY = "Sorry, I couldn't answer that just now. Please try again."
+STILL_READING_REPLY = (
+    "I'm still reading your bill. The bell will show it when it's ready; "
+    "ask me about it again then."
+)
+# Extraction usually takes 10-15 seconds; past this the turn stops waiting.
+ATTACHMENT_WAIT_SECONDS = 60.0
+ATTACHMENT_POLL_SECONDS = 1.0
+_READING = {DocumentStatus.UPLOADED, DocumentStatus.PROCESSING}
 
 Chat = Callable[..., ai.ChatTurn]
 
@@ -36,7 +58,7 @@ Chat = Callable[..., ai.ChatTurn]
 class Event:
     """One thing the client should show: a tool chip, reply text, the end, or an error."""
 
-    type: Literal["tool", "delta", "done", "error"]
+    type: Literal["document", "tool", "delta", "done", "error"]
     data: dict[str, Any] = field(default_factory=dict)
 
 
@@ -63,11 +85,16 @@ def run_turn(
     model: str,
     chat: Chat | None = None,
     today: date | None = None,
+    document_ids: Sequence[UUID] = (),
+    sleep: Callable[[float], None] = time.sleep,
+    clock: Callable[[], float] = time.monotonic,
 ) -> Iterator[Event]:
     """Answer the user message `start_turn` saved, yielding events as it goes.
 
-    Every database step opens and closes its own session, so no connection is
-    held while the model thinks. The run is always finished, even on failure.
+    Bills attached to the message are waited for first, so the model reads
+    their drafts instead of a half-extracted bill. Every database step opens
+    and closes its own session, so no connection is held while the model
+    thinks or the worker extracts. The run is always finished, even on failure.
     """
     chat = chat or ai.chat_with_tools
     system: ai.ChatMessage = {
@@ -77,12 +104,22 @@ def run_turn(
     schemas = tool_schemas()
     usage = _Usage()
     try:
+        if document_ids:
+            ready = yield from _wait_for_documents(document_ids, sleep, clock)
+            if not ready:
+                yield from _reply(
+                    run_id,
+                    conversation_id,
+                    {"role": "assistant", "content": STILL_READING_REPLY},
+                    usage,
+                )
+                return
         while usage.steps < MAX_STEPS:
             with Session(database.engine) as session:
                 rows = crud.history(
                     session, conversation_id=conversation_id, turns=HISTORY_TURNS
                 )
-                messages = [system, *(crud.chat_message(row) for row in rows)]
+                messages = [system, *(_model_message(row) for row in rows)]
             turn = chat(messages, schemas, model=model)
             usage.add(turn)
             if not turn.tool_calls:
@@ -123,6 +160,46 @@ def run_turn(
         logger.exception("agent turn crashed", extra={"run_id": str(run_id)})
         _finish(run_id, usage, RunStatus.FAILED, error=type(exc).__name__)
         yield Event("error", {"message": FAILED_REPLY, "run_id": str(run_id)})
+
+
+def _model_message(row: AgentMessage) -> ai.ChatMessage:
+    """The saved row as the model sees it; attached bills are named by id."""
+    message = crud.chat_message(row)
+    if row.document_ids:
+        ids = ", ".join(row.document_ids)
+        note = f"[Attached bills: {ids}]"
+        message["content"] = f"{row.content}\n\n{note}" if row.content else note
+    return message
+
+
+def _wait_for_documents(
+    document_ids: Sequence[UUID],
+    sleep: Callable[[float], None],
+    clock: Callable[[], float],
+) -> Generator[Event, None, bool]:
+    """Poll the attached bills until none is being read; a `document` event per change.
+
+    Returns False if any is still being read after `ATTACHMENT_WAIT_SECONDS`.
+    The service already checked that every id belongs to the user.
+    """
+    deadline = clock() + ATTACHMENT_WAIT_SECONDS
+    seen: dict[UUID, str] = {}
+    while True:
+        with Session(database.engine) as session:
+            statuses = {
+                document_id: document.status
+                for document_id in document_ids
+                if (document := session.get(Document, document_id)) is not None
+            }
+        for document_id, status in statuses.items():
+            if seen.get(document_id) != status:
+                seen[document_id] = status
+                yield Event("document", {"id": str(document_id), "status": status})
+        if not any(status in _READING for status in statuses.values()):
+            return True
+        if clock() >= deadline:
+            return False
+        sleep(ATTACHMENT_POLL_SECONDS)
 
 
 def _reply(

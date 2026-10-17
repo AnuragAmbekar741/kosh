@@ -73,7 +73,7 @@ GET  /agent/conversations/{id}       transcript      POST /agent/conversations/{
 
 Steps 5–6 are `runtime.run_turn(user_id, conversation_id, run_id, model, chat=None)`, a generator of `Event(type, data)`. The router turns events into SSE; evals read them directly. `chat` defaults to `ai.chat_with_tools`; tests and evals pass their own.
 
-SSE events: `tool` (name, for a "looking up…" chip), `delta` (reply text), `action` (pending card), `document` (attachment status), `done` (message and run ids), `error`.
+SSE events: `document` (attachment status while waiting), `tool` (name, for a "looking up…" chip), `delta` (reply text), `action` (a card for a proposed write, phase 2 PR 8), `done` (message and run ids), `error`.
 
 How a turn ends:
 
@@ -120,6 +120,8 @@ The system prompt (`core/prompts/system.md`, rendered by `core/prompts/__init__.
 
 The model can only **propose** a write. Confirmation is enforced by code, not by the prompt.
 
+**Phase 3.** This section is for writes with no review state of their own (edits, deletes); its table was built and parked in closed PR #61. Saving a bill doesn't use it: the bill's drafts and `POST /documents/{id}/confirm` already are its approval step (§7).
+
 1. The model calls a `write` or `destructive` tool.
 2. The runtime validates the arguments and inserts an `agent_pending_actions` row: tool name, exact arguments, a human summary ("Delete 12 Starbucks items · ₹870"), `pending`, `expires_at` = now + 15 min.
 3. The model gets `{"status": "pending_confirmation"}` and tells the user to confirm; the UI shows a card from `summary`.
@@ -132,9 +134,10 @@ What the user approves is exactly what runs, an injected instruction can at most
 
 Chat images use the documents pipeline only:
 
-1. The web uploads with `POST /documents` (`source=agent`), gets `document_id`s, and sends them with the message.
-2. The turn waits for the worker (status polled from the DB every second, up to ~60 s), emitting `document` events.
-3. Ready → the model reads the drafts with `get_document` and proposes `confirm_document`. Timeout → a templated "still reading your receipt" reply with no model call.
+1. The web uploads with `POST /documents` (form field `source=agent`), gets `document_id`s, and sends them with the message (`document_ids`, at most 5, text optional). The service 404s on any id that isn't the user's, before anything is saved.
+2. The turn waits for the worker before calling the model (`_wait_for_documents`: status read from the DB every second, up to 60 s, a fresh short session per poll), emitting a `document` event (`{id, status}`) each time a status changes.
+3. None still being read → the model gets the user message with `[Attached bills: <ids>]` appended and reads the drafts with `get_document`. Still reading after 60 s → a templated "still reading your bill" reply with no model call (`STILL_READING_REPLY`). A failed bill goes to the model like any other, which says so.
+4. Saving is the document's own review: drafts stay `pending_review` until the user confirms them (`POST /documents/{id}/confirm`). See decisions, "Agent writes use the system's own approval step" (phase 2, PR 8).
 
 The agent model never sees the image, so it can stay text-only and cheap.
 
