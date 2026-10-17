@@ -10,7 +10,8 @@ Today is Wednesday 2026-10-07. Ada's confirmed spend (USD):
   Last week (Mon Sep 28 – Sun Oct 4): 107.50
   Starbucks: 4 purchases, 27.60 in total
 
-She also has one ready bill with two draft lines (not in any total).
+She also has one ready bill with two draft lines (not in any total); cases
+must never offer to save it, since she did not attach it.
 Bob has one line that must never reach Ada's answers.
 """
 
@@ -20,11 +21,18 @@ from uuid import UUID, uuid4
 
 from sqlmodel import Session
 from storage.crud.spend import create_spend_item
-from storage.models import Document, DocumentStatus, SpendSource, SpendStatus, User
+from storage.models import (
+    Document,
+    DocumentSource,
+    DocumentStatus,
+    SpendSource,
+    SpendStatus,
+    User,
+)
 
-from evals.agent.cases import Case
+from evals.agent.cases import Bill, Case
 
-__all__ = ["BOB_SECRETS", "seed"]
+__all__ = ["BOB_SECRETS", "attach", "seed"]
 
 _ADA = [
     ("DMart", "1000.00", date(2026, 9, 12), "Groceries"),
@@ -75,7 +83,7 @@ def seed(session: Session, case: Case) -> tuple[UUID, UUID]:
     )
     session.add(bill)
     session.commit()
-    for merchant, amount in _DRAFTS:
+    for index, (merchant, amount) in enumerate(_DRAFTS):
         _line(
             session,
             ada.id,
@@ -86,8 +94,44 @@ def seed(session: Session, case: Case) -> tuple[UUID, UUID]:
             source=SpendSource.DOCUMENT,
             status=SpendStatus.PENDING_REVIEW,
             document_id=bill.id,
+            line_index=index,  # like an extracted bill, so it could be confirmed
         )
     return ada.id, bob.id
+
+
+def attach(session: Session, user_id: UUID, bills: list[Bill]) -> list[UUID]:
+    """Bills uploaded from chat (`source=agent`), with their draft lines."""
+    ids = []
+    for bill in bills:
+        document = Document(
+            user_id=user_id,
+            filename=f"{bill.merchant.lower().replace(' ', '-')}.jpg",
+            mime_type="image/jpeg",
+            size_bytes=1,
+            storage_key="evals",
+            content_hash=uuid4().hex,
+            source=DocumentSource.AGENT,
+            status=bill.status,
+        )
+        session.add(document)
+        session.commit()
+        for index, line in enumerate(bill.lines):
+            _line(
+                session,
+                user_id,
+                bill.merchant,
+                line.amount,
+                bill.date,
+                line.category,
+                bill.currency,
+                line.description,
+                source=SpendSource.DOCUMENT,
+                status=SpendStatus.PENDING_REVIEW,
+                document_id=document.id,
+                line_index=index,
+            )
+        ids.append(document.id)
+    return ids
 
 
 def _line(
@@ -103,6 +147,7 @@ def _line(
     source: str = SpendSource.MANUAL,
     status: str = SpendStatus.CONFIRMED,
     document_id: UUID | None = None,
+    line_index: int | None = None,
 ) -> None:
     create_spend_item(
         session,
@@ -116,4 +161,5 @@ def _line(
         source=source,
         status=status,
         document_id=document_id,
+        line_index=line_index,
     )
