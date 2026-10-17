@@ -47,6 +47,7 @@ export function ChatPage() {
             <AgentThread
               empty={<AgentHome />}
               extra={scans.length ? <AgentScans /> : null}
+              extraCount={scans.length}
             />
             <AgentComposer
               leading={<PhoneNav placement="inline" />}

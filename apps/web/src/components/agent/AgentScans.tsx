@@ -56,7 +56,7 @@ type ScanItemProps = {
 
 function ScanItem({ scan }: ScanItemProps) {
   return (
-    <MessageScrollerItem messageId={scan.id} scrollAnchor>
+    <MessageScrollerItem messageId={scan.id}>
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap justify-end gap-2">
           {scan.pages.map((page) =>
