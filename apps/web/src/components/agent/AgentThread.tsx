@@ -20,6 +20,7 @@ import {
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
+  useMessageScroller,
 } from "@/components/ui/message-scroller"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAgentPanel } from "@/hooks/agent/use-agent-panel"
@@ -83,16 +84,42 @@ function withoutTurnInFlight(messages: MessagePublic[]): MessagePublic[] {
   return index === -1 ? messages : messages.slice(0, index)
 }
 
+type FollowLatestProps = {
+  /** Changes whenever something new lands at the end of the thread. */
+  signal: string
+}
+
+/**
+ * Scrolls to the newest item when the user adds something (a message, a scan)
+ * or a reply or card appears.
+ *
+ * No item in the thread is a `scrollAnchor`: when one item was swapped for
+ * another (a scan for its pending turn), the scroller jumped to the first
+ * anchor it hadn't handled yet, an old question near the top.
+ */
+function FollowLatest({ signal }: FollowLatestProps) {
+  const { scrollToEnd } = useMessageScroller()
+
+  useEffect(() => {
+    scrollToEnd({ behavior: "smooth" })
+  }, [signal, scrollToEnd])
+
+  return null
+}
+
 type AgentThreadProps = {
   /** Shown when the chat has no messages yet. */
   empty?: ReactNode
   /** Items after the messages (phone scans); null keeps the empty state. */
   extra?: ReactNode
+  /** How many extra items there are, so the thread follows new ones. */
+  extraCount?: number
 }
 
 export function AgentThread({
   empty = <AgentEmpty />,
   extra = null,
+  extraCount = 0,
 }: AgentThreadProps) {
   const { conversationId, chat, forgetConversation } = useAgentPanel()
   const conversation = useConversation(conversationId)
@@ -122,17 +149,22 @@ export function AgentThread({
   const stillRunning =
     !turn && last?.role === "user" && last.status === "running"
 
+  const latest = [
+    messages.at(-1)?.id ?? "",
+    turn ? "turn" : "",
+    turn?.actions.length ?? 0,
+    turn?.reply ? "reply" : "",
+    extraCount,
+  ].join(":")
+
   return (
     <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+      <FollowLatest signal={latest} />
       <MessageScroller className="flex-1">
         <MessageScrollerViewport>
           <MessageScrollerContent className="gap-5 px-4 py-4">
             {messages.map((message, index) => (
-              <MessageScrollerItem
-                key={message.id}
-                messageId={message.id}
-                scrollAnchor={message.role === "user"}
-              >
+              <MessageScrollerItem key={message.id} messageId={message.id}>
                 <div className="flex flex-col gap-3">
                   <AgentMessage
                     content={message.content}
@@ -165,7 +197,7 @@ export function AgentThread({
               </MessageScrollerItem>
             ) : null}
             {turn ? (
-              <MessageScrollerItem messageId="pending" scrollAnchor>
+              <MessageScrollerItem messageId={turn.id}>
                 <div className="flex flex-col gap-3">
                   <AgentMessage
                     content={turn.text}
