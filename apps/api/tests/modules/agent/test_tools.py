@@ -10,9 +10,11 @@ from api.modules.agent.core.tools import (
     TOOLS,
     Tool,
     ToolContext,
+    call_tool,
     run_tool,
     tool_schemas,
 )
+from api.modules.agent.core.tools.base import ToolRefused
 from sqlmodel import Session
 from storage.crud.spend import create_spend_item
 from storage.models import Document, DocumentStatus, SpendSource, SpendStatus, User
@@ -209,14 +211,40 @@ def test_documents_show_drafts_and_stay_private(session, ledger) -> None:
     assert _call(session, bob, "list_documents")["total_count"] == 0
 
 
-def test_write_tools_never_run_directly(session, ledger, monkeypatch) -> None:
+def test_write_tools_only_ever_await_the_user(session, ledger, monkeypatch) -> None:
     ada, _ = ledger
+    item_id = str(uuid4())
     write = Tool(
-        "Delete.", tools.spend.SpendItemArgs, lambda ctx, args: {}, "destructive"
+        "Delete.",
+        tools.spend.SpendItemArgs,
+        lambda ctx, args: {"kind": "delete_items", "count": 1},
+        "destructive",
     )
     monkeypatch.setitem(TOOLS, "delete_spend_item", write)
-    with pytest.raises(RuntimeError, match="pending action"):
-        _call(session, ada, "delete_spend_item", item_id=str(uuid4()))
+    result = _call(session, ada, "delete_spend_item", item_id=item_id)
+    assert result["status"] == "awaiting_user"
+    assert result["action"] == {
+        "tool": "delete_spend_item",
+        "kind": "delete_items",
+        "count": 1,
+    }
+
+
+def test_refused_write_goes_back_to_the_model(session, ledger, monkeypatch) -> None:
+    ada, _ = ledger
+
+    def refuse(ctx, args):
+        raise ToolRefused("nothing to delete")
+
+    write = Tool("Delete.", tools.spend.SpendItemArgs, refuse, "destructive")
+    monkeypatch.setitem(TOOLS, "delete_spend_item", write)
+    result = call_tool(
+        ToolContext(session=session, user_id=ada.id),
+        "delete_spend_item",
+        json.dumps({"item_id": str(uuid4())}),
+    )
+    assert json.loads(result.content) == {"error": "nothing to delete"}
+    assert result.action is None
 
 
 def test_prompt_carries_today_and_a_version() -> None:
