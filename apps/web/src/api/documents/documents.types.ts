@@ -2,6 +2,9 @@ import type { Category, SpendItem } from "@/api/spend-items/spend-items.types"
 
 export type DocumentStatus = "uploaded" | "processing" | "ready" | "failed"
 
+/** `agent`: attached to a chat message and sent with it as `document_ids`. */
+export type UploadSource = "dashboard" | "agent"
+
 export type DocumentSummary = {
   id: string
   filename: string

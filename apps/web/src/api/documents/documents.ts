@@ -7,14 +7,17 @@ import type {
   DocumentSummary,
   ManualDocumentCreate,
   UpdateDocumentInput,
+  UploadSource,
 } from "@/api/documents/documents.types"
 
 export async function uploadDocument(
   file: File,
-  idempotencyKey?: string
+  idempotencyKey?: string,
+  source: UploadSource = "dashboard"
 ): Promise<{ id: string; status: string }> {
   const body = new FormData()
   body.append("file", file)
+  body.append("source", source)
   const { data } = await client.post<{ id: string; status: string }>(
     "/documents",
     body,

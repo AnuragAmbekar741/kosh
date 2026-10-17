@@ -7,7 +7,10 @@ const TOOL_LABELS: Record<string, string> = {
   get_spend_item: "Opening that purchase",
   list_documents: "Checking your bills",
   get_document: "Opening that bill",
+  confirm_document: "Getting your bill ready to save",
 }
+
+export const READING_BILLS = "Reading your bill"
 
 export function toolLabel(name: string | null): string {
   return (name && TOOL_LABELS[name]) ?? "Thinking"

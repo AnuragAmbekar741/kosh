@@ -187,24 +187,36 @@ decode (HEIC outside Safari) go up untouched. Each file uploads as its own
 document through the same queue as the Add documents dialog
 (`useUploads`, `POST /documents`), so the bell tracks it too.
 
-The thread shows each send after the conversation's messages: page
-thumbnails on the right (72×96, `object-cover`; a file tile for PDFs), then
-one status line per page that follows the document:
+Chat uploads use `source=agent`. While a scan uploads, the thread shows it
+after the conversation: page thumbnails on the right (72×96, `object-cover`;
+a file tile for PDFs) and one line per page: "Uploading {file}…" (shimmer), or
+the upload error with **Retry**. Once every page has settled, the uploaded
+ones are **sent as a chat message** with their `document_ids` and no text; a
+page that succeeds later on Retry goes out on its own. The upload queue
+reports each settled file to `useChatScans` (in `AppShell`, so it sends even
+if the user left Chat), and `useSendMessage` queues a send while a reply is
+still streaming, so a scan never interrupts one.
 
-| State | Line |
-|---|---|
-| Queued or sending | "Uploading {file}…" (shimmer) |
-| Upload failed | The upload error with **Retry** |
-| `uploaded` / `processing` | "Reading your bill…" (shimmer) |
-| `failed` | "Couldn’t read {file}." plus the worker's error |
-| `ready`, needs review | "{merchant} is ready to review" with **Review** (opens the full-screen review) |
-| `ready`, reviewed | "Saved {merchant}" |
-| Deleted | "Discarded {file}" |
+From there the thread is the agent's:
 
-Scans live for the session (`useChatScans` in `AppShell`); after a reload
-the bell still has every document. One photo is one bill for now; combining
-pages into one bill, and handing the result to the assistant as a confirm
-card, come with agent phase 2.
+- **Your message** shows the bills (`AgentAttachments`): the photo while this
+  session still has it, a frosted file tile after a reload. A photo sent on
+  its own has no text bubble.
+- **While the reply waits for extraction**, the status line reads "Reading
+  your bill…" (from the `document` events), then the tool labels.
+- **The bill card** (`AgentBillCard`, `glass-strong`, `rounded-2xl`) follows
+  each `action` event and, after a reload, the reply's `actions`. Header:
+  receipt icon tile, merchant, "{date} · {n} lines", total per currency. Body,
+  while the bill waits for review: up to 4 draft lines (name and amount, from
+  the live document), "+N more in Edit", and "Looks like a bill you've already
+  saved" when the offer counted possible duplicates. Actions: **Save bill**
+  (primary, `POST /documents/{id}/confirm`, toasts "Saved {merchant}"),
+  **Edit** (the full-screen review dialog), and a ghost trash icon that asks
+  "Discard this bill?" with **Keep** / **Discard** (`DELETE /documents/{id}`).
+  The card follows the bill however it was decided: "Saved." with **View in
+  Bills**, or "Discarded.".
+
+One photo is one bill for now; combining pages into one bill comes later.
 
 ## Visual rules
 

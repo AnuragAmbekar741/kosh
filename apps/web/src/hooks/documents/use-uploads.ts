@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react"
 import axios from "axios"
 
 import { apiDetail } from "@/api/client"
+import type { UploadSource } from "@/api/documents/documents.types"
 import { useUploadDocument } from "@/hooks/documents/use-documents"
 import { randomId } from "@/lib/utils"
 
@@ -23,8 +24,11 @@ export type UploadStatus = "waiting" | "uploading" | "failed"
 export type Upload = {
   key: string
   file: File
+  source: UploadSource
   status: UploadStatus
   error?: string
+  /** Called each time the file settles: its document id, or null if it failed. */
+  onSettled?: (key: string, documentId: string | null) => void
 }
 
 /**
@@ -66,14 +70,17 @@ export function useUploadsState() {
           const document = await upload.mutateAsync({
             file: next.file,
             idempotencyKey: next.key,
+            source: next.source,
           })
           setAccepted((current) => ({ ...current, [next.key]: document.id }))
           commit(current.current.filter((item) => item.key !== next.key))
+          next.onSettled?.(next.key, document.id)
         } catch (error) {
           patch(next.key, {
             status: "failed",
             error: uploadError(error),
           })
+          next.onSettled?.(next.key, null)
         }
       }
     } finally {
@@ -82,11 +89,17 @@ export function useUploadsState() {
   }
 
   /** Queues files and returns their keys, in order. */
-  function add(files: File[]): string[] {
+  function add(
+    files: File[],
+    source: UploadSource = "dashboard",
+    onSettled?: Upload["onSettled"]
+  ): string[] {
     const added = files.map((file) => ({
       key: randomId(),
       file,
+      source,
       status: "waiting" as const,
+      onSettled,
     }))
     commit([...current.current, ...added])
     void drain()
