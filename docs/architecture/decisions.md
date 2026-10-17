@@ -483,3 +483,10 @@ Previously linked accounts are unchanged; review them separately if used with re
 - Why: Install is the goal; offline is not. Fewer moving parts until there is a reason.
 - Revisit when: Offline use (reading the ledger without signal), push notifications, or a WhatsApp-style share target needs one.
 
+**The chat only offers bills attached in that chat, enforced in code**
+
+- Chosen: `confirm_document`'s check refuses any bill whose id isn't in that conversation's `document_ids`, after the confirm endpoint's own checks. "Save all my bills" gets no cards; bills waiting from other uploads are reviewed from the bell.
+- Rejected: Leaving it to the tool description and prompt (the real model offered an unattached bill in the `save-all-my-bills` eval); offering any bill waiting for review when asked (helpful, but receipt text could then put cards on screen for bills the user never sent).
+- Why: Predictable, and the same rule the evals check. Prompts guide; code decides.
+- Revisit when: A "review my waiting bills" flow is wanted in chat; it would be its own tool and confirmation, not a loosening of this check.
+
