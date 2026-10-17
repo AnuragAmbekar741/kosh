@@ -207,3 +207,39 @@ def test_active_run_ignores_finished_and_stale_runs(session: Session) -> None:
     assert [
         r.id for r in agent.list_runs(session, conversation_id=conversation.id)
     ] == [run.id]
+
+
+def test_attached_document_ids_are_per_conversation(session: Session) -> None:
+    owner = _user(session)
+    conversation = agent.create_conversation(session, user_id=owner.id)
+    other = agent.create_conversation(session, user_id=owner.id)
+    first, second, elsewhere = uuid4(), uuid4(), uuid4()
+    agent.start_turn(
+        session,
+        conversation=conversation,
+        content="",
+        model="m",
+        prompt_version="1",
+        document_ids=[first],
+    )
+    _turn(session, conversation, "no bills here")
+    agent.start_turn(
+        session,
+        conversation=conversation,
+        content="and this",
+        model="m",
+        prompt_version="1",
+        document_ids=[second, first],
+    )
+    agent.start_turn(
+        session,
+        conversation=other,
+        content="",
+        model="m",
+        prompt_version="1",
+        document_ids=[elsewhere],
+    )
+    assert agent.attached_document_ids(session, conversation_id=conversation.id) == {
+        str(first),
+        str(second),
+    }

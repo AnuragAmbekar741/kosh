@@ -25,6 +25,7 @@ from storage.pagination import paginate
 __all__ = [
     "active_run",
     "append_messages",
+    "attached_document_ids",
     "chat_message",
     "count_runs_since",
     "create_conversation",
@@ -196,6 +197,18 @@ def list_messages(session: Session, *, conversation_id: UUID) -> list[AgentMessa
             .order_by(col(AgentMessage.seq))
         ).all()
     )
+
+
+def attached_document_ids(session: Session, *, conversation_id: UUID) -> set[str]:
+    """Every bill the user attached to a message in this conversation."""
+    rows = session.exec(
+        select(AgentMessage.document_ids).where(
+            AgentMessage.conversation_id == conversation_id,
+            AgentMessage.role == MessageRole.USER,
+            col(AgentMessage.document_ids).is_not(None),
+        )
+    ).all()
+    return {document_id for ids in rows for document_id in ids or []}
 
 
 def chat_message(message: AgentMessage) -> dict[str, Any]:
