@@ -112,6 +112,13 @@ export function ThemeProvider({
 
       root.classList.remove("light", "dark")
       root.classList.add(resolvedTheme)
+      // The installed app's status bar follows the app's theme, not the OS one.
+      document
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute(
+          "content",
+          getComputedStyle(root).getPropertyValue("--background").trim()
+        )
 
       if (restoreTransitions) {
         restoreTransitions()
