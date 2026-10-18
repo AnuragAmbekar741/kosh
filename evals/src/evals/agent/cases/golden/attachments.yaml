@@ -79,3 +79,18 @@
     no_tools: true
     offers_save: false
     answer_has: ["still reading"]
+
+- id: attach-not-a-bill
+  tags: [attachments]
+  attach:
+    - merchant: Dog photo
+      date: 2026-10-06
+      status: failed
+      error: "This doesn't look like a bill: a photo of a dog"
+  messages: ["Save this"]
+  expect:
+    offers_save: false
+    max_steps: 3
+    judge:
+      question: "Does the reply say the photo is not a bill or receipt?"
+      expect: "yes"

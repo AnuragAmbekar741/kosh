@@ -10,7 +10,14 @@ from ai.settings import get_settings
 __all__ = ["extract"]
 
 _PROMPT = (
-    "Extract spending data from this financial document. "
+    "First decide whether this file is a bill: a receipt, invoice, or bank or card "
+    "statement. If it clearly is not (a photo of people, pets, places or things, a "
+    "screenshot of an app or chat, a blank page), answer document_kind not_a_bill "
+    "with a short reason such as 'a photo of a dog', and nothing else. Never invent "
+    "a merchant, items or amounts to fill a bill. A blurry, folded or partly cut "
+    "bill is still a bill: extract what is readable and mark unclear lines "
+    "requires_review. "
+    "Otherwise extract the spending data. "
     "Use document_kind receipt for store receipts and statement for bank or card statements. "
     "Money fields must be decimal strings such as 56.71. "
     "Dates must be ISO 8601 (YYYY-MM-DD). Treat 10/19/24 as 2024-10-19 when the locale is US. "

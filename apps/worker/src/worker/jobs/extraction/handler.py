@@ -11,6 +11,8 @@ from worker.outcome import Outcome
 
 logger = logging.getLogger(__name__)
 
+NOT_A_BILL = "This doesn't look like a bill"
+
 
 def handle(session: Session, document: Document) -> Outcome:
     try:
@@ -31,6 +33,17 @@ def handle(session: Session, document: Document) -> Outcome:
     except RuntimeError as exc:
         logger.exception("extraction failed unexpectedly")
         return Outcome.failed(str(exc))
+    if isinstance(extraction, ai.NotABill):
+        # Final, not retried: another try would see the same photo. The attempt
+        # is kept for its tokens and the model's reason.
+        attempts.write_success(
+            session,
+            document.id,
+            meta=meta,
+            payload=extraction.model_dump(mode="json"),
+            warning=None,
+        )
+        return Outcome.failed(f"{NOT_A_BILL}: {extraction.reason}")
     warning = validation.warning_for(extraction)
     attempt = attempts.write_success(
         session,
