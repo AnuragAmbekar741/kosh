@@ -6,9 +6,12 @@ import type { AgentEvent, BillAction } from "@/api/agent/agent.types"
 import type { DocumentStatus } from "@/api/documents/documents.types"
 import { sendErrorMessage } from "@/components/agent/agent-copy"
 import { agentQueryKeys } from "@/hooks/agent/query-keys"
+import { randomId } from "@/lib/utils"
 
 /** The turn being sent: shown until the saved transcript replaces it. */
 export type PendingTurn = {
+  /** New per send: the scroller remembers positions by id, so never reuse one. */
+  id: string
   text: string
   documentIds: string[]
   /** Attached bills while the reply waits for them to be read. */
@@ -57,6 +60,7 @@ export function useSendMessage({ conversationId, onConversation }: Options) {
     }
     streaming.current = true
     setTurn({
+      id: randomId(),
       text,
       documentIds,
       documents: {},

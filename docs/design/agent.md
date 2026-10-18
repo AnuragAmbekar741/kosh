@@ -40,9 +40,12 @@ origin, 220ms exponential ease-out. Reduced motion keeps only a 120ms fade.
 └──────────────────────────────────────────┘
 ```
 
-- **Thread:** shadcn `MessageScroller` (auto-follow while streaming, the
-  user's question anchored, jump-to-latest button), `Message` rows, `Bubble`
-  surfaces, `Marker` for status lines. No hand-rolled scroll or bubble divs.
+- **Thread:** shadcn `MessageScroller` (auto-follow while streaming,
+  jump-to-latest button), `Message` rows, `Bubble` surfaces, `Marker` for
+  status lines. No hand-rolled scroll or bubble divs. The thread scrolls to the
+  newest item whenever you send something or a reply or card lands
+  (`FollowLatest`). No item is a scroll anchor: swapping a scan for its turn
+  made the scroller jump to an old question near the top.
 - **User messages:** `Bubble variant="secondary"`, right, text as typed
   (`whitespace-pre-wrap`).
 - **Replies:** `Bubble variant="ghost"`, left, full width, rendered with
