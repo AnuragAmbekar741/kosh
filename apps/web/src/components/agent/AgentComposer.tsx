@@ -69,7 +69,9 @@ export function AgentComposer({
       <InputGroup
         className={cn(
           phone &&
-            "min-h-12 rounded-[22px] border-(--glass-border) glass pl-1.5 dark:bg-(--glass)"
+            // Frosted look without backdrop-filter: blurring what's behind the
+            // box on every keystroke made typing lag on phones.
+            "min-h-12 rounded-[22px] border-(--glass-border) bg-(--glass-strong) pl-1.5 shadow-(--glass-shadow)"
         )}
       >
         <InputGroupTextarea

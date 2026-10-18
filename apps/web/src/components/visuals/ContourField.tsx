@@ -15,16 +15,25 @@ const flowLines = Array.from({ length: 17 }, (_, index) => {
 type ContourFieldProps = {
   className?: string
   opacity?: number
+  /**
+   * No drift. Behind frosted glass a moving layer is re-blurred every frame,
+   * which made typing in the phone chat lag.
+   */
+  still?: boolean
 }
 
-export function ContourField({ className, opacity = 0.82 }: ContourFieldProps) {
+export function ContourField({
+  className,
+  opacity = 0.82,
+  still = false,
+}: ContourFieldProps) {
   const reduceMotion = useReducedMotion()
 
   return (
     <motion.div
       aria-hidden="true"
       animate={
-        reduceMotion
+        reduceMotion || still
           ? undefined
           : {
               rotate: [0, -0.65, 0.45, 0],
@@ -34,7 +43,8 @@ export function ContourField({ className, opacity = 0.82 }: ContourFieldProps) {
             }
       }
       className={cn(
-        "pointer-events-none absolute -inset-16 origin-center will-change-transform",
+        "pointer-events-none absolute -inset-16 origin-center",
+        !still && "will-change-transform",
         className
       )}
       transition={{ duration: 26, ease: "easeInOut", repeat: Infinity }}
