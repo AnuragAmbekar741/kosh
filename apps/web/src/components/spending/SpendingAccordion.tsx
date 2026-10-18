@@ -1,9 +1,11 @@
 import { useRef, useState } from "react"
 import {
   CalendarIcon,
+  ChevronRightIcon,
   EllipsisVerticalIcon,
   FileTextIcon,
   PencilIcon,
+  PlusIcon,
   Trash2Icon,
 } from "lucide-react"
 
@@ -37,6 +39,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { useDeleteDocument } from "@/hooks/documents/use-documents"
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   useDeleteSpendItem,
   useUpdateSpendItem,
@@ -44,8 +47,10 @@ import {
 
 import { BillDatePopover } from "./BillDatePopover"
 import { CategoryBadge } from "./CategoryBadge"
+import { ItemBadge } from "./ItemBadge"
 import { ItemPicker } from "./ItemPicker"
 import { SpendingAddLineRow } from "./SpendingAddLineRow"
+import { type LineSheetTarget, SpendingLineSheet } from "./SpendingLineSheet"
 import { formatDate, formatMoney } from "./spending-formatters"
 
 type SpendingAccordionProps = {
@@ -65,6 +70,8 @@ type SpendingGroup = {
 type SpendingBillRowProps = {
   editingItemId: string
   group: SpendingGroup
+  isMobile: boolean
+  onAddLine: (group: SpendingGroup) => void
   onDeleteBill: (group: SpendingGroup) => void
   onDeleteItem: (item: SpendItem) => void
   onEditBill: (group: SpendingGroup) => void
@@ -309,6 +316,39 @@ function SpendingLineRow({
   )
 }
 
+type PhoneLineRowProps = {
+  item: SpendItem
+  onEdit: (itemId: string) => void
+}
+
+/** Phones: the whole line is one tap target that opens the edit sheet. */
+function PhoneLineRow({ item, onEdit }: PhoneLineRowProps) {
+  const label = itemName(item)
+  return (
+    <button
+      aria-label={`Edit ${label}, ${formatMoney(item.amount, item.currency)}`}
+      className="grid min-h-14 w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto_1rem] items-center gap-x-3 px-4 py-2.5 text-left transition-colors not-first:border-t focus-visible:bg-muted focus-visible:outline-none active:bg-muted"
+      onClick={() => onEdit(item.id)}
+      type="button"
+    >
+      <span className="flex min-w-0 flex-col gap-1.5">
+        <span className="line-clamp-2 text-sm">{label}</span>
+        <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <CategoryBadge category={item.category} />
+          <ItemBadge item={item} />
+        </span>
+      </span>
+      <span className="text-sm tabular-nums">
+        {formatMoney(item.amount, item.currency)}
+      </span>
+      <ChevronRightIcon
+        aria-hidden="true"
+        className="size-4 text-muted-foreground"
+      />
+    </button>
+  )
+}
+
 function uniqueCategories(items: SpendItem[]) {
   const names: Category[] = []
   for (const item of items) {
@@ -322,6 +362,8 @@ function uniqueCategories(items: SpendItem[]) {
 function SpendingBillRow({
   editingItemId,
   group,
+  isMobile,
+  onAddLine,
   onDeleteBill,
   onDeleteItem,
   onEditBill,
@@ -423,19 +465,33 @@ function SpendingBillRow({
         </span>
       </AccordionTrigger>
       <AccordionContent className="border-t bg-muted/40 pb-0 [&_p]:mb-0 [&_p:not(:last-child)]:mb-0">
-        <div className="no-scrollbar max-h-72 scroll-fade-y overflow-y-auto">
-          {group.items.map((item, index) => (
-            <SpendingLineRow
-              isEditing={editingItemId === item.id}
-              item={item}
-              key={item.id}
-              position={index + 1}
-              onDelete={onDeleteItem}
-              onEdit={onEditItem}
-              onStopEditing={onStopEditing}
-            />
-          ))}
-          {showAddRow ? (
+        {/* Phones scroll the page, not a box inside it. */}
+        <div className="md:no-scrollbar md:max-h-72 md:scroll-fade-y md:overflow-y-auto">
+          {group.items.map((item, index) =>
+            isMobile ? (
+              <PhoneLineRow item={item} key={item.id} onEdit={onEditItem} />
+            ) : (
+              <SpendingLineRow
+                isEditing={editingItemId === item.id}
+                item={item}
+                key={item.id}
+                position={index + 1}
+                onDelete={onDeleteItem}
+                onEdit={onEditItem}
+                onStopEditing={onStopEditing}
+              />
+            )
+          )}
+          {showAddRow && isMobile ? (
+            <button
+              className="flex min-h-12 w-full cursor-pointer items-center gap-3 px-4 text-left text-sm text-brand-ink transition-colors not-first:border-t focus-visible:bg-muted focus-visible:outline-none active:bg-muted"
+              onClick={() => onAddLine(group)}
+              type="button"
+            >
+              <PlusIcon aria-hidden="true" className="size-4" />
+              Add item
+            </button>
+          ) : showAddRow ? (
             <SpendingAddLineRow
               documentId={group.id}
               startOpen={group.items.length === 0}
@@ -470,6 +526,8 @@ export function SpendingAccordion({
   const [openedEmptyId, setOpenedEmptyId] = useState(newestEmptyId)
   const [editingItemId, setEditingItemId] = useState("")
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
+  const [addingTo, setAddingTo] = useState<SpendingGroup | null>(null)
+  const isMobile = useIsMobile()
   const deleteDocument = useDeleteDocument()
   const deleteSpendItem = useDeleteSpendItem()
   const isPending = deleteDocument.isPending || deleteSpendItem.isPending
@@ -485,6 +543,20 @@ export function SpendingAccordion({
     setOpenBill(newestEmptyId)
     setOpenedEmptyId(newestEmptyId)
   }
+
+  const editingItem = isMobile
+    ? items.find((item) => item.id === editingItemId)
+    : undefined
+  const sheetTarget: LineSheetTarget | null = editingItem
+    ? { kind: "edit", item: editingItem }
+    : addingTo
+      ? {
+          kind: "add",
+          billTitle: addingTo.title,
+          currency: addingTo.currency,
+          documentId: addingTo.id,
+        }
+      : null
 
   function resetDeleteMutations() {
     deleteDocument.reset()
@@ -544,7 +616,9 @@ export function SpendingAccordion({
           <SpendingBillRow
             editingItemId={editingItemId}
             group={group}
+            isMobile={isMobile}
             key={group.id}
+            onAddLine={setAddingTo}
             onDeleteBill={requestDeleteBill}
             onDeleteItem={requestDeleteItem}
             onEditBill={editBill}
@@ -553,6 +627,15 @@ export function SpendingAccordion({
           />
         ))}
       </Accordion>
+
+      <SpendingLineSheet
+        onClose={() => {
+          setEditingItemId("")
+          setAddingTo(null)
+        }}
+        onDelete={requestDeleteItem}
+        target={sheetTarget}
+      />
 
       <Dialog
         onOpenChange={(open) => {
