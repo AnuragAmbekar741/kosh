@@ -129,7 +129,9 @@ def run_turn(
             for call in turn.tool_calls:
                 yield Event("tool", {"name": call["function"]["name"]})
             with Session(database.engine) as session:
-                ctx = ToolContext(session=session, user_id=user_id)
+                ctx = ToolContext(
+                    session=session, user_id=user_id, conversation_id=conversation_id
+                )
                 outcomes = [
                     (
                         call,
