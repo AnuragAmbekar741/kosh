@@ -193,9 +193,23 @@ bill divider.
 - **Bill rows** drop the merchant tile, the source badge, and the category
   badges; the title truncates, and the date and item-count badges wrap under
   it, so the total and the three-dot tile always fit.
-- **Lines** drop the number column. The name gets its own line and wraps in
-  full instead of truncating, with the category and item badges wrapping
-  under it.
+- **Lines** drop the number column and are each one tap target (at least
+  56px): the name (up to two lines) with read-only category and item badges
+  under it, the amount, and a chevron. The open bill grows with its lines
+  instead of scrolling inside `max-h-72`, so the page is the only scroller.
+- **Editing and adding a line** happen in a bottom sheet
+  (`SpendingLineSheet`), not inline. Tapping a line, the bill menu's Edit, or
+  the 48px Add item row opens it: full-width Name, Amount (decimal keypad,
+  currency beside the label), the 14 categories as 40px radio chips, and, when
+  editing, the Product picker. Save (or Add item) is a full-width 44px button
+  pinned at the bottom above the safe area, with a 44px outline Delete beside
+  it that opens the usual confirmation. Edit opens without focusing a field,
+  so the keyboard stays down until the user taps one; Add focuses Name, and
+  Enter there moves to Amount. Save sends only the fields that changed through
+  `PATCH /spend-items/{id}`; Add posts to `POST /documents/{id}/line-items`.
+  The error line above the buttons always keeps its height, so a message
+  appearing or clearing never moves fields under the thumb, and the field
+  at fault is marked `aria-invalid`.
 - **Items** is a list instead of the table, two aligned lines per item: the
   name and the amount on top; "merchant · date" (short date, year only when
   it isn't this year) and the category badge below, the badge right-aligned
@@ -294,7 +308,8 @@ src/components/spending/
   ItemPicker.tsx
   DocumentReview.tsx
   SpendingAccordion.tsx
-  SpendingAddLineRow.tsx
+  SpendingAddLineRow.tsx     desktop inline add row
+  SpendingLineSheet.tsx      phone add/edit sheet
   SpendingItemsTable.tsx
   SpendingItemsPager.tsx
   SpendingLedgerSkeleton.tsx
