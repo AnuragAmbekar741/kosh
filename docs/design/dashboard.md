@@ -156,11 +156,12 @@ and **New chat** before the bell. There is no floating launcher or panel on
 phones.
 
 Behind it, `ChatBackdrop` gives the page depth: the slate mist
-(`--empty-wash`), the login page's waveform (`ContourField`) drifting slowly
-and masked to fade at every edge, and a faint glow in the middle. It is
-decorative and never takes taps. The cards, chips and composer above it are
-frosted glass (`glass`: translucent card, blur, hairline, soft shadow), in
-both themes. See [global.md](./global.md#glass-and-depth-phones).
+(`--empty-wash`), the login page's waveform (`ContourField still`, which
+doesn't drift here) masked to fade at every edge, and a faint, still glow in
+the middle. It is decorative and never takes taps. The cards and chips above
+it are frosted glass (`glass`: translucent card, blur, hairline, soft shadow),
+in both themes. The backdrop stays still on purpose: glass over a moving layer
+is re-blurred every frame, and that made typing lag on phones. See [global.md](./global.md#glass-and-depth-phones).
 
 Before the first message the thread shows `AgentHome`:
 
@@ -178,10 +179,11 @@ Before the first message the thread shows `AgentHome`:
   one after another, then float a few pixels, slowly. A chip sends its
   question.
 
-All of that motion, and the waveform drift, stops under
-`prefers-reduced-motion`.
+All of that motion stops under `prefers-reduced-motion`.
 
-The composer is a frosted pill (at least 48px tall) with the text box, a
+The composer is a pill (at least 48px tall) in the glass colours
+(`--glass-strong`, hairline, soft shadow) but with **no backdrop blur**, since
+it repaints on every keystroke. It holds the text box, a
 paperclip, and a round send button; the nav button sits to its left. Past
 chats has no composer, so the nav button floats bottom-right there.
 The composer doesn't take focus on load, so the keyboard stays down until the
