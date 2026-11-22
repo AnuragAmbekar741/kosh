@@ -57,6 +57,7 @@ Import order: third-party → `@/` → styles.
 - Early returns. No `console.log` unless behind a debug flag.
 - Do not define components inside components. Derive state in render, not effects.
 - Do not sprinkle `useMemo` / `useCallback` on simple values.
+- Check Storybook (`pnpm storybook`) for an existing component first. New shared components get a `<Name>.stories.tsx` next to them ([docs/design/storybook.md](docs/design/storybook.md)).
 
 ## Git
 

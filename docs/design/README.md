@@ -10,6 +10,7 @@ UX and UI docs for `apps/web`. Product scope and API contracts live in [../produ
 | [spending.md](./spending.md) | Document upload, extraction review, and confirmed ledger |
 | [agent.md](./agent.md) | Assistant widget: launcher, floating chat panel, states, copy |
 | [notifications.md](./notifications.md) | Header bell: upload and extraction progress, review entry, polling |
+| [storybook.md](./storybook.md) | Storybook: running it, sections, mock data, adding a story |
 
 Root `PRODUCT.md` / `DESIGN.md` are gitignored Impeccable copies of this folder. Do not invent a second system.
 
