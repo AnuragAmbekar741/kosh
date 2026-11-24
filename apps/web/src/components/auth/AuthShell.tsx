@@ -146,7 +146,7 @@ export function AuthShell({
                   transition={{ duration: reduceMotion ? 0 : 0.26 }}
                 >
                   <Button
-                    className="h-11 min-h-0 w-full font-normal focus-visible:border-foreground/40 focus-visible:ring-foreground/10 sm:h-10"
+                    className="h-11 min-h-0 w-full font-normal focus-visible:border-foreground/40 focus-visible:ring-foreground/10 sm:h-9"
                     disabled={pending}
                     type="submit"
                   >
