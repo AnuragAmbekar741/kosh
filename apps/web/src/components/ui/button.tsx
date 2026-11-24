@@ -20,16 +20,16 @@ const buttonVariants = cva(
       },
       size: {
         default:
-          "h-11 gap-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 sm:h-9",
-        xs: "h-9 gap-1 rounded-[min(var(--radius-md),10px)] px-3 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 sm:h-7 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-10 gap-1.5 rounded-[min(var(--radius-md),12px)] px-3 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5 sm:h-8 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-11 gap-2 px-5 has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4 sm:h-10",
-        icon: "size-11 sm:size-9",
+          "h-11 gap-1.5 px-3 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5 sm:h-8",
+        xs: "h-9 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 sm:h-6 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-10 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 sm:h-7 [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-11 gap-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 sm:h-9",
+        icon: "size-11 sm:size-8",
         "icon-xs":
-          "size-9 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg sm:size-7 [&_svg:not([class*='size-'])]:size-3",
+          "size-9 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg sm:size-6 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm":
-          "size-10 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg sm:size-8",
-        "icon-lg": "size-11 sm:size-10",
+          "size-10 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg sm:size-7",
+        "icon-lg": "size-11 sm:size-9",
         // Phone-only toolbars: fixed sizes, no desktop step.
         "icon-dense": "size-9 rounded-[min(var(--radius-md),11px)]",
         "icon-dense-sm":
